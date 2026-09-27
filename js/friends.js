@@ -147,6 +147,17 @@
     if(pending){ try{ pending.pc.close(); }catch(e){} pending=null; }
     const pc=newPc(), dc=pc.createDataChannel('gc'), entry={pc,dc,peer:null};
     pending=entry; setupHostMessages(entry);
+    // Si la connexion n'aboutit jamais (réseau, pare-feu...), connectionState finit par passer
+    // à 'failed' — sans ça, le message resterait bloqué sur « Connexion en cours... » pour
+    // toujours, sans aucun moyen de savoir que ça a échoué. On ne réagit qu'à 'failed' (jamais
+    // à 'disconnected', souvent transitoire et qui peut se rétablir tout seul), et seulement si
+    // cette invitation est toujours celle en attente (un ami a peut-être déjà rejoint entre-temps).
+    pc.addEventListener('connectionstatechange',()=>{
+      if(pending===entry&&pc.connectionState==='failed'){
+        pending=null;
+        say('La connexion a échoué. Génère une nouvelle invitation et réessaie — vérifiez que la case « Jouer via Internet » est cochée des deux côtés, ou que vous êtes bien sur le même réseau si elle est décochée.');
+      }
+    });
     say('Préparation de l’invitation...');
     const off=await pc.createOffer(); await pc.setLocalDescription(off); await gathered(pc);
     $('fr-offer').value=enc(pc.localDescription); $('fr-answerIn').value='';
@@ -164,6 +175,14 @@
     if(!supported){ say('Ton navigateur ne gère pas WebRTC.'); return; }
     let off; try{ off=dec($('fr-offerIn').value); }catch(e){ say('Code d’invitation invalide.'); return; }
     const pc=newPc();
+    // Même filet de sécurité côté invité : sans lui, une connexion qui échoue laisse le message
+    // bloqué sur « ... attends la connexion » indéfiniment. Ignoré une fois réellement connecté
+    // (role==='guest') : une coupure après coup est déjà gérée par onHostLost (fermeture du canal).
+    pc.addEventListener('connectionstatechange',()=>{
+      if(role!=='guest'&&pc.connectionState==='failed'){
+        say('La connexion a échoué. Redemande un nouveau code d’invitation à ton hôte et réessaie — vérifiez que la case « Jouer via Internet » est cochée des deux côtés, ou que vous êtes bien sur le même réseau si elle est décochée.');
+      }
+    });
     pc.ondatachannel=ev=>{
       const dc=ev.channel; hostConn={pc,dc};
       dc.onopen=()=>sendTo(dc,{t:'hello',name:myName,av:myAv()});

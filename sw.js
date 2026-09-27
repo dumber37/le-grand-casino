@@ -6,7 +6,7 @@
    versionné : à chaque changement de fichiers, incrémenter le
    suffixe fait automatiquement place nette de l'ancien cache.
    ============================================================ */
-const CACHE_NAME = 'grand-casino-v8';
+const CACHE_NAME = 'grand-casino-v9';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './css/base.css', './css/slots.css', './css/dragon-slots.css', './css/blackjack.css',
