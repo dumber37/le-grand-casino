@@ -120,8 +120,14 @@
     const win=Math.round(s.bet*currentMult);
     if(s.kind==='me'){
       C.state.balance+=win; C.saveBalance(); C.renderBalance(); C.recordGame('crash',s.bet,win);
-      msg.textContent='Encaissé à x'+currentMult.toFixed(2)+' ! +'+win+' jetons';
-      C.flashScreen(); C.flashWin(msg);
+      C.flashScreen();
+      // Toast + son directement, SANS jamais passer par msg.textContent : ce champ est partagé
+      // et rediffusé à tout le salon par render() (même instantané pour tous les joueurs) — s'il
+      // portait mon message personnel, tous les amis le verraient s'afficher chez eux comme si
+      // c'était leur propre gain. Ma ligne dans la liste des sièges (déjà personnalisée, propre
+      // à chacun) suffit à afficher mon résultat sans toucher au message commun.
+      C.showToast('Encaissé à x'+currentMult.toFixed(2)+' ! +'+win+' jetons');
+      C.sound&&C.sound('win');
       crashHistory.push(currentMult); renderHistory();
     } else if(s.kind==='remote'){ F().sendPeer(s.peerId,{t:'cr_end',total:s.bet,won:win,mult:currentMult}); }
     render();
@@ -200,8 +206,13 @@
         const total=parseInt(m.total,10)||0, won=parseInt(m.won,10)||0;
         C.state.balance+=won; C.saveBalance(); C.renderBalance(); guestInvested=0;
         C.recordGame('crash',total,won);
-        if(won>0){ C.flashScreen(); C.flashWin(msg); crashHistory.push(typeof m.mult==='number'?m.mult:won/total); renderHistory(); }
-        else { C.flashLoss(displayEl); crashHistory.push(typeof m.cp==='number'?m.cp:crashPoint); renderHistory(); }
+        if(won>0){
+          C.flashScreen(); C.showToast('Encaissé à x'+(typeof m.mult==='number'?m.mult.toFixed(2):(won/total).toFixed(2))+' ! +'+won+' jetons'); C.sound&&C.sound('win');
+          crashHistory.push(typeof m.mult==='number'?m.mult:won/total); renderHistory();
+        } else {
+          C.flashLoss(displayEl);
+          crashHistory.push(typeof m.cp==='number'?m.cp:crashPoint); renderHistory();
+        }
       }
     });
     F().onPeerLeft(id=>{
