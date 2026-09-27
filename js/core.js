@@ -469,10 +469,26 @@ window.Casino = (function(){
   // resynchroniser à la main les nombreuses variables en mémoire de chaque module.
   const SAVE_KEYS=[BAL_KEY,WAG_KEY,STREAK_KEY,BEST_STREAK_KEY,LAST_KEY,THEME_KEY,STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,MISSIONS_KEY,PSEUDO_KEY,AVATAR_KEY,'grand-casino-sound','grand-casino-challenges'];
   const SAVE_JSON_KEYS=[STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,MISSIONS_KEY,'grand-casino-challenges'];
-  function exportSave(){
+  // buildSaveObject/applySaveObject : le coeur commun de l'export/import fichier ci-dessous,
+  // exposé sur C au cas où un autre module voudrait le réutiliser plus tard (même format,
+  // même validation, plutôt que d'en recréer une variante).
+  function buildSaveObject(){
     const data={};
     SAVE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
-    const payload={app:'grand-casino', version:1, exportedAt:new Date().toISOString(), data};
+    return {app:'grand-casino', version:1, exportedAt:new Date().toISOString(), data};
+  }
+  function applySaveObject(payload){
+    if(!validateSaveData(payload)) return false;
+    SAVE_KEYS.forEach(k=>{
+      try{ if(payload.data[k]!==undefined) localStorage.setItem(k, payload.data[k]); else localStorage.removeItem(k); }catch(e){}
+    });
+    return true;
+  }
+  C.buildSaveObject = buildSaveObject;
+  C.applySaveObject = applySaveObject;
+  C.reloadAfterImport = function(msg){ showToast(msg||'✅ Sauvegarde importée — rechargement...'); setTimeout(()=>location.reload(), 900); };
+  function exportSave(){
+    const payload=buildSaveObject();
     const blob=new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a'); a.href=url; a.download='grand-casino-sauvegarde-'+todayStr()+'.json';
@@ -498,11 +514,8 @@ window.Casino = (function(){
       try{ payload=JSON.parse(reader.result); }catch(e){ showToast('❌ Fichier illisible (JSON invalide)'); return; }
       if(!validateSaveData(payload)){ showToast('❌ Fichier de sauvegarde invalide ou corrompu'); return; }
       if(!confirm('Importer cette sauvegarde va remplacer TOUTES tes données actuelles (solde, statistiques, historique, favoris, achievements, missions...). Continuer ?')) return;
-      SAVE_KEYS.forEach(k=>{
-        try{ if(payload.data[k]!==undefined) localStorage.setItem(k, payload.data[k]); else localStorage.removeItem(k); }catch(e){}
-      });
-      showToast('✅ Sauvegarde importée — rechargement...');
-      setTimeout(()=>location.reload(), 900);
+      applySaveObject(payload);
+      C.reloadAfterImport();
     };
     reader.onerror=()=>showToast('❌ Impossible de lire le fichier');
     reader.readAsText(file);
