@@ -68,14 +68,17 @@ window.Casino = window.Casino || {};
 
       const results=[weighted(),weighted(),weighted()];
       const stopAt=[9,11,13]; let count=0;
-      const iv=setInterval(()=>{
+      // Rythme "physique" plutôt qu'un tic strictement constant : les rouleaux défilent vite au
+      // début puis ralentissent avant de s'arrêter, comme une vraie machine à sous. Seul le
+      // RYTHME visuel change (le délai entre deux images s'allonge progressivement) — le tirage
+      // et les indices d'arrêt (stopAt/results, déjà déterminés ci-dessus) restent identiques.
+      function tick(){
         count++;
         reels.forEach((r,i)=>{ if(count<stopAt[i]) r.textContent=weighted().icon; });
         stopAt.forEach((s,i)=>{
           if(count===s){ reels[i].textContent=results[i].icon; reels[i].classList.remove('spin-active'); bounceReel(reels[i]); }
         });
         if(count>=stopAt[2]){
-          clearInterval(iv);
           const icons=results.map(r=>r.icon);
           let win=0;
           if(icons[0]===icons[1]&&icons[1]===icons[2]){
@@ -95,8 +98,11 @@ window.Casino = window.Casino || {};
           C.state.balance+=win; C.saveBalance(); C.renderBalance();
           C.recordGame(opts.gameKey, bet, win); if(win>0) C.flashWin(msg);
           spinning=false; lever.classList.remove('pulled'); render();
+          return;
         }
-      },90);
+        setTimeout(tick, Math.min(58+count*count*0.85, 165));
+      }
+      setTimeout(tick, 58);
     }
     lever.addEventListener('click',doSpin);
     render();

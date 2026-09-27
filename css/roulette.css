@@ -37,6 +37,17 @@
 .wheel-pointer{position:absolute;left:50%;top:2px;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:14px solid var(--gold-bright);z-index:5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .ball-orbit{position:absolute;inset:10px;transition:transform 3.4s cubic-bezier(.1,.7,.2,1);pointer-events:none}
 .ball{position:absolute;top:4px;left:50%;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ccc);box-shadow:0 0 5px rgba(0,0,0,.6)}
+/* Petit rebond au moment où la bille se pose dans la case — purement 2D (translateY),
+   jamais de rotation 3D : aucun rapport avec le bug backface-visibility déjà rencontré
+   ailleurs (cartes), qui ne concerne que le retournement animé d'une face 3D. */
+.ball.ball-settle{animation:ballSettle .5s cubic-bezier(.36,1.4,.4,1)}
+@keyframes ballSettle{
+  0%{transform:translateY(0)}
+  30%{transform:translateY(3px)}
+  55%{transform:translateY(-2px)}
+  80%{transform:translateY(1px)}
+  100%{transform:translateY(0)}
+}
 .wheel-center{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold-bright),var(--gold));box-shadow:0 3px 8px rgba(0,0,0,.5);z-index:3}
 .wheel-result-text{text-align:center;color:var(--gold-bright);font-size:1rem;margin-bottom:8px}
 

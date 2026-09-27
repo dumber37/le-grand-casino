@@ -58,7 +58,7 @@
   function resetGraph(){
     points=[{x:0,y:H}]; currentMult=1;
     multEl.classList.remove('busted'); multEl.textContent='x1.00';
-    lineEl.setAttribute('points',''); rocket.style.left='0%'; rocket.style.bottom='0%';
+    lineEl.setAttribute('points',''); rocket.style.left='0%'; rocket.style.bottom='0%'; rocket.style.transform='';
   }
   function myCommit(){
     if(myBet>C.state.balance){ msg.textContent='Solde insuffisant.'; return; }
@@ -98,6 +98,7 @@
     points.push({x,y});
     lineEl.setAttribute('points', points.map(p=>p.x+','+p.y).join(' '));
     rocket.style.left=(x/W*100)+'%'; rocket.style.bottom=((1-y/H)*100)+'%';
+    R().updateRocketFx(rocket, rocket.parentElement, points);
     renderSeats();
   }
   function crashRound(){

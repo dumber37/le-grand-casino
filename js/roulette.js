@@ -124,6 +124,10 @@
       resultText.textContent=result+' — '+col.charAt(0).toUpperCase()+col.slice(1);
       resultText.style.color=col==='rouge'?'var(--red)':(col==='noir'?'var(--cream)':'#4fce85');
       msg.textContent=win>0?('Gagné +'+win+' jetons'):'Perdu';
+      // Petit rebond de la bille au moment où elle se pose, comme une vraie bille qui
+      // finit de rouler dans la case plutôt que de s'arrêter net.
+      const ballEl=ballOrbitEl.querySelector('.ball');
+      if(ballEl){ ballEl.classList.remove('ball-settle'); void ballEl.offsetWidth; ballEl.classList.add('ball-settle'); }
 
       spinHistory.push({n:result, color:col}); renderSpinHistory();
 

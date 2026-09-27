@@ -4,7 +4,18 @@
    affiche sa valeur dans un disque central, la tranche porte les
    marques blanches (♠ ♥ ♦ ♣ stylisées).
    ============================================================ */
-.chips{display:inline-flex;align-items:flex-end;gap:2px;transform:scale(var(--cs,1));transform-origin:bottom center;vertical-align:bottom}
+.chips{display:inline-flex;align-items:flex-end;gap:2px;transform:scale(var(--cs,1));transform-origin:bottom center;vertical-align:bottom;
+  /* Petit "dépôt" de la pile de jetons sur le tapis, comme une vraie pile qu'on pose plutôt
+     qu'un simple pop instantané — même courbe de rebond que cardPopIn/reelBounce/coinBounceWin,
+     pour rester cohérent avec le reste de l'app. Rejoué à chaque re-rendu (comme les cartes,
+     recréées elles aussi à chaque appel) : volontairement bref et discret pour ne jamais gêner. */
+  animation:chipsDrop .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes chipsDrop{
+  0%{opacity:0;transform:scale(var(--cs,1)) translateY(-12px)}
+  60%{opacity:1;transform:scale(var(--cs,1)) translateY(2px)}
+  100%{opacity:1;transform:scale(var(--cs,1)) translateY(0)}
+}
 .cstack{position:relative;display:inline-block;width:30px;flex-shrink:0}
 .pc{position:absolute;left:0;width:30px;height:13px;border-radius:50%;background:var(--c);
   border:1px solid rgba(0,0,0,.4);

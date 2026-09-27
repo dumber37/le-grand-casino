@@ -25,7 +25,8 @@
     RATE: 0.15, MAXMULT,
     genCrashPoint: function(){ return crashPointFromR(Math.random()); },
     multFromElapsed: function(elapsed){ return Math.exp(0.15*elapsed); },
-    yFor: function(mult){ return yFor(mult); }
+    yFor: function(mult){ return yFor(mult); },
+    updateRocketFx: function(el,wrapEl,pts){ return updateRocketFx(el,wrapEl,pts); }
   };
   // Mode transparence : explique la formule, avec les chiffres réels de la dernière manche
   // une fois qu'une manche a eu lieu — purement pédagogique, ne change rien au tirage.
@@ -35,6 +36,29 @@
     infoEl.textContent = lastR===null ? base : (base+' Dernière manche : r = '+lastR.toFixed(4)+' → 0,99 / (1 − '+lastR.toFixed(4)+') = x'+crashPoint.toFixed(2)+'.');
   }
   function yFor(mult){ return H-Math.min(H-8, (Math.log(mult)/Math.log(MAXMULT))*(H-8)); }
+  // Inclinaison + étincelles de la fusée : purement décoratif, aucune rotation 3D (juste un
+  // rotate() 2D en plus de translate, comme le reste de l'app) — sans rapport avec le bug
+  // backface-visibility déjà rencontré (qui ne concerne que le retournement animé de cartes).
+  // La pente locale (delta x/y entre les deux derniers points) pilote une inclinaison légère
+  // autour de l'angle de base, plus verticale au décollage puis plus à plat plus tard, comme
+  // la vraie courbe (log) qui s'aplatit avec le temps.
+  let sparkTick=0;
+  function updateRocketFx(el, wrapEl, pts){
+    if(pts.length>=2){
+      const a=pts[pts.length-2], b=pts[pts.length-1];
+      const dx=Math.max(0.01,b.x-a.x), dy=a.y-b.y;
+      const steep=Math.max(0,Math.min(1, dy/(dx+Math.abs(dy)+0.01)));
+      const angle=-35+(steep-0.5)*30;
+      el.style.transform='translate(-50%,50%) rotate('+Math.max(-55,Math.min(-15,angle))+'deg)';
+    }
+    sparkTick++;
+    if(wrapEl&&sparkTick%3===0){
+      const s=document.createElement('span'); s.className='crash-spark'; s.textContent='✨';
+      s.style.left=el.style.left; s.style.bottom=el.style.bottom;
+      wrapEl.appendChild(s);
+      setTimeout(()=>s.remove(),560);
+    }
+  }
   function renderCrashHistory(){
     histEl.innerHTML='';
     crashHistory.slice(-8).forEach(h=>{ const s=document.createElement('span'); s.textContent='x'+h.toFixed(2); s.style.color=h<2?'var(--red)':'#4fce85'; histEl.appendChild(s); });
@@ -43,7 +67,7 @@
     if(C.state.balance<bet){ msg.textContent='Solde insuffisant.'; return; }
     C.state.balance-=bet; C.trackWager(bet); C.saveBalance(); C.renderBalance();
     crashPoint=genCrashPoint(); currentMult=1; active=true; startTime=Date.now(); points=[{x:0,y:H}];
-    multEl.classList.remove('busted'); multEl.textContent='x1.00'; lineEl.setAttribute('points',''); rocket.style.left='0%'; rocket.style.bottom='0%';
+    multEl.classList.remove('busted'); multEl.textContent='x1.00'; lineEl.setAttribute('points',''); rocket.style.left='0%'; rocket.style.bottom='0%'; rocket.style.transform='';
     msg.textContent='En vol...'; actionsEl.style.display='flex'; render(); renderCrashInfo();
     iv=setInterval(()=>{
       const elapsed=(Date.now()-startTime)/1000;
@@ -54,6 +78,7 @@
       points.push({x,y});
       lineEl.setAttribute('points', points.map(p=>p.x+','+p.y).join(' '));
       rocket.style.left=(x/W*100)+'%'; rocket.style.bottom=((1-y/H)*100)+'%';
+      updateRocketFx(rocket, rocket.parentElement, points);
     },60);
   }
   function crash(){
