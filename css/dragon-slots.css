@@ -1,0 +1,66 @@
+/* ============================================================
+   FORTUNE DRAGON — thème chinois (rouge/or, touches noires).
+   Reprend les classes génériques de slots.css (reel-bounce,
+   symbol-blink, win-line, coin-fall) avec une palette dédiée.
+   ============================================================ */
+
+#view-dragon .panel{border-color:#c9302c}
+#view-dragon .scene-header .sh-name{color:#ffd479}
+#view-dragon .panel.dragon-stage{
+  background:
+    radial-gradient(circle at 50% -5%, rgba(220,30,40,.32), transparent 55%),
+    radial-gradient(circle at 12% 95%, rgba(212,175,55,.12), transparent 40%),
+    linear-gradient(180deg,#120507,#060102);
+}
+
+/* ---- Cabinet haut rouge et noir : bandeau supérieur néon, bannières jackpot
+   (Grand/Major/Minor/Mini = vrais multiplicateurs de la machine), écran doré,
+   pupitre noir à touches, socle chromé. Purement visuel. ---- */
+.cab-dragon{
+  max-width:400px;padding:12px 12px 10px;border-radius:24px 24px 12px 12px;
+  background:linear-gradient(180deg,#e0141f 0%,#a20a13 42%,#5a0509 100%);
+  box-shadow:0 16px 34px rgba(0,0,0,.65),inset 0 2px 0 rgba(255,255,255,.28),0 0 0 3px #260204,0 0 0 5px #d4af37;
+}
+.dr-topper{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 8px;border-radius:14px;
+  background:#0b0203;border:3px solid #ff2a2a;box-shadow:0 0 18px rgba(255,42,42,.75),inset 0 0 22px rgba(255,42,42,.3)}
+.dr-title{font-size:1.2rem;font-weight:bold;letter-spacing:.13em;color:#ffd479;text-shadow:0 0 8px #ff3b30,0 0 22px #ff3b30}
+.dr-fu{font-size:1.5rem;color:#ffd479;text-shadow:0 0 10px #ff3b30}
+.dr-jackpots{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+.dr-jp,.dr-jp-row{border-radius:10px}
+.dr-jp{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:.78rem;font-weight:bold;letter-spacing:.06em;border:2px solid rgba(0,0,0,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.dr-jp b{font-size:1rem;font-variant-numeric:tabular-nums}
+.dr-grand{background:linear-gradient(180deg,#ffe27a,#c8901a);color:#6a0a0a;font-size:.9rem}
+.dr-major{background:linear-gradient(180deg,#8a0f18,#4a060b);color:#ffe27a;border-color:#3b78ff}
+.dr-jp-row{display:flex;gap:5px}
+.dr-jp-row .dr-jp{flex:1}
+.dr-minor{background:linear-gradient(180deg,#9b3fd0,#4c1275);color:#ffe6ff}
+.dr-mini{background:linear-gradient(180deg,#ff5a8a,#a2124a);color:#fff}
+.dr-screen{margin-top:8px;background:#050101;border:3px solid #d4af37;border-radius:12px;padding:10px;box-shadow:inset 0 0 22px rgba(0,0,0,.9)}
+.dr-screen .message{margin:10px 0 0}
+#view-dragon .reels{box-shadow:inset 0 8px 14px rgba(0,0,0,.7),0 0 0 2px #7a1a10}
+.dr-deck{margin-top:8px;padding:10px;border-radius:10px;background:linear-gradient(180deg,#232323,#060606);border:1px solid #4a4a4a}
+.dr-keys{display:flex;gap:6px;justify-content:center;margin-bottom:10px}
+.dr-keys i{width:30px;height:13px;border-radius:4px;background:linear-gradient(180deg,#3a3a3a,#111);border:1px solid #666;box-shadow:0 0 6px rgba(255,60,50,.55)}
+.dr-keys i:nth-child(4){background:linear-gradient(180deg,#ff6a5c,#a01008);box-shadow:0 0 9px rgba(255,60,50,.9)}
+.dr-slot{height:10px;margin:10px 26px 0;border-radius:5px;background:#000;box-shadow:inset 0 0 6px #000,0 1px 0 rgba(255,255,255,.18)}
+.dr-base{margin-top:8px;padding:6px;border-radius:8px;text-align:center;font-size:.64rem;font-weight:bold;letter-spacing:.32em;color:#1a1a1a;
+  background:linear-gradient(180deg,#d6d9de,#7d8189 60%,#4b4e54);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+
+#view-dragon .reel{background:#160707;border:1px solid #c9302c}
+#view-dragon .reel.spin-active{border-color:#ffd479;box-shadow:0 0 14px rgba(201,48,44,.65)}
+#view-dragon .reels{background:#0c0303;border:1px solid rgba(201,48,44,.4)}
+
+#view-dragon .lever-col{background:rgba(20,4,4,.7);border-color:#c9302c}
+#view-dragon .lever-track{border-color:#c9302c}
+#view-dragon .lever-handle{background:radial-gradient(circle at 35% 30%, #ff6b57, #8a1210);border-color:#3a0605}
+
+#view-dragon .win-line{background:linear-gradient(90deg,transparent,#ffd479,transparent);box-shadow:0 0 10px 2px rgba(255,212,121,.85)}
+
+/* Le dragon est le symbole jackpot : flourish rouge/or plus intense que le générique */
+#view-dragon .reel.jackpot-flourish{animation:dragonJackpot .7s ease-in-out 2}
+@keyframes dragonJackpot{
+  0%,100%{transform:scale(1);filter:brightness(1)}
+  50%{transform:scale(1.2);filter:brightness(1.9) drop-shadow(0 0 10px #ff3b30) drop-shadow(0 0 22px #ffd479)}
+}
+
+#view-dragon .paytable{border-top-color:rgba(201,48,44,.4)}

@@ -1,0 +1,48 @@
+/* ============================================================
+   AVATARS & CROUPIERS — pastilles rondes des joueurs/bots et
+   illustration du croupier (animation « il distribue » : le bras
+   balaie à chaque carte donnée / bille lancée).
+   ============================================================ */
+
+.av{display:inline-block;vertical-align:middle;border-radius:50%;overflow:hidden;flex-shrink:0;
+  border:1.5px solid var(--gold);box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.av svg{display:block;width:100%;height:100%}
+
+.dealer{display:flex;flex-direction:column;align-items:center;gap:1px;margin:0 auto 4px;pointer-events:none}
+.dealer svg{width:96px;height:96px;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.55));animation:dealerBreath 4.5s ease-in-out infinite}
+.dealer-label{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-bright);opacity:.85}
+@keyframes dealerBreath{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+
+.dealer .d-arm{transform-box:fill-box;transform-origin:0% 0%}
+.dealer.dealing .d-arm{animation:dealSweep .6s cubic-bezier(.3,.6,.4,1)}
+@keyframes dealSweep{0%{transform:rotate(0)}35%{transform:rotate(-34deg) translateX(-2px)}70%{transform:rotate(14deg)}100%{transform:rotate(0)}}
+
+/* Dans les sièges : avatar au-dessus du nom */
+.pk-av{display:flex;justify-content:center;margin-bottom:2px}
+.bj-ai-seat .zone-label span:first-child,.bus-rival .rival-name,.bc-ai-seat .ai-name,.fr-player span:first-child{display:inline-flex;align-items:center;gap:6px}
+/* Éditeur d'avatar (Profil) */
+#pf-avatar{overflow:hidden;padding:0}
+#pf-avatar .av{border:none;box-shadow:none}
+.av-details{margin:0 0 14px}
+.av-details summary{font-size:.86rem;color:var(--gold-bright)}
+.av-editor{margin-top:10px;padding:12px;border:1px dashed var(--border);border-radius:12px;background:rgba(0,0,0,.2)}
+.avx-preview{display:flex;justify-content:center;margin-bottom:10px}
+.avx-row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:.76rem;color:var(--muted)}
+.avx-row>span{width:74px;flex-shrink:0}
+.avx-opts,.avx-sws{display:flex;flex-wrap:wrap;gap:6px}
+.avx-opts button,.avx-actions button{background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:5px 10px;font-family:inherit;font-size:.74rem;cursor:pointer}
+.avx-opts button.sel{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;font-weight:bold}
+.avx-sw{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.25);cursor:pointer;padding:0}
+.avx-sw.sel{border-color:var(--gold-bright);box-shadow:0 0 0 2px rgba(242,214,117,.55)}
+.avx-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+/* Sélecteur de mode : classique (IA) / multijoueur */
+.mode-switch{display:flex;gap:0;margin:0 0 12px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.mode-switch button{flex:1;background:var(--bg-deep);border:none;color:var(--muted);padding:9px 6px;font-family:inherit;font-size:.78rem;cursor:pointer;transition:background .15s ease,color .15s ease}
+.mode-switch button+button{border-left:1px solid var(--border)}
+.mode-switch button.sel{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;font-weight:bold}
+.mode-switch button:hover:not(.sel){background:rgba(212,175,55,.1);color:var(--cream)}
+
+.zl-me{display:inline-flex;align-items:center;gap:6px}
+.bj-ai-seat .zone-label span:first-child .av,.bus-rival .av,.bc-ai-seat .av{margin-right:0}
+@media (prefers-reduced-motion:reduce){ .dealer svg{animation:none} .dealer.dealing .d-arm{animation:none} }

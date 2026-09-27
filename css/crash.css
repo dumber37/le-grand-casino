@@ -1,0 +1,31 @@
+/* ============================================================
+   CRASH — multiplicateur, graphique, historique des crashs.
+   ============================================================ */
+
+#view-crash .panel{border-color:#c96a1f}
+#view-crash .primary-btn{background:linear-gradient(180deg,#ffb066,#c96a1f);color:#2a1503}
+#view-crash .scene-header .sh-name{color:#ffb066}
+
+.crash-display{text-align:center;padding:16px 10px 6px;position:relative}
+.crash-mult{font-size:2.6rem;font-weight:bold;color:#4fce85;transition:color .2s ease}
+.crash-mult.busted{color:var(--red);animation:mineShake .4s ease}
+/* Animation signature : tremblement plus marqué (tout l'affichage, pas juste le multiplicateur) au crash */
+.crash-display.crash-shake{animation:crashShake .5s ease}
+@keyframes crashShake{
+  0%,100%{transform:translateX(0)}
+  15%{transform:translateX(-10px) rotate(-1deg)}
+  30%{transform:translateX(9px) rotate(1deg)}
+  45%{transform:translateX(-7px)}
+  60%{transform:translateX(6px)}
+  75%{transform:translateX(-3px)}
+  90%{transform:translateX(2px)}
+}
+.crash-graph-wrap{
+  position:relative;width:100%;max-width:320px;height:160px;margin:14px auto 0;
+  background:var(--bg-deep);border:1px solid var(--border);border-radius:10px;overflow:hidden;
+  box-shadow:inset 0 6px 12px rgba(0,0,0,.6), inset 0 -2px 6px rgba(0,0,0,.4), 0 8px 16px rgba(0,0,0,.35);
+}
+#cr-svg{width:100%;height:100%;display:block}
+.crash-rocket{position:absolute;left:0%;bottom:0%;font-size:1rem;transform:translate(-50%,50%);transition:left .06s linear,bottom .06s linear}
+.crash-history{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.crash-history span{font-size:.68rem;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:2px 7px}

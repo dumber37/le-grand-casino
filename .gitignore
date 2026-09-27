@@ -1,0 +1,16 @@
+# Dépendances (au cas où un outil npm/node serait utilisé plus tard)
+node_modules/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs / IDE
+.vscode/
+.idea/
+*.swp
+
+# Déploiement
+.vercel/
+.netlify/

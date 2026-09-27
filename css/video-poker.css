@@ -1,0 +1,23 @@
+/* ============================================================
+   VIDÉO POKER — Jacks or Better. Cartes 3D partagées (C.renderCard),
+   table feutrée partagée (.bj-table). Ce fichier ne gère que la
+   sélection des cartes à garder et la table des gains.
+   ============================================================ */
+
+.vp-cards{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:4px 0}
+.vp-slot{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:transform .15s ease}
+.vp-slot:hover{transform:translateY(-3px)}
+.vp-slot.vp-empty{width:62px;height:90px;border:2px dashed var(--border);border-radius:9px;opacity:.4}
+.vp-hold-tag{font-size:.6rem;color:var(--gold-bright);letter-spacing:.06em;min-height:11px;opacity:0;transition:opacity .15s ease;font-weight:bold}
+.vp-slot.vp-held{transform:translateY(-6px)}
+.vp-slot.vp-held .vp-hold-tag{opacity:1}
+.vp-slot.vp-held .card-face{box-shadow:0 6px 14px rgba(212,175,55,.55),0 0 0 3px var(--gold-bright)}
+
+/* Animation signature : main gagnante = halo doré + léger pulse ; perte = assombrissement discret (lossDim, partagé) */
+.vp-cards.vp-win{animation:vpWinPulse .6s ease}
+.vp-cards.vp-win .card-face{box-shadow:0 6px 14px rgba(212,175,55,.5),0 0 0 2px var(--gold-bright)}
+@keyframes vpWinPulse{0%{transform:scale(1)}40%{transform:scale(1.025)}100%{transform:scale(1)}}
+
+.vp-paytable{margin:14px 0;font-size:.76rem;color:var(--muted);border-top:1px dashed var(--border);border-bottom:1px dashed var(--border);padding:8px 2px}
+.vp-paytable div{display:flex;justify-content:space-between;padding:4px 6px;border-radius:6px;transition:background .2s ease,color .2s ease}
+.vp-paytable div.vp-hit{background:rgba(212,175,55,.18);color:var(--gold-bright);font-weight:bold}

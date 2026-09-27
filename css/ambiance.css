@@ -1,0 +1,22 @@
+/* ============================================================
+   AMBIANCE — particules dorées flottantes, discrètes, purement
+   décoratives (pointer-events:none, derrière tout le contenu).
+   ============================================================ */
+
+.ambient-layer{
+  position:fixed;inset:0;z-index:1;overflow:hidden;pointer-events:none;
+}
+.ambient-particle{
+  position:absolute;bottom:-10px;border-radius:50%;
+  background:radial-gradient(circle,var(--gold-bright),var(--gold) 60%,transparent 75%);
+  box-shadow:0 0 6px 1px rgba(212,175,55,.5);
+  animation:ambientFloat linear infinite;
+}
+@keyframes ambientFloat{
+  0%{ transform:translate(0,0); opacity:0; }
+  8%{ opacity:1; }
+  92%{ opacity:1; }
+  100%{ transform:translate(var(--drift,20px),-105vh); opacity:0; }
+}
+/* Le contenu doit rester au-dessus de la couche de particules */
+.shell{position:relative;z-index:2}

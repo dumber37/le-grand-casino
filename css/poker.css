@@ -1,0 +1,49 @@
+/* ============================================================
+   POKER TEXAS HOLD'EM — table feutrée (réutilise .bj-table et les
+   cartes 3D partagées), sièges des IA, tableau, actions.
+   ============================================================ */
+
+#view-poker .panel{border-color:#2f7a5a}
+#view-poker .scene-header .sh-name{color:#8fe3c0}
+
+.pk-table{padding:14px 10px 12px}
+/* Pas d'animation d'apparition à chaque rendu : seules les cartes du tableau
+   fraîchement distribuées (.pk-new) "pop". */
+.pk-table .card-3d{animation:none}
+.pk-table .card-3d.pk-new{animation:cardPopIn .35s ease}
+
+.pk-seats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.pk-seat{
+  background:rgba(0,0,0,.28);border:1px solid rgba(212,175,55,.25);border-radius:10px;
+  padding:6px 4px;text-align:center;font-size:.72rem;
+  transition:opacity .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.pk-seat.folded{opacity:.42}
+.pk-seat.turn{border-color:var(--gold-bright);box-shadow:0 0 12px rgba(242,214,117,.45)}
+.pk-seat.win{border-color:#4fce85;box-shadow:0 0 14px rgba(79,206,133,.55)}
+.pk-name{color:var(--cream);font-size:.76rem}
+.pk-stack{color:var(--gold-bright);font-variant-numeric:tabular-nums;margin-bottom:2px}
+.pk-cards{display:flex;justify-content:center;gap:3px;margin:4px 0;min-height:56px}
+.pk-info{color:var(--muted);font-size:.68rem;min-height:1.3em}
+.pk-dealer{display:inline-block;background:var(--gold-bright);color:#2a1f05;border-radius:50%;width:16px;height:16px;line-height:16px;font-size:.6rem;font-weight:bold;margin-left:5px}
+
+.pk-center{text-align:center;margin:6px 0 10px}
+.pk-pot{color:var(--gold-bright);font-size:.92rem;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.pk-potchips{display:flex;justify-content:center;align-items:flex-end;min-height:26px;margin-bottom:8px}
+.pk-bet{display:flex;justify-content:center;align-items:flex-end;margin-top:4px;min-height:22px}
+.pk-board{display:flex;justify-content:center;gap:5px;min-height:74px}
+.pk-board .card-3d.lg{width:50px;height:74px}
+.pk-board .card-3d.lg .card-face{font-size:1.05rem}
+.pk-slot{width:50px;height:74px;border:2px dashed rgba(212,175,55,.25);border-radius:8px}
+
+.pk-me-seat{max-width:220px;margin:0 auto}
+.pk-me-seat .pk-cards{min-height:90px;gap:6px}
+
+/* Barre multijoueur : état du salon, complétion par des IA, raccourci vers le salon */
+.pk-mp{align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px dashed var(--border);border-radius:10px;font-size:.76rem;color:var(--muted)}
+.pk-mp .fr-copy{margin-top:0;padding:5px 10px;font-size:.72rem}
+.pk-fill{display:flex;align-items:center;gap:5px;cursor:pointer}
+.pk-fill input{accent-color:var(--gold)}
+.pk-actions{margin-top:4px}
+.pk-quick{margin-bottom:8px}
+#pk-raiseBox{margin-top:8px}

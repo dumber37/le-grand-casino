@@ -1,0 +1,183 @@
+/* ============================================================
+   BLACKJACK
+   ============================================================ */
+(function(){
+  const C=window.Casino;
+  let bet=0, deck=[], hands=[], dealerHand=[], currentIdx=0, inRound=false, hasSplit=false;
+  const betEl=document.getElementById('bj-betAmount'), msg=document.getElementById('bj-message');
+  const dealerCardsEl=document.getElementById('bj-dealerCards'), dealerScoreEl=document.getElementById('bj-dealerScore');
+  const playerZonesEl=document.getElementById('bj-playerZones');
+  const dealBtn=document.getElementById('bj-dealBtn'), hitBtn=document.getElementById('bj-hitBtn'), standBtn=document.getElementById('bj-standBtn');
+  const doubleBtn=document.getElementById('bj-doubleBtn'), splitBtn=document.getElementById('bj-splitBtn');
+  function cardValue(c){ if(c.r==='A') return 11; if(['J','Q','K'].includes(c.r)) return 10; return parseInt(c.r,10); }
+  function handScore(cards){ let s=cards.reduce((a,c)=>a+cardValue(c),0); let aces=cards.filter(c=>c.r==='A').length; while(s>21&&aces>0){s-=10;aces--;} return s; }
+  // Règles exposées telles quelles (mêmes calculs que le solo) pour le Blackjack multijoueur —
+  // aucune règle dupliquée : js/multi-blackjack.js appelle exactement ce code.
+  function payoutFor(pCards,dCards,betAmt,doubled){
+    const p=handScore(pCards), d=handScore(dCards), dealerBJ=d===21&&dCards.length===2;
+    const naturalBJ=p===21&&pCards.length===2&&!doubled;
+    if(p>21) return {win:0,cls:'hand-loss',label:'perdu'};
+    if(naturalBJ){ if(dealerBJ) return {win:betAmt,cls:null,label:'égalité'}; const w=Math.round(betAmt*2.5); return {win:w,cls:'hand-blackjack',label:'blackjack ! +'+w}; }
+    if(d>21||p>d){ const w=betAmt*2; return {win:w,cls:'hand-win',label:'gagné +'+w}; }
+    if(p===d) return {win:betAmt,cls:null,label:'égalité'};
+    return {win:0,cls:'hand-loss',label:'perdu'};
+  }
+  C.bjRules={cardValue,handScore,payoutFor,dealerShouldHit:h=>handScore(h)<17,aiShouldHit:(cards,dealerUp,risky)=>{
+    let s=cards.reduce((a,c)=>a+cardValue(c),0), aces=cards.filter(c=>c.r==='A').length;
+    while(s>21&&aces>0){ s-=10; aces--; }
+    const soft=aces>0, up=cardValue(dealerUp);
+    if(s>=21) return false;
+    if(risky) return s<=16||(soft&&s<=17);
+    if(soft) return s<=17||(s===18&&up>=9);
+    if(s<=11) return true;
+    if(s===12) return !(up>=4&&up<=6);
+    if(s<=16) return up>=7;
+    return false;
+  }};
+
+  // ---- Joueurs IA à la table : jouent leur main depuis la même pioche, contre le même croupier.
+  // Purement décoratifs pour le solde : aucune mise réelle, aucun effet sur tes gains ni sur les
+  // règles. Léa suit la stratégie de base ; Marco est plus téméraire (tire jusqu'à 16). ----
+  const AI_SEATS=[{name:'Léa',icon:'🦊',risky:false},{name:'Marco',icon:'🎩',risky:true}];
+  let aiHands=AI_SEATS.map(()=>({cards:[],result:''}));
+  const aiSeatsEl=document.getElementById('bj-aiSeats');
+  function handInfo(cards){
+    let s=cards.reduce((a,c)=>a+cardValue(c),0), aces=cards.filter(c=>c.r==='A').length;
+    while(s>21&&aces>0){ s-=10; aces--; }
+    return {s, soft:aces>0};
+  }
+  function aiShouldHit(cards,risky){
+    const {s,soft}=handInfo(cards); const up=cardValue(dealerHand[0]);
+    if(s>=21) return false;
+    if(risky) return s<=16||(soft&&s<=17);
+    if(soft) return s<=17||(s===18&&up>=9);
+    if(s<=11) return true;
+    if(s===12) return !(up>=4&&up<=6);
+    if(s<=16) return up>=7;
+    return false;
+  }
+  function playAiHands(){
+    aiHands.forEach((h,i)=>{ while(h.cards.length&&aiShouldHit(h.cards,AI_SEATS[i].risky)){ h.cards.push(deck.pop()); C.sound&&C.sound('card'); } });
+  }
+  function resolveAi(){
+    const d=handScore(dealerHand), dealerBJ=d===21&&dealerHand.length===2;
+    aiHands.forEach(h=>{
+      if(!h.cards.length){ h.result=''; return; }
+      const p=handScore(h.cards), bj=p===21&&h.cards.length===2;
+      if(p>21) h.result='Perdu';
+      else if(bj&&!dealerBJ) h.result='Blackjack !';
+      else if(d>21||p>d) h.result='Gagné';
+      else if(p===d) h.result='Égalité';
+      else h.result='Perdu';
+    });
+    renderAi();
+  }
+  function renderAi(){
+    aiSeatsEl.innerHTML='';
+    aiHands.forEach((h,i)=>{
+      const seat=document.createElement('div');
+      const res=h.result;
+      seat.className='bj-ai-seat'+(res==='Gagné'||res==='Blackjack !'?' ai-win':(res==='Perdu'?' ai-loss':''));
+      const label=document.createElement('div'); label.className='zone-label';
+      label.innerHTML='<span>'+C.avatars.html(AI_SEATS[i].name,22)+AI_SEATS[i].name+'</span><span>'+(h.cards.length?handScore(h.cards):'')+'</span>';
+      const row=document.createElement('div'); row.className='cards';
+      h.cards.forEach(c=>row.appendChild(C.renderCard(c,false)));
+      const st=document.createElement('div'); st.className='hand-bet'; st.textContent=res||(h.cards.length?'En jeu':'En attente');
+      seat.appendChild(label); seat.appendChild(row); seat.appendChild(st);
+      aiSeatsEl.appendChild(seat);
+    });
+  }
+  function renderTable(revealDealer){
+    dealerCardsEl.innerHTML='';
+    dealerHand.forEach((c,i)=>dealerCardsEl.appendChild(C.renderCard(c,i===1&&!revealDealer,true)));
+    dealerScoreEl.textContent=revealDealer?handScore(dealerHand):(dealerHand[0]?cardValue(dealerHand[0]):'');
+    renderAi();
+    playerZonesEl.innerHTML='';
+    hands.forEach((h,idx)=>{
+      const block=document.createElement('div'); block.className='hand-block'+(idx===currentIdx&&inRound?' active':'');
+      const label=document.createElement('div'); label.className='zone-label';
+      label.innerHTML='<span class="zl-me">'+C.avatars.html('Toi',22)+(hasSplit?'Main '+(idx+1):'Toi')+'</span><span>'+handScore(h.cards)+'</span>';
+      block.appendChild(label);
+      const row=document.createElement('div'); row.className='cards';
+      h.cards.forEach(c=>row.appendChild(C.renderCard(c,false,true)));
+      block.appendChild(row);
+      const betRow=document.createElement('div'); betRow.className='hand-bet';
+      betRow.innerHTML='Mise : '+h.bet+(h.doubled?' (doublée)':'')+' '+(C.chips?C.chips.html(h.bet,{scale:.7,label:false}):'');
+      block.appendChild(betRow);
+      playerZonesEl.appendChild(block);
+    });
+  }
+  function updateButtons(){
+    if(!inRound){ hitBtn.disabled=standBtn.disabled=doubleBtn.disabled=splitBtn.disabled=true; return; }
+    const hand=hands[currentIdx]; const first=hand.cards.length===2;
+    hitBtn.disabled=false; standBtn.disabled=false;
+    doubleBtn.disabled=!(first&&C.state.balance>=hand.bet);
+    const canSplit=first&&hands.length===1&&cardValue(hand.cards[0])===cardValue(hand.cards[1])&&C.state.balance>=hand.bet;
+    splitBtn.disabled=!canSplit;
+  }
+  function render(){ betEl.textContent=bet; dealBtn.disabled=inRound||bet<=0||C.state.balance<bet; updateButtons(); }
+  document.querySelectorAll('#view-blackjack .chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{
+      if(inRound) return;
+      if(chip.dataset.value==='clear'){ bet=0; render(); return; }
+      bet=Math.min(C.state.balance, bet+parseInt(chip.dataset.value,10)); render();
+    });
+  });
+  document.addEventListener('balance-changed',render);
+  function deal(){
+    if(C.state.balance<bet){msg.textContent='Solde insuffisant.';return;}
+    C.state.balance-=bet; C.trackWager(bet); C.saveBalance(); C.renderBalance();
+    deck=C.newDeck(); hands=[{cards:[deck.pop(),deck.pop()],bet:bet,done:false,doubled:false}]; dealerHand=[deck.pop(),deck.pop()];
+    aiHands=AI_SEATS.map(()=>({cards:[deck.pop(),deck.pop()],result:''}));
+    C.sound&&C.sound('card');
+    currentIdx=0; hasSplit=false; inRound=true;
+    renderTable(false); render(); msg.textContent='À toi de jouer.';
+    if(handScore(hands[0].cards)===21){ hands[0].done=true; finishFlow(); }
+  }
+  function hit(){ const hand=hands[currentIdx]; hand.cards.push(deck.pop()); C.sound&&C.sound('card'); const score=handScore(hand.cards); renderTable(false); render(); if(score>=21){ hand.done=true; finishFlow(); } }
+  function stand(){ hands[currentIdx].done=true; finishFlow(); }
+  function doubleDown(){
+    const hand=hands[currentIdx]; C.state.balance-=hand.bet; C.trackWager(hand.bet); hand.bet*=2; hand.doubled=true; hand.cards.push(deck.pop()); hand.done=true;
+    C.sound&&C.sound('card');
+    C.saveBalance(); C.renderBalance(); renderTable(false); render(); finishFlow();
+  }
+  function split(){
+    const hand=hands[0]; C.state.balance-=hand.bet; C.trackWager(hand.bet);
+    const c2=hand.cards.pop(); hand.cards.push(deck.pop());
+    hands.push({cards:[c2,deck.pop()],bet:hand.bet,done:false,doubled:false});
+    C.sound&&C.sound('card');
+    hasSplit=true; C.saveBalance(); C.renderBalance(); renderTable(false); render(); msg.textContent='Mains séparées. Joue la main 1.';
+  }
+  function finishFlow(){
+    if(currentIdx+1<hands.length){ currentIdx++; renderTable(false); render(); msg.textContent=hasSplit?'Joue la main '+(currentIdx+1)+'.':''; return; }
+    playAiHands();
+    const anyAlive=hands.some(h=>handScore(h.cards)<=21)||aiHands.some(h=>h.cards.length&&handScore(h.cards)<=21);
+    if(anyAlive){ while(handScore(dealerHand)<17){ dealerHand.push(deck.pop()); C.sound&&C.sound('card'); } }
+    inRound=false; renderTable(true); resolve();
+  }
+  function resolve(){
+    resolveAi();
+    const d=handScore(dealerHand); const dealerBJ=d===21&&dealerHand.length===2;
+    let totalWin=0; const msgs=[]; const handClasses=[];
+    hands.forEach((h,idx)=>{
+      const p=handScore(h.cards); const naturalBJ=p===21&&h.cards.length===2&&!hasSplit&&!h.doubled;
+      const tag=hasSplit?'Main '+(idx+1)+': ':''; let win=0; let cls=null;
+      if(p>21){ msgs.push(tag+'perdu'); cls='hand-loss'; }
+      else if(naturalBJ){ if(dealerBJ){win=h.bet;msgs.push(tag+'égalité');} else {win=Math.round(h.bet*2.5);msgs.push(tag+'blackjack ! +'+win); cls='hand-blackjack';} }
+      else if(d>21){ win=h.bet*2; msgs.push(tag+'gagné +'+win); cls='hand-win'; }
+      else if(p>d){ win=h.bet*2; msgs.push(tag+'gagné +'+win); cls='hand-win'; }
+      else if(p===d){ win=h.bet; msgs.push(tag+'égalité'); }
+      else { msgs.push(tag+'perdu'); cls='hand-loss'; }
+      totalWin+=win; handClasses.push(cls);
+    });
+    C.state.balance+=totalWin; C.saveBalance(); C.renderBalance(); msg.textContent=msgs.join(' · ');
+    const totalBet=hands.reduce((s,h)=>s+h.bet,0);
+    C.recordGame('blackjack', totalBet, totalWin); if(totalWin>0) C.flashWin(msg);
+    // Animation signature : mains gagnantes surélevées avec halo doré (flourish plus fort sur un blackjack naturel), pertes assombries.
+    Array.from(playerZonesEl.children).forEach((block,idx)=>{ if(handClasses[idx]) block.classList.add(handClasses[idx]); });
+  }
+  renderAi();
+  dealBtn.addEventListener('click',deal); hitBtn.addEventListener('click',hit); standBtn.addEventListener('click',stand);
+  doubleBtn.addEventListener('click',doubleDown); splitBtn.addEventListener('click',split);
+  render();
+})();

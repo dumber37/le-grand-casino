@@ -1,0 +1,29 @@
+/* ============================================================
+   RIDE THE BUS — étapes, points de progression, multiplicateur.
+   ============================================================ */
+
+#view-bus .panel{border-color:#8b6fd6}
+#view-bus .primary-btn{background:linear-gradient(180deg,#b39bef,#8b6fd6);color:#1c1030}
+#view-bus .scene-header .sh-name{color:#c3aef2}
+
+.bus-progress{display:flex;justify-content:center;gap:8px;margin-bottom:10px}
+.bus-dot{width:10px;height:10px;border-radius:50%;background:var(--glass-2);border:1px solid var(--border);transition:background .2s ease,box-shadow .2s ease}
+.bus-dot.done{background:linear-gradient(180deg,var(--gold-bright),var(--gold));box-shadow:0 0 8px rgba(212,175,55,.5);border-color:var(--gold)}
+.bus-dot.current{border-color:var(--gold-bright)}
+/* Animation signature : le point de progression vibre au moment où l'étape est validée */
+.bus-dot.dot-vibrate{animation:dotVibrate .4s ease}
+@keyframes dotVibrate{0%,100%{transform:scale(1)}25%{transform:scale(1.5)}50%{transform:scale(1.1)}75%{transform:scale(1.35)}}
+
+.bus-stage{text-align:center;color:var(--muted);font-size:.78rem;margin-bottom:6px}
+.bus-cards{display:flex;justify-content:center;gap:8px;margin:10px 0}
+.bus-mult{text-align:center;color:var(--gold-bright);font-size:.85rem;margin-bottom:8px}
+
+/* Rivaux IA : leur trajet dans le bus, comparé au tien à la fin de la manche */
+.bus-rivals{margin:2px 0 10px;font-size:.74rem}
+.bus-rival{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px dashed var(--border);color:var(--muted)}
+.bus-rival .rival-name{color:var(--cream);white-space:nowrap}
+.bus-rival .rival-res{text-align:right}
+.bus-rival.rival-best{background:rgba(79,206,133,.1);border-radius:6px}
+.bus-rival.rival-best .rival-res{color:#4fce85}
+.bus-rival.rival-out{opacity:.7}
+.rival-summary{text-align:center;color:var(--gold-bright);padding-top:6px}

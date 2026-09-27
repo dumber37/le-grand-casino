@@ -1,0 +1,106 @@
+/* ============================================================
+   ROULETTE — roue premium (bois/laiton), bille, historique des
+   numéros, et vraie table de mise en feutre (0 + grille 1-36,
+   colonnes 2:1, douzaines, mises extérieures).
+   ============================================================ */
+
+#view-roulette .panel{border-color:#a3352f}
+
+/* ---- Roue en 3D : perspective CSS + inclinaison, le spin (rotate JS) continue
+   de s'appliquer normalement sur .wheel/.ball-orbit à l'intérieur du plan incliné —
+   aucune modification du calcul de tirage n'est nécessaire. ---- */
+.wheel-3d{
+  position:relative;height:160px;margin:6px auto 8px;
+  display:flex;align-items:flex-start;justify-content:center;
+  perspective:900px;perspective-origin:50% 10%;
+}
+.wheel-3d::before{
+  /* Ombre portée au sol, pour ancrer visuellement la roue sur le feutre */
+  content:'';position:absolute;left:50%;top:130px;width:180px;height:30px;
+  transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent 72%);
+  filter:blur(1px);z-index:0;
+}
+.wheel-wrap{
+  position:relative;width:220px;height:220px;flex-shrink:0;z-index:1;
+  padding:10px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #6b4a2a, #3a2712 70%, #1e1409);
+  box-shadow:0 26px 40px rgba(0,0,0,.65), inset 0 0 0 2px rgba(212,175,55,.4), inset 0 2px 6px rgba(255,255,255,.08);
+  transform:rotateX(56deg);
+  transform-style:preserve-3d;
+}
+.wheel{position:absolute;inset:10px;border-radius:50%;border:5px solid var(--gold);box-shadow:0 8px 24px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.5);transition:transform 3.4s cubic-bezier(.14,.7,.15,1);transform-style:preserve-3d}
+.wheel span.num{position:absolute;left:50%;top:50%;font-size:.5rem;font-weight:bold;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);transform-origin:0 0}
+/* Animation signature : la case gagnante pulse/brille après l'arrêt de la bille (ne touche jamais transform, la position reste intacte) */
+.wheel span.num.wheel-num-win{animation:wheelNumWin 1s ease-in-out 2;z-index:4}
+@keyframes wheelNumWin{0%,100%{filter:none}50%{filter:drop-shadow(0 0 6px var(--gold-bright)) brightness(1.7)}}
+.wheel-pointer{position:absolute;left:50%;top:2px;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:14px solid var(--gold-bright);z-index:5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.ball-orbit{position:absolute;inset:10px;transition:transform 3.4s cubic-bezier(.1,.7,.2,1);pointer-events:none}
+.ball{position:absolute;top:4px;left:50%;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ccc);box-shadow:0 0 5px rgba(0,0,0,.6)}
+.wheel-center{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold-bright),var(--gold));box-shadow:0 3px 8px rgba(0,0,0,.5);z-index:3}
+.wheel-result-text{text-align:center;color:var(--gold-bright);font-size:1rem;margin-bottom:8px}
+
+/* ---- Historique des derniers numéros ---- */
+.rl-history{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;min-height:28px}
+.rl-history span{
+  width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:.68rem;font-weight:bold;color:#fff;
+  box-shadow:0 3px 5px rgba(0,0,0,.5), inset 0 2px 2px rgba(255,255,255,.35), inset 0 -3px 4px rgba(0,0,0,.35);
+}
+.rl-history span.rl-h-red{background:var(--red)}
+.rl-history span.rl-h-black{background:#161616;border:1px solid #3a3a3a}
+.rl-history span.rl-h-green{background:#1f7a44}
+
+/* ---- Table de mise (feutre) ---- */
+.rl-table-scroll{overflow-x:auto;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+.rl-table{
+  display:grid;grid-template-columns:38px 1fr 42px;grid-template-rows:repeat(3,34px);
+  min-width:470px;gap:3px;padding:8px;border-radius:10px 10px 0 0;
+  background:radial-gradient(ellipse at 50% 0%, #147049 0%, #0c3d2e 60%, #062a1f 100%);
+  border:2px solid var(--gold);border-bottom:none;
+  box-shadow:inset 0 0 24px rgba(0,0,0,.4);
+}
+.rl-zero{
+  grid-row:1 / 4;grid-column:1;
+  background:linear-gradient(180deg,#2a9560,#1f7a44);color:#fff;border:1px solid rgba(255,255,255,.25);
+  border-radius:6px;font-weight:bold;font-size:.85rem;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;transition:transform .12s ease,box-shadow .12s ease;
+}
+.rl-zero:hover{transform:translateY(-1px)}
+.rl-numbers{grid-row:1 / 4;grid-column:2;display:grid;grid-template-columns:repeat(12,minmax(30px,1fr));grid-template-rows:repeat(3,1fr);gap:3px}
+.rl-cell{
+  border:1px solid rgba(255,255,255,.18);border-radius:4px;color:#fff;font-weight:bold;font-size:.72rem;
+  cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.rl-cell.rl-red{background:linear-gradient(180deg,#c1443c,var(--red))}
+.rl-cell.rl-black{background:linear-gradient(180deg,#262626,#121212)}
+.rl-cell:hover{transform:translateY(-1px)}
+.rl-cols{grid-row:1 / 4;grid-column:3;display:grid;grid-template-rows:repeat(3,1fr);gap:3px}
+.rl-col{
+  background:rgba(6,20,15,.6);border:1px solid var(--gold);color:var(--gold-bright);border-radius:4px;
+  font-size:.6rem;font-weight:bold;cursor:pointer;font-family:inherit;
+}
+
+/* Sélection active — anneau doré, ne casse jamais la couleur rouge/noir d'origine */
+.rl-zero.sel,.rl-cell.sel{outline:2px solid var(--gold-bright);outline-offset:-2px;transform:scale(1.08);z-index:2;box-shadow:0 0 10px rgba(212,175,55,.75)}
+.rl-col.sel{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05}
+
+/* Case gagnante mise en avant sur la table après le résultat (numéro plein, et mise
+   extérieure — rouge/noir/douzaine/colonne... — quand c'est elle qui a été jouée) */
+.rl-zero.win-pulse,.rl-cell.win-pulse,.rl-col.win-pulse,.rl-out.win-pulse{animation:wheelNumWin 1s ease-in-out 2}
+
+.rl-outside-row{
+  display:flex;gap:3px;padding:0 8px 8px;background:#062a1f;border:2px solid var(--gold);border-top:none;
+}
+.rl-outside-row-6{border-radius:0 0 10px 10px;padding-bottom:10px}
+.rl-out{
+  flex:1;background:rgba(6,20,15,.6);border:1px solid var(--gold);color:var(--cream);border-radius:4px;
+  padding:9px 2px;font-size:.66rem;font-weight:bold;letter-spacing:.02em;cursor:pointer;font-family:inherit;
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.rl-out:hover{transform:translateY(-1px)}
+.rl-out.sel{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;box-shadow:0 4px 12px rgba(212,175,55,.35)}
+.rl-diamond{display:inline-block;width:13px;height:13px;transform:rotate(45deg);border-radius:2px}
+.rl-color-red .rl-diamond{background:var(--red)}
+.rl-color-black .rl-diamond{background:#161616;border:1px solid #4a4a4a}

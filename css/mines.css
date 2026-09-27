@@ -1,0 +1,18 @@
+/* ============================================================
+   MINES — grille de cases.
+   ============================================================ */
+
+#view-mines .panel{border-color:#a3352f}
+#view-mines .scene-header .sh-name{color:#e2988f}
+
+.mines-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:14px 0;perspective:500px}
+.mines-cell{aspect-ratio:1;background:var(--bg-deep);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:pointer;transition:transform .15s ease,background .15s ease}
+.mines-cell:hover:not(.revealed){background:rgba(212,175,55,.12);transform:translateY(-2px)}
+.mines-cell.revealed{cursor:default;animation:cellFlip .3s ease}
+.mines-cell.safe{background:rgba(31,107,58,.35);border-color:#2f8f56}
+.mines-cell.mine{background:rgba(163,53,47,.4);border-color:var(--red)}
+@keyframes cellFlip{from{transform:scale(.6) rotateY(90deg);opacity:0}to{transform:scale(1) rotateY(0deg);opacity:1}}
+/* Animation signature : les diamants révélés scintillent, la mine qui explose secoue toute la grille (pas juste la case) */
+.mines-cell.safe.diamond-twinkle{animation:diamondTwinkle 1.8s ease-in-out infinite}
+@keyframes diamondTwinkle{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35) drop-shadow(0 0 5px rgba(120,220,255,.7))}}
+.mines-grid.grid-shake{animation:mineShake .45s ease}

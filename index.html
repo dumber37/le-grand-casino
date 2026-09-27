@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Le Grand Casino</title>
+<meta name="description" content="Casino virtuel 100% fictif — jetons uniquement, aucun argent réel.">
+<meta name="theme-color" content="#0c3d2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grand Casino">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/slots.css">
+<link rel="stylesheet" href="css/dragon-slots.css">
+<link rel="stylesheet" href="css/blackjack.css">
+<link rel="stylesheet" href="css/roulette.css">
+<link rel="stylesheet" href="css/bus.css">
+<link rel="stylesheet" href="css/baccarat.css">
+<link rel="stylesheet" href="css/coinflip.css">
+<link rel="stylesheet" href="css/mines.css">
+<link rel="stylesheet" href="css/crash.css">
+<link rel="stylesheet" href="css/video-poker.css">
+<link rel="stylesheet" href="css/cases.css">
+<link rel="stylesheet" href="css/poker.css">
+<link rel="stylesheet" href="css/friends.css">
+<link rel="stylesheet" href="css/avatars.css">
+<link rel="stylesheet" href="css/chips.css">
+<link rel="stylesheet" href="css/missions.css">
+<link rel="stylesheet" href="css/vip.css">
+<link rel="stylesheet" href="css/ambiance.css">
+<link rel="stylesheet" href="css/floor.css">
+</head>
+<body>
+<div id="ambientLayer" class="ambient-layer"></div>
+<div id="toastContainer"></div>
+<div id="screenFlash" class="screen-flash"></div>
+<div class="shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">🎰 <span>Le Grand<br>Casino</span></div>
+    <nav class="side-nav">
+      <button data-view="home" class="active">🏠 Accueil</button>
+      <div class="side-section">Casino</div>
+      <button data-view="floor">🗺️ Plan du casino</button>
+      <button data-view="slots">🎰 Machines à sous</button>
+      <button data-view="dragon">🐉 Fortune Dragon</button>
+      <button data-view="blackjack">🃏 Blackjack</button>
+      <button data-view="roulette">🎡 Roulette</button>
+      <button data-view="bus">🚌 Ride the Bus</button>
+      <button data-view="baccarat">🎴 Baccarat</button>
+      <button data-view="coinflip">🪙 Pile ou Face</button>
+      <button data-view="mines">💣 Mines</button>
+      <button data-view="crash">🚀 Crash</button>
+      <button data-view="videopoker">♠️ Vidéo Poker</button>
+      <button data-view="poker">♣️ Poker (vs IA)</button>
+      <button data-view="friends">🤝 Salon entre amis</button>
+      <button data-view="cases">📦 Ouverture de Caisses</button>
+      <div class="side-section">Progression</div>
+      <button data-view="stats">📊 Statistiques</button>
+      <button data-view="history">🕘 Historique</button>
+      <button data-view="achievements">🏆 Achievements</button>
+      <button data-view="missions">🎯 Missions</button>
+      <button data-view="vip">💎 Statut VIP</button>
+      <button class="soon" disabled>🏆 Tournois <span class="tag">Bientôt</span></button>
+      <button class="soon" disabled>📊 Classement <span class="tag">Bientôt</span></button>
+      <button data-view="profil">👤 Profil</button>
+    </nav>
+    <div class="side-bottom">
+      <button data-view="parametres">⚙️ Paramètres</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu">☰</button>
+      <div class="topbar-title" id="viewTitle">Accueil</div>
+      <div class="topbar-stats">
+        <span>💰 <b id="hdrBalance">500</b></span>
+        <span>🏆 Niv. <b id="hdrLevel">1</b></span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <section class="view active" id="view-home">
+        <div class="hero">
+          <h1>BIENVENUE AU GRAND CASINO</h1>
+          <p>Votre casino virtuel — jetons fictifs uniquement</p>
+          <button class="cta" data-view="slots">JOUER MAINTENANT</button>
+        </div>
+        <div class="stat-chips">
+          <div class="chip-stat">💰<span id="home-balance">500</span><small>Solde</small></div>
+          <div class="chip-stat">🏆<span id="home-level">1</span><small>Niveau</small></div>
+          <div class="chip-stat">🔥<span id="home-streak">1</span><small>Série</small></div>
+          <div class="chip-stat">💎<span id="home-vip">Bronze</span><small>VIP</small></div>
+        </div>
+        <div class="xp-bar-wrap"><div class="xp-bar" id="xpBar"></div></div>
+        <div class="event-banner" id="event-banner" style="display:none"></div>
+        <div class="missions-home-card" data-view="missions">
+          <div class="mh-icon">🎯</div>
+          <div class="mh-body">
+            <div class="mh-title">Missions du jour</div>
+            <div class="mh-sub" id="mh-summary">0 / 3 complétées</div>
+          </div>
+          <span class="mh-arrow">→</span>
+        </div>
+        <div id="favSection" style="display:none">
+          <h2 class="section-title">Vos favoris</h2>
+          <div class="game-grid" id="favGrid"></div>
+        </div>
+        <h2 class="section-title">Jeux populaires</h2>
+        <div class="game-grid" id="popularGrid"></div>
+      </section>
+
+      <section class="view" id="view-floor"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🗺️</span><div><div class="sh-name">Plan du casino</div><div class="sh-desc">Balade-toi dans les salles — clique une table ou une zone pour y jouer</div></div></div>
+        <div class="floor-stage">
+          <div class="floor-scale">
+            <div class="floor-plane" id="floor-plane"></div>
+          </div>
+        </div>
+        <p class="floor-hint">Survole une table pour son nom, clique pour t'y installer.</p>
+      </div></section>
+
+      <section class="view" id="view-slots"><div class="panel neon-stage">
+        <div class="scene-header"><span class="sh-icon">🎰</span><div><div class="sh-name">Machine à sous</div><div class="sh-desc">3 rouleaux, tire le levier et tente le jackpot</div></div></div>
+        <div class="cab cab-neon">
+          <div class="cab-topper"><div class="cab-marquee"><span class="mq-title">SUPER CHERRY</span><span class="mq-sub">7️⃣ 7️⃣ 7️⃣ &nbsp;=&nbsp; x50</span></div></div>
+          <div class="cab-screen">
+            <div class="cab-strip"><span>🍒 x3</span><span>🍋 x5</span><span>🔔 x10</span><span>💎 x20</span><span>7️⃣ x50</span></div>
+            <div style="display:flex;gap:12px;align-items:stretch">
+              <div class="reels" id="s-reels" style="flex:1;margin-bottom:0">
+                <div class="reel" id="s-reel0">🍒</div>
+                <div class="reel" id="s-reel1">🍒</div>
+                <div class="reel" id="s-reel2">🍒</div>
+                <div class="win-line" id="s-winline"></div>
+              </div>
+              <div class="lever-col"><div class="lever-track"><div class="lever-handle" id="s-lever"></div></div><div class="lever-label">Tirer</div></div>
+            </div>
+            <div class="message" id="s-message">Bonne chance !</div>
+          </div>
+          <div class="cab-deck">
+            <div class="cab-buttons" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="bet-row" style="margin-bottom:0">
+              <div class="bet-group" style="flex:1"><button id="s-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="s-betAmount">10</span><button id="s-betPlus" aria-label="Augmenter la mise">+</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="kbd-hint" style="margin-top:12px"><kbd>Espace</kbd> pour jouer</div>
+        <div class="paytable">
+          <div><span>🍒🍒🍒</span><span>x3</span></div>
+          <div><span>🍋🍋🍋</span><span>x5</span></div>
+          <div><span>🔔🔔🔔</span><span>x10</span></div>
+          <div><span>💎💎💎</span><span>x20</span></div>
+          <div><span>7️⃣7️⃣7️⃣</span><span>x50</span></div>
+        </div>
+      </div></section>
+
+      <section class="view" id="view-dragon"><div class="panel dragon-stage">
+        <div class="scene-header"><span class="sh-icon">🐉</span><div><div class="sh-name">Fortune Dragon</div><div class="sh-desc">3 rouleaux, thème chinois — le dragon doré est le symbole jackpot</div></div></div>
+        <div class="cab cab-dragon">
+          <div class="dr-topper"><span class="dr-fu">福</span><span class="dr-title">FORTUNE DRAGON</span><span class="dr-fu">福</span></div>
+          <div class="dr-jackpots">
+            <div class="dr-jp dr-grand"><span>🐉 GRAND</span><b>x60</b></div>
+            <div class="dr-jp dr-major"><span>福 MAJOR</span><b>x25</b></div>
+            <div class="dr-jp-row">
+              <div class="dr-jp dr-minor"><span>🥁 MINOR</span><b>x15</b></div>
+              <div class="dr-jp dr-mini"><span>🪙 MINI</span><b>x8</b></div>
+            </div>
+          </div>
+          <div class="dr-screen">
+            <div style="display:flex;gap:12px;align-items:stretch">
+              <div class="reels" id="sd-reels" style="flex:1;margin-bottom:0">
+                <div class="reel" id="sd-reel0">🐱</div>
+                <div class="reel" id="sd-reel1">🐱</div>
+                <div class="reel" id="sd-reel2">🐱</div>
+                <div class="win-line" id="sd-winline"></div>
+              </div>
+              <div class="lever-col"><div class="lever-track"><div class="lever-handle" id="sd-lever"></div></div><div class="lever-label">Tirer</div></div>
+            </div>
+            <div class="message" id="sd-message">Bonne chance !</div>
+          </div>
+          <div class="dr-deck">
+            <div class="dr-keys" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="bet-row" style="margin-bottom:0">
+              <div class="bet-group" style="flex:1"><button id="sd-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="sd-betAmount">10</span><button id="sd-betPlus" aria-label="Augmenter la mise">+</button></div>
+            </div>
+            <div class="dr-slot" aria-hidden="true"></div>
+          </div>
+          <div class="dr-base" aria-hidden="true">FORTUNE • DRAGON</div>
+        </div>
+        <div class="kbd-hint" style="margin-top:12px"><kbd>Espace</kbd> pour jouer</div>
+        <div class="paytable">
+          <div><span>🐱🐱🐱</span><span>x3</span></div>
+          <div><span>🏮🏮🏮</span><span>x5</span></div>
+          <div><span>🪙🪙🪙</span><span>x8</span></div>
+          <div><span>🥁🥁🥁</span><span>x15</span></div>
+          <div><span>福福福</span><span>x25</span></div>
+          <div><span>🐉🐉🐉</span><span>x60</span></div>
+        </div>
+      </div></section>
+
+      <section class="view" id="view-blackjack"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🃏</span><div><div class="sh-name">Blackjack</div><div class="sh-desc">Approche 21 sans dépasser, bats le croupier</div></div></div>
+        <div class="mode-switch" data-mode-for="blackjack">
+          <button data-mode="ai" class="sel">🤖 Classique (contre l'IA)</button><button data-mode="multi">👥 Multijoueur</button>
+        </div>
+        <div id="bj-solo">
+        <div class="bj-table">
+          <div class="dealer" data-dealer="cards"></div>
+          <div class="zone"><div class="zone-label"><span>Croupier</span><span id="bj-dealerScore"></span></div><div class="cards" id="bj-dealerCards"></div></div>
+          <div class="bj-ai" id="bj-aiSeats"></div>
+          <div class="bj-divider"></div>
+          <div id="bj-playerZones"></div>
+        </div>
+        <div class="message" id="bj-message">Place ta mise avec les jetons puis distribue.</div>
+        <div class="bj-bet-display">Mise : <span id="bj-betAmount">0</span></div>
+        <div class="chip-rail">
+          <button class="chip c5" data-value="5">5</button>
+          <button class="chip c25" data-value="25">25</button>
+          <button class="chip c50" data-value="50">50</button>
+          <button class="chip c100" data-value="100">100</button>
+          <button class="chip clear" data-value="clear">Effacer</button>
+        </div>
+        <button class="primary-btn" id="bj-dealBtn" style="width:100%;margin-bottom:6px">DISTRIBUER</button>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour distribuer</div>
+        <div class="actions">
+          <button id="bj-hitBtn" disabled>Tirer</button>
+          <button id="bj-standBtn" disabled>Rester</button>
+          <button id="bj-doubleBtn" disabled>Doubler</button>
+          <button id="bj-splitBtn" disabled>Diviser</button>
+        </div>
+        </div>
+
+        <div id="bj-multi" style="display:none">
+          <div class="pk-mp" id="bjm-mp">
+            <span id="bjm-mpInfo"></span>
+            <label class="pk-fill"><input type="checkbox" id="bjm-fill" checked> Compléter avec des IA</label>
+            <button class="fr-copy" id="bjm-friendsBtn">Salon entre amis</button>
+          </div>
+          <div class="bj-table">
+            <div class="dealer" data-dealer="cards"></div>
+            <div class="zone"><div class="zone-label"><span>Croupier</span><span id="bjm-dScore"></span></div><div class="cards" id="bjm-dCards"></div></div>
+            <div class="bj-divider"></div>
+            <div class="mp-seats" id="bjm-seats"></div>
+          </div>
+          <div class="message" id="bjm-message">Valide ta mise, puis l'hôte distribue.</div>
+          <div class="bet-row" id="bjm-betBox">
+            <div class="bet-group"><button id="bjm-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="bjm-betAmount">25</span><button id="bjm-betPlus" aria-label="Augmenter la mise">+</button></div>
+            <button class="primary-btn" id="bjm-betBtn">VALIDER MA MISE</button>
+          </div>
+          <div class="actions" id="bjm-actions" style="display:none">
+            <button id="bjm-hit">Tirer</button><button id="bjm-stand">Rester</button><button id="bjm-double">Doubler</button>
+          </div>
+          <button class="primary-btn" id="bjm-dealBtn" style="width:100%;margin-top:8px;display:none">DISTRIBUER (hôte)</button>
+          <div class="kbd-hint">Multijoueur : hit / stand / double (pas de split) — les gains suivent les mêmes règles que le Blackjack classique.</div>
+        </div>
+      </div></section>
+
+      <section class="view" id="view-roulette"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🎡</span><div><div class="sh-name">Roulette</div><div class="sh-desc">Mise sur un numéro, une couleur, une douzaine ou une colonne</div></div></div>
+        <div class="dealer" data-dealer="roulette"></div>
+        <div class="wheel-3d">
+          <div class="wheel-wrap">
+            <div class="wheel-pointer"></div>
+            <div class="wheel" id="r-wheel"></div>
+            <div class="ball-orbit" id="r-ballOrbit"><div class="ball"></div></div>
+            <div class="wheel-center"></div>
+          </div>
+        </div>
+        <div class="wheel-result-text" id="r-resultText">–</div>
+        <div class="rl-history" id="r-history"></div>
+        <div class="message" id="r-message">Choisis ta mise, puis lance la roulette.</div>
+
+        <div class="rl-table-scroll">
+          <div class="rl-table">
+            <button class="rl-zero" id="r-zero" data-num="0">0</button>
+            <div class="rl-numbers" id="r-numbersGrid"></div>
+            <div class="rl-cols">
+              <button class="rl-col" data-bet="colonne1">2 to 1</button>
+              <button class="rl-col" data-bet="colonne2">2 to 1</button>
+              <button class="rl-col" data-bet="colonne3">2 to 1</button>
+            </div>
+          </div>
+          <div class="rl-outside-row">
+            <button class="rl-out" data-bet="douzaine1">1st 12</button>
+            <button class="rl-out" data-bet="douzaine2">2nd 12</button>
+            <button class="rl-out" data-bet="douzaine3">3rd 12</button>
+          </div>
+          <div class="rl-outside-row rl-outside-row-6">
+            <button class="rl-out" data-bet="manque">1 to 18</button>
+            <button class="rl-out rl-parity" data-bet="pair">PAIR</button>
+            <button class="rl-out rl-color rl-color-red" data-bet="rouge"><span class="rl-diamond"></span></button>
+            <button class="rl-out rl-color rl-color-black" data-bet="noir"><span class="rl-diamond"></span></button>
+            <button class="rl-out rl-parity" data-bet="impair">IMPAIR</button>
+            <button class="rl-out" data-bet="passe">19 to 36</button>
+          </div>
+        </div>
+
+        <div class="bet-row">
+          <div class="bet-group"><button id="r-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="r-betAmount">20</span><button id="r-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="r-spinBtn">LANCER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour lancer</div>
+      </div></section>
+
+      <section class="view" id="view-bus"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🚌</span><div><div class="sh-name">Ride the Bus</div><div class="sh-desc">4 étapes, encaisse quand tu veux ou tente le jackpot</div></div></div>
+        <div class="mode-switch" data-mode-for="bus">
+          <button data-mode="ai" class="sel">🤖 Classique (contre l'IA)</button><button data-mode="multi">👥 Multijoueur</button>
+        </div>
+        <div id="bus-solo">
+        <div class="bus-progress" id="bus-progress">
+          <div class="bus-dot" id="bus-dot0"></div><div class="bus-dot" id="bus-dot1"></div><div class="bus-dot" id="bus-dot2"></div><div class="bus-dot" id="bus-dot3"></div>
+        </div>
+        <div class="bus-stage" id="bus-stage">Étape 1 : rouge ou noir ?</div>
+        <div class="bj-table"><div class="dealer" data-dealer="cards"></div><div class="bus-cards" id="bus-cards"></div></div>
+        <div class="bus-rivals" id="bus-rivals"></div>
+        <div class="bus-mult" id="bus-mult">Multiplicateur : x1</div>
+        <div class="message" id="bus-message">Place ta mise pour monter dans le bus.</div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="bus-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="bus-betAmount">15</span><button id="bus-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="bus-startBtn">MONTER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour monter</div>
+        <div class="actions" id="bus-actions" style="display:none"></div>
+        </div>
+
+        <div id="bus-multi" style="display:none">
+          <div class="pk-mp" id="bsm-mp">
+            <span id="bsm-mpInfo"></span>
+            <label class="pk-fill"><input type="checkbox" id="bsm-fill" checked> Ajouter les rivaux IA</label>
+            <button class="fr-copy" id="bsm-friendsBtn">Salon entre amis</button>
+          </div>
+          <div class="bus-stage" id="bsm-stage">Valide ta mise, puis l'hôte lance le bus.</div>
+          <div class="bj-table"><div class="dealer" data-dealer="cards"></div><div class="bus-cards" id="bsm-cards"></div></div>
+          <div class="bus-mult" id="bsm-mult"></div>
+          <div class="mp-seats mp-seats-col" id="bsm-seats"></div>
+          <div class="message" id="bsm-message"></div>
+          <div class="bet-row" id="bsm-betBox">
+            <div class="bet-group"><button id="bsm-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="bsm-betAmount">15</span><button id="bsm-betPlus" aria-label="Augmenter la mise">+</button></div>
+            <button class="primary-btn" id="bsm-betBtn">VALIDER MA MISE</button>
+          </div>
+          <div class="actions" id="bsm-actions" style="display:none"></div>
+          <button class="primary-btn" id="bsm-dealBtn" style="width:100%;margin-top:8px;display:none">LANCER LE BUS (hôte)</button>
+        </div>
+      </div></section>
+
+      <section class="view" id="view-baccarat"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🎴</span><div><div class="sh-name">Baccarat</div><div class="sh-desc">Player, Banker ou Tie — le plus proche de 9 gagne</div></div></div>
+        <div class="mode-switch">
+          <button data-view="baccarat" class="sel">🤖 Classique (contre l'IA)</button><button data-view="friends">👥 Multijoueur</button>
+        </div>
+        <div class="bj-table">
+          <div class="dealer" data-dealer="cards"></div>
+          <div class="zone"><div class="zone-label"><span>Banker</span><span id="bc-bankerScore"></span></div><div class="cards" id="bc-bankerCards"></div></div>
+          <div class="bj-divider"></div>
+          <div class="zone"><div class="zone-label"><span>Player</span><span id="bc-playerScore"></span></div><div class="cards" id="bc-playerCards"></div></div>
+        </div>
+        <div class="bc-ai" id="bc-aiSeats"></div>
+        <div class="message" id="bc-message">Choisis Player, Banker ou Tie.</div>
+        <div class="roulette-grid">
+          <button data-bet="player">Player</button><button data-bet="banker">Banker</button><button data-bet="tie">Tie</button>
+        </div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="bc-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="bc-betAmount">25</span><button id="bc-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="bc-dealBtn">DISTRIBUER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour distribuer</div>
+      </div></section>
+
+      <section class="view" id="view-coinflip"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🪙</span><div><div class="sh-name">Pile ou Face</div><div class="sh-desc">50/50, simple et rapide, double ta mise</div></div></div>
+        <div style="text-align:center;margin-bottom:12px">
+          <div class="coin-3d" id="cf-coin">
+            <div class="coin-inner">
+              <div class="coin-face coin-pile">PILE</div>
+              <div class="coin-face coin-tails">FACE</div>
+            </div>
+          </div>
+        </div>
+        <div class="message" id="cf-message">Choisis Pile ou Face.</div>
+        <div class="roulette-grid" style="grid-template-columns:repeat(2,1fr)">
+          <button data-side="pile">Pile</button><button data-side="face">Face</button>
+        </div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="cf-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="cf-betAmount">20</span><button id="cf-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="cf-flipBtn">LANCER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour lancer</div>
+      </div></section>
+
+      <section class="view" id="view-mines"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">💣</span><div><div class="sh-name">Mines</div><div class="sh-desc">Révèle des cases, évite les mines, encaisse à temps</div></div></div>
+        <div class="message" id="mn-message">Choisis le nombre de mines puis lance la partie.</div>
+        <div class="roulette-grid">
+          <button data-mines="3" class="sel">3 mines</button><button data-mines="5">5 mines</button><button data-mines="8">8 mines</button>
+        </div>
+        <div class="mines-grid" id="mn-grid"></div>
+        <div class="bj-bet-display">Gain potentiel : <span id="mn-potential">0</span> (x<span id="mn-mult">1.00</span>)</div>
+        <details class="info-disclosure">
+          <summary>ⓘ Comment est calculé le multiplicateur ?</summary>
+          <p id="mn-infoDetail">Le multiplicateur suit les probabilités réelles : à chaque case sûre révélée, il est multiplié par (cases restantes) / (cases sûres restantes parmi elles), avec une marge de la maison de 3% (facteur ×0,97). Moins il reste de cases sûres par rapport au total, plus il grimpe vite.</p>
+        </details>
+        <div class="bet-row">
+          <div class="bet-group"><button id="mn-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="mn-betAmount">20</span><button id="mn-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="mn-startBtn">JOUER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour jouer</div>
+        <div class="actions" id="mn-actions" style="display:none"><button id="mn-cashoutBtn">Encaisser</button></div>
+      </div></section>
+
+      <section class="view" id="view-crash"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🚀</span><div><div class="sh-name">Crash</div><div class="sh-desc">Le multiplicateur grimpe, encaisse avant le crash</div></div></div>
+        <div class="crash-display">
+          <div class="crash-mult" id="cr-mult">x1.00</div>
+          <div class="crash-graph-wrap">
+            <svg id="cr-svg" viewBox="0 0 300 160" preserveAspectRatio="none">
+              <defs><linearGradient id="crGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#d4af37"/><stop offset="100%" stop-color="#4fce85"/></linearGradient></defs>
+              <polyline id="cr-line" points="" fill="none" stroke="url(#crGrad)" stroke-width="3"/>
+            </svg>
+            <div class="crash-rocket" id="cr-rocket">🚀</div>
+          </div>
+          <div class="crash-history" id="cr-history"></div>
+        </div>
+        <details class="info-disclosure">
+          <summary>ⓘ Comment est calculé le point de crash ?</summary>
+          <p id="cr-infoDetail">Le point de crash est tiré au hasard à chaque manche avec la formule 0,99 / (1 − r), où r est un nombre aléatoire entre 0 et 1 (résultat plafonné à x50).</p>
+        </details>
+        <div class="message" id="cr-message">Place ta mise puis lance la fusée.</div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="cr-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="cr-betAmount">20</span><button id="cr-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="cr-startBtn">LANCER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour jouer</div>
+        <div class="actions" id="cr-actions" style="display:none"><button id="cr-cashoutBtn">Encaisser</button></div>
+      </div></section>
+
+      <section class="view" id="view-videopoker"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">♠️</span><div><div class="sh-name">Vidéo Poker</div><div class="sh-desc">Jacks or Better — garde tes cartes, échange le reste, forme la meilleure main</div></div></div>
+        <div class="bj-table">
+          <div class="vp-cards" id="vp-cards"></div>
+        </div>
+        <div class="message" id="vp-message">Place ta mise puis distribue.</div>
+        <div class="vp-paytable" id="vp-paytable">
+          <div data-mult="800"><span>Quinte Flush Royale</span><span>x800</span></div>
+          <div data-mult="50"><span>Quinte Flush</span><span>x50</span></div>
+          <div data-mult="25"><span>Carré</span><span>x25</span></div>
+          <div data-mult="9"><span>Full</span><span>x9</span></div>
+          <div data-mult="6"><span>Couleur</span><span>x6</span></div>
+          <div data-mult="4"><span>Quinte</span><span>x4</span></div>
+          <div data-mult="3"><span>Brelan</span><span>x3</span></div>
+          <div data-mult="2"><span>Deux Paires</span><span>x2</span></div>
+          <div data-mult="1"><span>Paire de Valets ou mieux</span><span>x1</span></div>
+        </div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="vp-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="vp-betAmount">20</span><button id="vp-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="vp-dealBtn">DISTRIBUER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour distribuer / échanger</div>
+      </div></section>
+
+      <section class="view" id="view-poker"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">♣️</span><div><div class="sh-name">Poker Texas Hold'em</div><div class="sh-desc">Affronte 3 joueurs IA — blinds, relances, tapis et abattage</div></div></div>
+        <div class="mode-switch" data-mode-for="poker">
+          <button data-mode="ai" class="sel">🤖 Classique (contre l'IA)</button><button data-mode="multi">👥 Multijoueur</button>
+        </div>
+        <div class="roulette-grid" id="pk-tables">
+          <button data-sb="5">Blinds 5/10</button><button data-sb="10" class="sel">Blinds 10/20</button><button data-sb="25">Blinds 25/50</button>
+        </div>
+        <div class="pk-mp" id="pk-mp" style="display:none">
+          <span id="pk-mpInfo"></span>
+          <label class="pk-fill"><input type="checkbox" id="pk-fill" checked> Compléter avec des IA</label>
+          <button class="fr-copy" id="pk-friendsBtn">Salon entre amis</button>
+        </div>
+        <div class="bj-table pk-table">
+          <div class="dealer" data-dealer="cards"></div>
+          <div class="pk-seats" id="pk-seats"></div>
+          <div class="pk-center"><div class="pk-pot" id="pk-pot">Pot : 0</div><div class="pk-potchips" id="pk-potChips"></div><div class="pk-board" id="pk-board"></div></div>
+          <div id="pk-me"></div>
+        </div>
+        <div class="message" id="pk-message">Choisis tes blinds puis lance une main.</div>
+        <div class="pk-actions" id="pk-actions" style="display:none">
+          <div class="actions"><button id="pk-foldBtn">Se coucher</button><button id="pk-callBtn">Suivre</button></div>
+          <div id="pk-raiseBox">
+            <div class="actions pk-quick"><button data-q="min">Min</button><button data-q="half">½ pot</button><button data-q="pot">Pot</button><button data-q="allin">Tapis</button></div>
+            <div class="bet-row">
+              <div class="bet-group"><button id="pk-rMinus" aria-label="Diminuer la relance">−</button><span class="bet-amount" id="pk-rAmount">40</span><button id="pk-rPlus" aria-label="Augmenter la relance">+</button></div>
+              <button class="primary-btn" id="pk-raiseBtn">RELANCER</button>
+            </div>
+          </div>
+        </div>
+        <div class="bet-row" id="pk-dealRow"><button class="primary-btn" id="pk-dealBtn" style="flex:1">NOUVELLE MAIN</button></div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour lancer une main</div>
+        <details class="info-disclosure">
+          <summary>ⓘ Comment jouent les IA ?</summary>
+          <p>Marco (agressif), Léa (prudente) et Victor (équilibré) ne voient jamais tes cartes : chacun estime sa probabilité de gagner par simulation (quelques centaines de tirages) à partir de ses seules cartes et du tableau, la compare à la cote du pot, puis suit, relance ou se couche selon son style. Les piles des IA sont virtuelles et se recavent seules ; seul ton solde est réel (fictif). Pots annexes gérés en cas de tapis.</p>
+        </details>
+      </div></section>
+
+      <section class="view" id="view-friends"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🤝</span><div><div class="sh-name">Salon entre amis</div><div class="sh-desc">Baccarat en direct avec tes copains — connexion directe entre navigateurs, sans serveur</div></div></div>
+
+        <div class="mode-switch">
+          <button data-view="baccarat">🤖 Classique (contre l'IA)</button><button data-view="friends" class="sel">👥 Multijoueur</button>
+        </div>
+        <div id="fr-setup">
+          <div class="roulette-grid" style="grid-template-columns:repeat(2,1fr)">
+            <button id="fr-createBtn">Créer un salon</button><button id="fr-joinBtn">Rejoindre un salon</button>
+          </div>
+          <label class="fr-stun"><input type="checkbox" id="fr-stun" checked> Jouer via Internet (utilise un serveur STUN public de Google, uniquement pour trouver ton adresse — aucune donnée de jeu n'y passe). Décoche pour jouer seulement sur le même réseau.</label>
+          <div id="fr-guestBox" style="display:none">
+            <label class="fr-label" for="fr-offerIn">Code d'invitation de l'hôte</label>
+            <textarea id="fr-offerIn" rows="3" placeholder="GC1:..."></textarea>
+            <button class="primary-btn" id="fr-genAnswerBtn" style="width:100%;margin:8px 0">Générer ma réponse</button>
+            <div id="fr-answerBox" style="display:none">
+              <label class="fr-label" for="fr-answer">Ma réponse — à envoyer à l'hôte</label>
+              <textarea id="fr-answer" rows="3" readonly></textarea>
+              <button data-copy="fr-answer" class="fr-copy">Copier</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="fr-table" style="display:none">
+          <div id="fr-hostBox" style="display:none">
+            <div class="fr-count" id="fr-count">0 / 4 amis connectés</div>
+            <button class="primary-btn" id="fr-inviteBtn" style="width:100%;margin-bottom:8px">Inviter un ami</button>
+            <div id="fr-inviteBox" style="display:none">
+              <label class="fr-label" for="fr-offer">1. Code d'invitation — envoie-le à ton ami</label>
+              <textarea id="fr-offer" rows="3" readonly></textarea>
+              <button data-copy="fr-offer" class="fr-copy">Copier</button>
+              <label class="fr-label" for="fr-answerIn">2. Réponse de ton ami — colle-la ici</label>
+              <textarea id="fr-answerIn" rows="3" placeholder="GC1:..."></textarea>
+              <button class="primary-btn" id="fr-connectBtn" style="width:100%;margin:8px 0">Connecter</button>
+            </div>
+          </div>
+          <div class="bj-table" id="fr-felt">
+            <div class="dealer" data-dealer="cards"></div>
+            <div class="zone"><div class="zone-label"><span>Banker</span><span id="fr-bankerScore"></span></div><div class="cards" id="fr-bankerCards"></div></div>
+            <div class="bj-divider"></div>
+            <div class="zone"><div class="zone-label"><span>Player</span><span id="fr-playerScore"></span></div><div class="cards" id="fr-playerCards"></div></div>
+          </div>
+          <div id="fr-players" class="fr-players"></div>
+          <div class="roulette-grid" id="fr-sides"><button data-side="player">Player</button><button data-side="banker">Banker</button><button data-side="tie">Tie</button></div>
+          <div class="bet-row">
+            <div class="bet-group"><button id="fr-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="fr-betAmount">25</span><button id="fr-betPlus" aria-label="Augmenter la mise">+</button></div>
+            <button class="primary-btn" id="fr-betBtn">VALIDER MA MISE</button>
+          </div>
+          <button class="primary-btn" id="fr-dealBtn" style="width:100%;margin-bottom:8px;display:none">DISTRIBUER (hôte)</button>
+          <button class="fr-copy" id="fr-pokerBtn" data-view="poker" style="width:100%;margin-bottom:8px">🃏 Jouer au poker avec ce salon</button>
+          <button class="fr-copy" id="fr-leaveBtn" style="width:100%">Quitter le salon</button>
+        </div>
+
+        <div class="message" id="fr-message">Crée un salon ou rejoins celui d'un ami.</div>
+        <details class="info-disclosure">
+          <summary>ⓘ Comment ça marche ?</summary>
+          <p>Il n'y a pas de serveur : les navigateurs se connectent directement entre eux. L'hôte clique « Inviter un ami », envoie le code à son ami (Discord, SMS...), l'ami le colle dans « Rejoindre un salon », génère sa réponse et la renvoie ; l'hôte la colle et clique « Connecter ». Jusqu'à 4 amis. L'hôte tire les cartes (mêmes règles que le Baccarat solo) ; chacun garde son propre solde, sa mise est mise de côté à la validation et son gain crédité au résultat. Si le salon reste bloqué sur « Connexion en cours », recommence l'invitation ou vérifie que la case Internet est cochée chez les deux joueurs.</p>
+        </details>
+      </div></section>
+
+      <section class="view" id="view-cases"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">📦</span><div><div class="sh-name">Ouverture de Caisses</div><div class="sh-desc">Ouvre une caisse — la rareté de l'objet obtenu détermine ton gain</div></div></div>
+        <div class="cs-case-grid" id="cs-caseGrid"></div>
+        <div class="cs-reel-wrap" id="cs-reelWrap">
+          <div class="cs-pointer"></div>
+          <div class="cs-track" id="cs-track"></div>
+        </div>
+        <div class="cs-result" id="cs-result">
+          <div class="cs-result-icon" id="cs-resultIcon">🔪</div>
+          <div class="cs-result-name" id="cs-resultName">—</div>
+          <div class="cs-result-rarity" id="cs-resultRarity">—</div>
+          <div class="cs-result-win" id="cs-resultWin">+0 jetons</div>
+        </div>
+        <div class="message" id="cs-message">Choisis une caisse puis ouvre-la.</div>
+        <div class="bet-row">
+          <button class="primary-btn" id="cs-openBtn" style="flex:1">OUVRIR — <span id="cs-priceLabel">50</span> 🪙</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour ouvrir</div>
+      </div></section>
+
+      <section class="view" id="view-stats"><div class="panel">
+        <div class="profile-row"><span>Parties jouées</span><b id="st-games">0</b></div>
+        <div class="profile-row"><span>Total gagné</span><b id="st-won">0</b></div>
+        <div class="profile-row"><span>Plus gros gain</span><b id="st-biggest">0</b></div>
+        <div class="profile-row"><span>Jeu favori</span><b id="st-fav">–</b></div>
+        <h2 class="section-title" style="margin:18px 4px 10px">Par jeu</h2>
+        <div id="st-pergame"></div>
+      </div></section>
+
+      <section class="view" id="view-history"><div class="panel">
+        <div class="hist-filter-row">
+          <select id="hist-filter">
+            <option value="all">Tous les jeux</option>
+            <option value="slots">Machine à sous</option>
+            <option value="dragon">Fortune Dragon</option>
+            <option value="blackjack">Blackjack</option>
+            <option value="roulette">Roulette</option>
+            <option value="bus">Ride the Bus</option>
+            <option value="baccarat">Baccarat</option>
+            <option value="coinflip">Pile ou Face</option>
+            <option value="mines">Mines</option>
+            <option value="crash">Crash</option>
+            <option value="videopoker">Vidéo Poker</option>
+            <option value="poker">Poker Texas Hold'em</option>
+            <option value="cases">Ouverture de Caisses</option>
+          </select>
+        </div>
+        <div id="hist-list"></div>
+        <p class="empty-state" id="hist-empty">Aucune partie pour le moment.<br>Lancez votre première partie pour commencer votre historique.</p>
+      </div></section>
+
+      <section class="view" id="view-profil"><div class="panel">
+        <div style="text-align:center;margin-bottom:14px">
+          <div class="avatar" id="pf-avatar">🎲</div>
+          <div style="color:var(--gold-bright);font-size:1rem;margin-top:8px" id="pf-pseudo">Joueur</div>
+        </div>
+        <details class="info-disclosure av-details" open>
+          <summary>🎨 Personnaliser mon avatar</summary>
+          <div id="av-editor" class="av-editor"></div>
+        </details>
+        <div class="profile-row"><span>Solde</span><b id="pf-balance">500</b></div>
+        <div class="profile-row"><span>Statut VIP</span><b id="pf-vip">🥉 Bronze</b></div>
+        <div class="profile-row"><span>Niveau</span><b id="pf-level">1</b></div>
+        <div class="profile-row"><span>Progression</span><b id="pf-xp">0 / 1000</b></div>
+        <div class="profile-row"><span>Série actuelle</span><b id="pf-streak">1 jour</b></div>
+        <div class="profile-row"><span>Total misé</span><b id="pf-wagered">0</b></div>
+        <div class="profile-row"><span>Parties jouées</span><b id="pf-games">0</b></div>
+        <div class="profile-row"><span>Jeu favori</span><b id="pf-fav">–</b></div>
+        <button class="primary-btn" id="resetBtn" style="width:100%;margin-top:16px">Réinitialiser le solde à 500</button>
+      </div></section>
+
+      <section class="view" id="view-achievements"><div class="panel">
+        <div id="ach-list"></div>
+      </div></section>
+
+      <section class="view" id="view-missions"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🎯</span><div><div class="sh-name">Missions quotidiennes</div><div class="sh-desc">3 missions tirées chaque jour — la progression avance automatiquement en jouant</div></div></div>
+        <div id="missions-list"></div>
+      </div></section>
+
+      <section class="view" id="view-vip"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">💎</span><div><div class="sh-name">Statut VIP</div><div class="sh-desc">Ton statut évolue avec le total misé, tous jeux confondus — purement honorifique</div></div></div>
+        <div class="vip-progress-wrap">
+          <div class="vip-progress-bar-bg"><div class="vip-progress-bar" id="vip-progressBar"></div></div>
+          <div class="vip-progress-label" id="vip-progressLabel">–</div>
+        </div>
+        <div id="vip-list"></div>
+      </div></section>
+
+      <section class="view" id="view-parametres"><div class="panel">
+        <div class="settings-row"><span>🌙 Thème sombre</span><button class="toggle on" id="themeToggle" aria-pressed="true">Activé</button></div>
+        <div class="settings-row"><span>🔊 Son</span><button class="toggle on" id="soundToggle" aria-pressed="true">Activé</button></div>
+        <h2 class="section-title">Sauvegarde</h2>
+        <p style="color:var(--muted);font-size:.78rem;margin:0 4px 12px">Exporte tes données (solde, stats, historique, favoris, achievements, missions...) dans un fichier, ou restaure-les sur un autre appareil.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <button class="primary-btn" id="exportSaveBtn" style="flex:1;min-width:140px">Exporter ma sauvegarde</button>
+          <button class="primary-btn" id="importSaveBtn" style="flex:1;min-width:140px">Importer une sauvegarde</button>
+        </div>
+        <input type="file" id="importSaveInput" accept="application/json,.json" style="display:none">
+        <p class="disclaimer" style="margin-top:16px;text-align:left">Jeu 100% fictif à but de divertissement. Aucun argent réel n'est en jeu, rien n'est gagné ni perdu pour de vrai.<br>Bonus quotidien automatique à la première connexion du jour (jour 1 à 7, de 50 à 300 jetons) et statut VIP basé sur le total misé — tous deux purement cosmétiques, sans effet sur les gains d'aucun jeu.</p>
+      </div></section>
+
+    </main>
+
+    <nav class="bottom-nav">
+      <button data-view="home" class="active">🏠</button>
+      <button data-view="slots">🎰</button>
+      <button data-view="blackjack">🃏</button>
+      <button data-view="roulette">🎡</button>
+      <button data-view="bus">🚌</button>
+    </nav>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/avatars.js"></script>
+<script src="js/chips.js"></script>
+<script src="js/slot-engine.js"></script>
+<script src="js/slots.js"></script>
+<script src="js/dragon-slots.js"></script>
+<script src="js/blackjack.js"></script>
+<script src="js/roulette.js"></script>
+<script src="js/bus.js"></script>
+<script src="js/baccarat.js"></script>
+<script src="js/coinflip.js"></script>
+<script src="js/mines.js"></script>
+<script src="js/crash.js"></script>
+<script src="js/video-poker.js"></script>
+<script src="js/cases.js"></script>
+<script src="js/friends.js"></script>
+<script src="js/poker.js"></script>
+<script src="js/multi-blackjack.js"></script>
+<script src="js/multi-bus.js"></script>
+<script src="js/shortcuts.js"></script>
+<script src="js/floor.js"></script>
+<script src="js/ambiance.js"></script>
+<script src="js/sw-register.js"></script>
+</body>
+</html>

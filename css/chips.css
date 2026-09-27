@@ -1,0 +1,24 @@
+/* ============================================================
+   JETONS — piles façon jetons de poker en plastique. Chaque jeton
+   est une ellipse (vue légèrement de dessus) ; le jeton du dessus
+   affiche sa valeur dans un disque central, la tranche porte les
+   marques blanches (♠ ♥ ♦ ♣ stylisées).
+   ============================================================ */
+.chips{display:inline-flex;align-items:flex-end;gap:2px;transform:scale(var(--cs,1));transform-origin:bottom center;vertical-align:bottom}
+.cstack{position:relative;display:inline-block;width:30px;flex-shrink:0}
+.pc{position:absolute;left:0;width:30px;height:13px;border-radius:50%;background:var(--c);
+  border:1px solid rgba(0,0,0,.4);
+  box-shadow:0 1.6px 0 rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.25)}
+/* marques blanches sur la tranche (comme sur les vrais jetons) */
+.pc::after{content:'';position:absolute;inset:0;border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.85) 0 7deg,transparent 7deg 45deg);
+  -webkit-mask:radial-gradient(ellipse at center,transparent 56%,#000 58%);mask:radial-gradient(ellipse at center,transparent 56%,#000 58%)}
+.pc-top{height:16px}
+.pc-top b{position:absolute;inset:2.5px 6px;border-radius:50%;background:var(--c);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;line-height:1;font-family:Georgia,serif;font-weight:bold;color:var(--tx);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+.cmore{position:absolute;right:-6px;top:-10px;font-style:normal;font-size:.56rem;color:var(--gold-bright);
+  background:rgba(0,0,0,.6);border-radius:6px;padding:0 3px}
+.camt{align-self:center;margin-left:4px;font-size:.66rem;color:var(--gold-bright);font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 2px rgba(0,0,0,.8)}

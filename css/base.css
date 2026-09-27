@@ -1,0 +1,312 @@
+/* ============================================================
+   BASE — variables, layout général, chrome (sidebar/topbar/nav),
+   composants partagés entre plusieurs jeux (panel, bet-row,
+   boutons, cartes, toasts, historique, stats, profil, succès).
+   Chaque jeu a son propre fichier CSS pour ses styles spécifiques.
+   ============================================================ */
+
+:root{
+  --felt:#0c3d2e; --felt-dark:#062a1f; --felt-deep:#031712;
+  --gold:#d4af37; --gold-bright:#f2d675; --cream:#f4ecd8; --red:#a3352f;
+  --border:rgba(212,175,55,.35);
+  --bg-deep:#05070a; --glass:rgba(14,22,19,.68); --glass-2:rgba(9,14,12,.85);
+  --muted:#93a89a;
+
+  /* ---- Habillage "casino chic" : texture de feutre, filigranes de cartes à
+     jouer, bordures façon jeton de poker / roue de roulette — uniquement des
+     gradients CSS et du SVG en data-URI (aucune image externe, hors-ligne).
+     Opacités volontairement très basses : purement décoratif, ne doit jamais
+     gêner la lecture du texte au-dessus. ---- */
+  --felt-weave: repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0px, rgba(255,255,255,.018) 1px, transparent 1px, transparent 5px);
+  --chip-dots: repeating-radial-gradient(circle at 4px 2px, rgba(212,175,55,.45) 0 1.3px, transparent 1.8px 11px);
+  --suit-watermark-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Ctext x='130' y='195' font-size='230' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.05'%3E%E2%99%A0%3C/text%3E%3C/svg%3E");
+  --suit-watermark-sm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ctext x='100' y='150' font-size='175' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.04'%3E%E2%99%A6%3C/text%3E%3C/svg%3E");
+  --suit-watermark-hero: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Ctext x='160' y='235' font-size='280' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.045'%3E%E2%99%A3%3C/text%3E%3C/svg%3E");
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg-deep);color:var(--cream);font-family:'Georgia','Iowan Old Style',serif;
+  background-image:radial-gradient(circle at 15% -10%, rgba(212,175,55,.10), transparent 45%),
+                    radial-gradient(circle at 100% 0%, rgba(163,53,47,.08), transparent 40%);
+}
+
+/* ---- Accessibilité : anneau de focus clavier cohérent avec le thème, visible sur tout
+   élément interactif (bouton, lien, case à cocher personnalisée...), uniquement au clavier
+   (:focus-visible) pour ne pas ajouter d'anneau disgracieux à chaque clic souris. ---- */
+:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;border-radius:4px}
+
+/* ---- Shell / Sidebar / Topbar ---- */
+.shell{display:flex;min-height:100vh}
+.sidebar{
+  width:230px;flex-shrink:0;border-right:1px solid var(--border);
+  /* Anneaux façon roue de roulette derrière le logo + filigrane de pique en bas + feutre discret */
+  background:
+    radial-gradient(circle at 34px 34px, transparent 0 19px, rgba(212,175,55,.4) 19px 20px, transparent 20px 25px, rgba(212,175,55,.22) 25px 26px, transparent 26px 100%),
+    var(--suit-watermark-lg) bottom -30px right -25px no-repeat,
+    var(--felt-weave),
+    var(--glass-2);
+  backdrop-filter:blur(10px);display:flex;flex-direction:column;padding:18px 12px;
+  position:fixed;top:0;bottom:0;left:0;z-index:40;transition:transform .25s ease;
+}
+.brand{display:flex;align-items:center;gap:8px;font-size:1rem;color:var(--gold-bright);margin-bottom:18px;padding:0 6px;letter-spacing:.02em;flex-shrink:0}
+.brand span{letter-spacing:.03em;text-shadow:0 0 12px rgba(242,214,117,.35)}
+.side-section{color:var(--muted);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;margin:14px 8px 6px;padding-bottom:6px;background:var(--chip-dots) bottom / 100% 3px repeat-x}
+/* La liste de navigation (de plus en plus longue au fil des jeux ajoutés) défile seule dans
+   l'espace disponible ; le logo en haut et "Paramètres" en bas restent toujours visibles. */
+.side-nav{display:flex;flex-direction:column;gap:3px;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
+.side-bottom{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+.side-nav button,.side-bottom button{
+  display:flex;align-items:center;gap:8px;justify-content:flex-start;text-align:left;
+  background:none;border:none;color:var(--muted);font-family:inherit;font-size:.85rem;
+  padding:9px 10px;border-radius:9px;cursor:pointer;
+}
+.side-nav button.active{background:linear-gradient(90deg,rgba(212,175,55,.18),transparent);color:var(--gold-bright);border-left:2px solid var(--gold)}
+.side-nav button:hover:not(.active):not(:disabled){background:rgba(255,255,255,.04);color:var(--cream)}
+.side-nav button.soon{cursor:default;opacity:.55}
+.side-nav button .tag{margin-left:auto;font-size:.6rem;background:var(--glass-2);border:1px solid var(--border);border-radius:10px;padding:1px 7px;color:var(--muted)}
+.side-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:10px}
+.sidebar-overlay{display:none}
+.main{flex:1;margin-left:230px;display:flex;flex-direction:column;min-height:100vh}
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+  padding:12px 20px;
+  /* Liseré de petits points dorés façon ampoules d'enseigne, juste au-dessus de la bordure */
+  background:var(--chip-dots) bottom / 100% 4px repeat-x, var(--glass);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+}
+.burger{display:none;background:none;border:1px solid var(--border);color:var(--gold-bright);border-radius:8px;width:34px;height:34px;font-size:1rem;cursor:pointer}
+.topbar-title{font-size:1rem;color:var(--gold-bright);flex:1}
+.topbar-stats{display:flex;gap:14px;font-size:.82rem;color:var(--muted)}
+.topbar-stats b{color:var(--gold-bright);font-variant-numeric:tabular-nums}
+.content{padding:20px;max-width:760px;width:100%;margin:0 auto;padding-bottom:90px}
+
+/* ---- Accueil ---- */
+.hero{text-align:center;padding:26px 10px 10px;
+  background:var(--suit-watermark-hero) top -40px right 6% no-repeat, var(--suit-watermark-sm) bottom -20px left 4% no-repeat;
+}
+.hero h1{font-size:1.7rem;letter-spacing:.05em;margin:0 0 6px;text-shadow:0 0 18px rgba(242,214,117,.3);
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);font-style:italic;margin:0 0 16px;font-size:.85rem}
+.cta{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;border:none;border-radius:10px;
+  padding:13px 26px;font-weight:bold;font-size:.9rem;cursor:pointer;font-family:inherit;
+  box-shadow:0 8px 20px rgba(212,175,55,.25)}
+.stat-chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0 10px}
+.chip-stat{
+  background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:12px 16px;
+  text-align:center;min-width:78px;backdrop-filter:blur(6px);
+}
+.chip-stat span{display:block;font-size:1.15rem;color:var(--gold-bright);font-variant-numeric:tabular-nums}
+.chip-stat small{color:var(--muted);font-size:.68rem}
+.xp-bar-wrap{max-width:340px;margin:0 auto 20px;height:8px;border-radius:6px;background:var(--glass-2);border:1px solid var(--border);overflow:hidden}
+.xp-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-bright));width:0%;transition:width .4s ease}
+/* Bandeau d'événement temporaire — discret, pulse très légère, affiché seulement si un
+   événement est actif aujourd'hui (voir le module Événements temporaires de core.js) */
+.event-banner{
+  align-items:center;justify-content:center;gap:8px;text-align:center;
+  background:linear-gradient(90deg, rgba(212,175,55,.16), rgba(163,53,47,.12));
+  border:1px solid var(--gold);border-radius:14px;padding:12px 16px;margin:16px 0;
+  color:var(--gold-bright);font-size:.86rem;animation:eventPulse 2.6s ease-in-out infinite;
+}
+@keyframes eventPulse{0%,100%{box-shadow:0 0 0 rgba(212,175,55,0)}50%{box-shadow:0 0 16px rgba(212,175,55,.3)}}
+.section-title{font-size:.95rem;color:var(--gold-bright);margin:22px 4px 12px;letter-spacing:.03em;padding-bottom:8px;background:var(--chip-dots) bottom / 100% 3px repeat-x}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.game-card{
+  background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:18px 14px;text-align:center;
+  backdrop-filter:blur(8px);transition:transform .2s ease,box-shadow .2s ease;cursor:pointer;position:relative;
+}
+.game-card:hover{transform:translateY(-4px);box-shadow:0 10px 26px rgba(212,175,55,.15)}
+.gc-icon{font-size:1.8rem;margin-bottom:6px}
+.gc-name{font-size:.9rem;color:var(--cream);margin-bottom:2px}
+.gc-tag{font-size:.68rem;color:var(--muted);margin-bottom:10px}
+.game-card button{background:none;border:1px solid var(--gold);color:var(--gold-bright);border-radius:8px;padding:6px 14px;font-family:inherit;font-size:.75rem;cursor:pointer}
+/* padding élargit la zone tactile réelle sans trop déplacer le glyphe visible */
+.fav-star{position:absolute;top:4px;right:4px;padding:6px;background:none;border:none;font-size:1rem;cursor:pointer;color:var(--muted);opacity:.7;transition:transform .15s ease,color .15s ease}
+.fav-star:hover{transform:scale(1.2);opacity:1}
+.fav-star.active{color:var(--gold-bright);opacity:1}
+
+/* ---- Toasts ---- */
+#toastContainer{position:fixed;top:14px;right:14px;z-index:100;display:flex;flex-direction:column;gap:8px;max-width:260px}
+.toast{
+  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  background:var(--glass-2);border:1px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:.82rem;color:var(--gold-bright);
+  backdrop-filter:blur(8px);box-shadow:0 8px 20px rgba(0,0,0,.4);animation:toastIn .25s ease;
+}
+.toast-msg{white-space:pre-line}
+.toast-action{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;border:none;border-radius:7px;padding:6px 13px;font-size:.74rem;font-weight:bold;cursor:pointer;font-family:inherit}
+.toast.out{animation:toastOut .3s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateX(20px)}}
+@media (max-width:880px){ #toastContainer{left:14px;right:14px;top:auto;bottom:80px;max-width:none} }
+
+/* ---- Historique ---- */
+.hist-filter-row{margin-bottom:14px}
+.hist-filter-row select{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:9px;font-family:inherit;font-size:.85rem}
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px dashed var(--border);font-size:.82rem}
+.hist-main{display:flex;flex-direction:column}
+.hist-main span{color:var(--muted);font-size:.72rem}
+.hist-side{text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+.hist-net{font-weight:bold}
+.hist-net.pos{color:#4fce85}
+.hist-net.neg{color:var(--red)}
+.hist-side small{color:var(--muted);font-size:.68rem}
+.empty-state{text-align:center;color:var(--muted);font-size:.85rem;padding:24px 10px;line-height:1.5}
+
+/* ---- En-tête de jeu (générique, chaque jeu colore .sh-name dans son propre CSS) ---- */
+.scene-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;background:var(--chip-dots) bottom / 100% 4px repeat-x}
+.scene-header .sh-icon{font-size:1.7rem}
+.scene-header .sh-name{font-size:1.05rem;color:var(--gold-bright);font-weight:bold;letter-spacing:.02em;text-shadow:0 0 10px rgba(242,214,117,.22)}
+.scene-header .sh-desc{font-size:.75rem;color:var(--muted)}
+
+/* ---- Profil / Stats / Succès ---- */
+.avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(180deg,var(--gold-bright),var(--gold));display:inline-flex;align-items:center;justify-content:center;font-size:1.8rem;box-shadow:0 4px 14px rgba(212,175,55,.3)}
+.pergame-card{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px dashed var(--border);font-size:.82rem}
+.pergame-card .pg-name{display:flex;align-items:center;gap:8px}
+.pergame-card .pg-stats{text-align:right;color:var(--muted);font-size:.72rem}
+.pergame-card .pg-stats b{color:var(--gold-bright);font-size:.85rem;display:block}
+.ach-item{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px dashed var(--border);opacity:.4}
+.ach-item.unlocked{opacity:1}
+.ach-icon{font-size:1.5rem}
+.ach-label{font-size:.85rem}
+.ach-status{margin-left:auto;font-size:.7rem;color:var(--muted)}
+.ach-item.unlocked .ach-status{color:#4fce85}
+.profile-row{display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px dashed var(--border);font-size:.85rem}
+.profile-row:last-child{border-bottom:none}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px dashed var(--border)}
+.toggle{background:var(--glass-2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-family:inherit;color:var(--cream);cursor:pointer;font-size:.8rem}
+.toggle.on{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05}
+.disclaimer{text-align:center;color:var(--muted);font-size:.68rem;margin-top:20px;line-height:1.5}
+
+/* ---- Mode transparence : petit disclosure discret (Crash, Mines) expliquant le calcul ---- */
+.info-disclosure{margin-bottom:12px;font-size:.74rem;color:var(--muted)}
+.info-disclosure summary{cursor:pointer;color:var(--muted);list-style:none;display:inline-flex;align-items:center;gap:4px;transition:color .15s ease}
+.info-disclosure summary::-webkit-details-marker{display:none}
+.info-disclosure summary:hover{color:var(--gold-bright)}
+.info-disclosure[open] summary{color:var(--gold-bright)}
+.info-disclosure p{margin:8px 2px 0;line-height:1.5}
+
+/* ---- Raccourci clavier : petite indication discrète sous le bouton d'action principal ---- */
+.kbd-hint{text-align:center;font-size:.68rem;color:var(--muted);opacity:.75;margin:-4px 0 10px}
+.kbd-hint kbd{background:var(--glass-2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-family:inherit;color:var(--gold-bright);font-size:.66rem}
+
+/* ---- Vues (panneaux de jeu) ---- */
+.view{display:none}
+.view.active{display:block;animation:viewIn .25s ease}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.panel{
+  /* Filigrane de carte + léger tissage façon feutre, sous le dégradé d'origine */
+  background:
+    var(--suit-watermark-sm) bottom -15px right -10px no-repeat,
+    var(--felt-weave),
+    linear-gradient(180deg,rgba(20,32,27,.85),rgba(8,14,12,.85));
+  border:1px solid var(--border);border-radius:18px;padding:20px 16px;backdrop-filter:blur(6px);
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+}
+.bottom-nav{display:none}
+
+/* ---- Composants de jeu partagés (message, mise, boutons d'action) ---- */
+.message{text-align:center;min-height:24px;margin:10px 0;font-size:.98rem;color:var(--gold-bright)}
+.message.win-flash{animation:winFlash .5s ease}
+@keyframes winFlash{0%{transform:scale(1)}30%{transform:scale(1.14)}100%{transform:scale(1)}}
+.bet-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.bet-group{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bg-deep);border-radius:9px;padding:7px 8px}
+.bet-group button{background:none;border:1px solid var(--border);color:var(--gold-bright);width:34px;height:34px;border-radius:6px;font-size:1.05rem;cursor:pointer;transition:background .15s ease}
+.bet-group button:hover{background:rgba(212,175,55,.15)}
+.bet-amount{font-variant-numeric:tabular-nums;min-width:44px;text-align:center}
+.primary-btn{flex:1.3;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;border:none;border-radius:9px;padding:12px 8px;font-size:.92rem;font-weight:bold;cursor:pointer;font-family:inherit;transition:transform .15s ease,box-shadow .15s ease}
+.primary-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 16px rgba(212,175,55,.35)}
+.primary-btn:active:not(:disabled){transform:translateY(0)}
+.primary-btn:disabled{opacity:.5;cursor:default}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.actions button{flex:1;min-width:64px;background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:9px;padding:10px 4px;font-size:.84rem;cursor:pointer;font-family:inherit;transition:background .15s ease,border-color .15s ease}
+.actions button:hover:not(:disabled){background:rgba(212,175,55,.1);border-color:var(--gold)}
+.actions button:disabled{opacity:.4;cursor:default}
+/* affichage "mise" / "gain potentiel" — réutilisé par le blackjack et les mines */
+.bj-bet-display{text-align:center;color:var(--gold-bright);font-size:.95rem;margin-bottom:2px}
+/* grille de boutons de choix — réutilisée par roulette, baccarat, pile ou face, mines */
+.roulette-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.roulette-grid button{background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:9px 4px;font-size:.78rem;cursor:pointer;font-family:inherit;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+.roulette-grid button:hover:not(.sel){background:rgba(212,175,55,.1);border-color:var(--gold)}
+.roulette-grid button.sel{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;font-weight:bold;box-shadow:0 4px 12px rgba(212,175,55,.35)}
+
+/* ---- Cartes à jouer (réutilisées par blackjack, baccarat, ride the bus) ----
+   Réservé aux emplacements "pas encore distribué" (voir ride the bus) : cartes
+   réellement distribuées passent désormais par C.renderCard / .card-3d ci-dessous. */
+.card{background:var(--cream);color:#1a1a1a;border-radius:6px;width:38px;height:56px;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,.3);animation:cardIn .25s ease}
+@keyframes cardIn{from{transform:scale(.5) rotateY(90deg);opacity:0}to{transform:scale(1) rotateY(0deg);opacity:1}}
+.card.red{color:var(--red)}
+.card.hidden{background:var(--felt-dark);color:var(--gold);border:1px dashed var(--gold)}
+.cards{display:flex;gap:6px;flex-wrap:wrap;min-height:60px}
+.zone{margin-bottom:12px}
+.zone-label{display:flex;justify-content:space-between;color:var(--muted);font-size:.8rem;margin-bottom:6px}
+
+/* ---- Cartes 3D (vraie carte à deux faces, recto/verso) — sortie de C.renderCard,
+   utilisée par blackjack, baccarat, ride the bus. ---- */
+.card-3d{width:38px;height:56px;flex-shrink:0;perspective:320px;animation:cardPopIn .3s ease}
+.card-3d.lg{width:62px;height:90px}
+@keyframes cardPopIn{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}
+.card-flip{
+  /* Rotation TOUJOURS statique (jamais animée par @keyframes) : dans ce moteur de rendu,
+     animer rotateY casse le backface-visibility et laisserait apparaître la carte cachée. */
+  position:relative;width:100%;height:100%;
+  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;
+  transform:rotateY(0deg);
+}
+.card-flip.is-back{transform:rotateY(180deg)}
+.card-face,.card-back{
+  position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-weight:bold;
+  box-shadow:0 3px 6px rgba(0,0,0,.35);
+  transform:translateZ(0); /* force chaque face dans son propre plan 3D pour un backface-visibility fiable */
+}
+.card-face{background:var(--cream);color:#1a1a1a;font-size:.9rem}
+.card-face.red{color:var(--red)}
+.card-back{
+  transform:rotateY(180deg) translateZ(0);border:2px solid var(--gold);
+  background:
+    repeating-linear-gradient(45deg, rgba(212,175,55,.28) 0 6px, transparent 6px 12px),
+    linear-gradient(160deg,#0c3d2e,#062a1f);
+}
+.card-3d.lg .card-face{font-size:1.3rem;border-radius:9px}
+.card-3d.lg .card-back{border-radius:9px}
+
+/* ---- Table feutrée inclinée en 3D (partagée par blackjack, baccarat, ride the bus) ---- */
+.bj-table{
+  position:relative;
+  background:radial-gradient(ellipse at 50% 25%, #147049 0%, #0c3d2e 55%, #062a1f 100%);
+  border:3px solid var(--gold);border-radius:24px;padding:18px 14px 14px;margin-bottom:14px;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.45), 0 22px 36px rgba(0,0,0,.55);
+  transform:perspective(1100px) rotateX(6deg);
+  transform-style:preserve-3d;
+}
+.bj-table::before{content:'';position:absolute;inset:9px;border:1px dashed rgba(212,175,55,.3);border-radius:18px;pointer-events:none}
+.bj-divider{height:4px;background:var(--chip-dots) center / 100% 4px repeat-x;margin:12px 0;opacity:.85}
+/* secousse — réutilisée par les mines (case piégée) et le crash (explosion) */
+@keyframes mineShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* ---- Perte : assombrissement discret, jamais agressif (partagé par tous les jeux) ---- */
+.loss-flash{animation:lossDim .5s ease}
+@keyframes lossDim{0%{filter:brightness(1)}35%{filter:brightness(.6)}100%{filter:brightness(1)}}
+
+/* ---- Flash plein écran (ex. cash out réussi au Crash) ---- */
+.screen-flash{position:fixed;inset:0;z-index:200;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,rgba(242,214,117,.35),transparent 70%)}
+.screen-flash.flash-gold{animation:screenFlashPulse .6s ease}
+@keyframes screenFlashPulse{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+
+/* ---- Responsive (mobile) ---- */
+@media (max-width:880px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar.open ~ .sidebar-overlay{display:block}
+  .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:30}
+  .main{margin-left:0}
+  .burger{display:inline-flex;align-items:center;justify-content:center}
+  .bottom-nav{
+    display:flex;justify-content:space-around;position:fixed;bottom:0;left:0;right:0;z-index:20;
+    background:var(--glass-2);backdrop-filter:blur(10px);border-top:1px solid var(--border);
+    padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));
+  }
+  .bottom-nav button{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:4px 10px;border-radius:8px}
+  .bottom-nav button.active{color:var(--gold-bright);background:rgba(212,175,55,.12)}
+}

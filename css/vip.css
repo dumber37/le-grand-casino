@@ -1,0 +1,24 @@
+/* ============================================================
+   VIP / TITRES — statut cosmétique basé sur le total misé
+   (C.state.totalWagered, déjà suivi). Purement honorifique :
+   badge et teinte uniquement, aucun effet sur les gains.
+   ============================================================ */
+
+#view-vip .panel{border-color:#7a6a2a}
+#view-vip .scene-header .sh-name{color:#f2d675}
+
+.vip-progress-wrap{margin:4px 0 18px}
+.vip-progress-bar-bg{height:10px;border-radius:7px;background:var(--glass-2);border:1px solid var(--border);overflow:hidden;margin-bottom:8px}
+.vip-progress-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-bright));width:0%;transition:width .5s ease}
+.vip-progress-label{text-align:center;color:var(--muted);font-size:.78rem}
+
+.vip-tier-card{
+  display:flex;align-items:center;gap:12px;padding:12px 6px;border-bottom:1px dashed var(--border);
+  opacity:.4;transition:opacity .2s ease,background .2s ease;
+}
+.vip-tier-card.unlocked{opacity:1}
+.vip-tier-card.current{background:rgba(212,175,55,.09);border-radius:10px}
+.vip-tier-icon{font-size:1.5rem}
+.vip-tier-name{flex:1;font-size:.9rem;color:var(--cream)}
+.vip-tier-req{font-size:.72rem;color:var(--muted)}
+.vip-tier-tag{margin-left:auto;font-size:.64rem;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;border-radius:10px;padding:2px 9px;font-weight:bold;white-space:nowrap}

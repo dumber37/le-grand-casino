@@ -1,0 +1,91 @@
+/* ============================================================
+   SLOTS — machine à sous : rouleaux, levier, table des gains.
+   ============================================================ */
+
+/* Fenêtre de rouleaux en creux (vitrine 3D de la machine) */
+.reels{
+  display:flex;gap:8px;background:var(--bg-deep);border-radius:10px;padding:14px 8px;margin-bottom:14px;position:relative;
+  transform:perspective(500px) rotateX(9deg);transform-style:preserve-3d;
+  box-shadow:inset 0 8px 14px rgba(0,0,0,.6), inset 0 -4px 10px rgba(0,0,0,.4), 0 6px 10px rgba(0,0,0,.3);
+}
+.reel{background:var(--felt-dark);border:1px solid var(--border);border-radius:8px;height:72px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;overflow:hidden;transition:box-shadow .2s ease,border-color .2s ease}
+.reel.spin-active{border-color:var(--gold-bright);box-shadow:0 0 14px rgba(212,175,55,.5);animation:reelPulse .5s ease-in-out infinite alternate}
+@keyframes reelPulse{from{box-shadow:0 0 6px rgba(212,175,55,.3)}to{box-shadow:0 0 18px rgba(212,175,55,.6)}}
+
+/* ---- Animations du moteur de machine à sous (partagées par toutes les machines) ---- */
+/* Rouleau qui s'arrête avec un léger rebond */
+.reel.reel-bounce{animation:reelBounce .42s cubic-bezier(.34,1.56,.64,1)}
+@keyframes reelBounce{0%{transform:translateY(-14px) scale(1.05)}55%{transform:translateY(4px) scale(.97)}100%{transform:translateY(0) scale(1)}}
+/* Symboles gagnants qui clignotent */
+.reel.symbol-blink{animation:symbolBlink .5s ease-in-out 3}
+@keyframes symbolBlink{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.35;filter:brightness(1.8)}}
+/* Alignement jackpot — flourish plus impressionnant (couleur ajustable par thème) */
+.reel.jackpot-flourish{animation:jackpotFlourish .7s ease-in-out 2}
+@keyframes jackpotFlourish{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.14);filter:brightness(1.7) drop-shadow(0 0 12px var(--gold-bright))}}
+/* Ligne lumineuse reliant les symboles gagnants */
+.win-line{position:absolute;left:8px;right:8px;top:50%;height:3px;margin-top:-1.5px;border-radius:3px;
+  background:linear-gradient(90deg,transparent,var(--gold-bright),transparent);
+  box-shadow:0 0 10px 2px rgba(212,175,55,.8);opacity:0;transform:scaleX(.2);pointer-events:none}
+.win-line.show{animation:winLineGrow .9s ease forwards}
+@keyframes winLineGrow{0%{opacity:0;transform:scaleX(.2)}30%{opacity:1;transform:scaleX(1)}80%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1)}}
+/* Pluie de pièces sur gros gain */
+.coin-fall{position:absolute;top:-10px;font-size:1.1rem;pointer-events:none;animation:coinFall 900ms cubic-bezier(.4,.6,.6,1) forwards}
+@keyframes coinFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(90px) rotate(280deg);opacity:0}}
+
+.lever-col{width:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--glass-2);border:1px solid var(--border);border-radius:14px;padding:10px 0}
+.lever-track{width:16px;height:150px;background:var(--bg-deep);border-radius:10px;border:1px solid var(--border);position:relative}
+.lever-handle{position:absolute;left:50%;transform:translateX(-50%);top:2px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #e2453b, #7d1a15);box-shadow:0 3px 8px rgba(0,0,0,.5);cursor:pointer;transition:top .3s ease;border:2px solid #4a0f0c}
+.lever-handle.pulled{top:calc(150px - 40px)}
+.lever-handle.disabled{opacity:.45;cursor:default}
+.lever-label{font-size:.66rem;color:var(--muted);text-align:center}
+
+/* ============================================================
+   MACHINE À SOUS CLASSIQUE — cabinet néon façon rangée de machines de
+   casino : bordure magenta lumineuse, bandeau supérieur, écran vitré
+   cyan, rouleaux blancs, pupitre à boutons lumineux. Purement visuel :
+   les ids et le moteur (slot-engine.js) ne changent pas.
+   ============================================================ */
+#view-slots .panel.neon-stage{
+  border-color:rgba(255,47,179,.5);
+  background:
+    radial-gradient(circle at 10% 18%, rgba(255,47,179,.24), transparent 38%),
+    radial-gradient(circle at 90% 10%, rgba(64,140,255,.24), transparent 40%),
+    radial-gradient(circle at 72% 92%, rgba(160,80,255,.22), transparent 42%),
+    linear-gradient(180deg,#12081f,#07040d);
+}
+#view-slots .scene-header .sh-name{color:#ff8fdc;text-shadow:0 0 10px rgba(255,47,179,.6)}
+.cab{max-width:440px;margin:0 auto}
+.cab-neon{
+  position:relative;padding:14px;border-radius:22px;
+  background:linear-gradient(180deg,#1b0c2e,#09030f);
+  box-shadow:0 0 0 2px #ff2fb3,0 0 22px 3px rgba(255,47,179,.6),0 0 60px rgba(120,60,255,.35),inset 0 0 30px rgba(255,47,179,.15);
+  animation:neonPulse 3.4s ease-in-out infinite;
+}
+@keyframes neonPulse{
+  0%,100%{box-shadow:0 0 0 2px #ff2fb3,0 0 22px 3px rgba(255,47,179,.6),0 0 60px rgba(120,60,255,.35),inset 0 0 30px rgba(255,47,179,.15)}
+  50%{box-shadow:0 0 0 2px #ff6bd6,0 0 32px 6px rgba(255,47,179,.8),0 0 80px rgba(120,60,255,.5),inset 0 0 36px rgba(255,47,179,.22)}
+}
+.cab-topper{max-width:88%;margin:0 auto 12px}
+.cab-marquee{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:12px;
+  background:linear-gradient(180deg,#3c1160,#1a0730);border:2px solid #ff2fb3;
+  box-shadow:0 0 18px rgba(255,47,179,.6),inset 0 0 20px rgba(255,47,179,.28)}
+.mq-title{font-size:1.15rem;font-weight:bold;letter-spacing:.16em;color:#fff;text-shadow:0 0 6px #ff2fb3,0 0 16px #ff2fb3,0 0 30px #b400ff}
+.mq-sub{font-size:.8rem;color:#7df9ff;text-shadow:0 0 8px #00e5ff}
+.cab-screen{background:#05020a;border:2px solid #38d2ff;border-radius:14px;padding:10px;box-shadow:0 0 16px rgba(56,210,255,.45),inset 0 0 24px rgba(56,210,255,.12)}
+.cab-strip{display:flex;justify-content:space-between;gap:4px;font-size:.66rem;color:#ffe066;text-shadow:0 0 6px rgba(255,200,40,.7);margin-bottom:8px}
+.cab-screen .message{margin:10px 0 0}
+/* Rouleaux qui remplissent toute la fenêtre vitrée (les deux machines) */
+#view-slots .reels,#view-dragon .reels{align-items:stretch;padding:10px 8px}
+#view-slots .reel,#view-dragon .reel{flex:1;height:auto;min-height:104px;font-size:2.7rem}
+#view-slots .reels{background:#0a0414;box-shadow:inset 0 8px 14px rgba(0,0,0,.6),0 0 0 2px #ffcf3d,0 0 16px rgba(255,207,61,.4)}
+#view-slots .reel{background:linear-gradient(180deg,#c9bfe0 0%,#fff 24%,#fff 76%,#c9bfe0 100%);border-color:#ff2fb3}
+#view-slots .reel.spin-active{border-color:#7df9ff;box-shadow:0 0 14px rgba(125,249,255,.7)}
+#view-slots .lever-col{background:linear-gradient(180deg,#27103d,#100519);border-color:#ff2fb3}
+.cab-deck{margin-top:12px;padding:10px;border-radius:12px;background:linear-gradient(180deg,#26123a,#0d0616);border:1px solid rgba(255,47,179,.55)}
+.cab-buttons{display:flex;gap:6px;justify-content:center;margin-bottom:10px}
+.cab-buttons i{width:34px;height:14px;border-radius:7px;background:linear-gradient(180deg,#ff7fdc,#a4007a);box-shadow:0 0 9px rgba(255,47,179,.8)}
+.cab-buttons i:nth-child(2n){background:linear-gradient(180deg,#7df9ff,#0080a0);box-shadow:0 0 9px rgba(0,229,255,.8)}
+.cab-buttons i:nth-child(3n){background:linear-gradient(180deg,#ffe066,#b58a00);box-shadow:0 0 9px rgba(255,200,40,.8)}
+
+.paytable{margin-top:16px;font-size:.78rem;color:var(--muted);border-top:1px dashed var(--border);padding-top:10px}
+.paytable div{display:flex;justify-content:space-between;padding:2px 0}
