@@ -88,8 +88,19 @@
     });
   }
   function renderTable(revealDealer){
-    dealerCardsEl.innerHTML='';
-    dealerHand.forEach((c,i)=>dealerCardsEl.appendChild(C.renderCard(c,i===1&&!revealDealer,true)));
+    // Retournement animé de la carte cachée du croupier : si elle est déjà à l'écran (pas de
+    // tirage supplémentaire entre-temps), on se contente de retirer sa classe .is-back — la
+    // transition CSS sur .card-flip fait le reste (même technique que la pièce de Pile ou
+    // Face). Sinon (première distribution, ou le croupier a dû tirer une carte de plus), on
+    // reconstruit tout comme avant : aucun changement de comportement dans ce cas.
+    const holeCardEl=dealerCardsEl.children[1]&&dealerCardsEl.children[1].querySelector('.card-flip.is-back');
+    if(revealDealer&&holeCardEl&&dealerCardsEl.children.length===dealerHand.length){
+      holeCardEl.classList.remove('is-back');
+      C.sound&&C.sound('card');
+    } else {
+      dealerCardsEl.innerHTML='';
+      dealerHand.forEach((c,i)=>dealerCardsEl.appendChild(C.renderCard(c,i===1&&!revealDealer,true)));
+    }
     dealerScoreEl.textContent=revealDealer?handScore(dealerHand):(dealerHand[0]?cardValue(dealerHand[0]):'');
     renderAi();
     playerZonesEl.innerHTML='';

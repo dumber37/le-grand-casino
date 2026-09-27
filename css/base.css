@@ -256,11 +256,15 @@ body{
 .card-3d.lg{width:62px;height:90px}
 @keyframes cardPopIn{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}
 .card-flip{
-  /* Rotation TOUJOURS statique (jamais animée par @keyframes) : dans ce moteur de rendu,
-     animer rotateY casse le backface-visibility et laisserait apparaître la carte cachée. */
+  /* Rotation pilotée par CSS transition (jamais par @keyframes, la combinaison qui avait
+     cassé le rendu du backface-visibility dans ce moteur) : exactement la même technique
+     que la pièce de Pile ou Face (.coin-inner), déjà éprouvée ici sans problème. La bascule
+     .is-back se fait sur un élément EXISTANT (jamais recréé pendant le retournement) : voir
+     blackjack.js/multi-blackjack.js, seul endroit qui retire réellement cette classe. */
   position:relative;width:100%;height:100%;
   -webkit-transform-style:preserve-3d;transform-style:preserve-3d;
   transform:rotateY(0deg);
+  transition:transform .5s cubic-bezier(.2,.65,.15,1);
 }
 .card-flip.is-back{transform:rotateY(180deg)}
 .card-face,.card-back{

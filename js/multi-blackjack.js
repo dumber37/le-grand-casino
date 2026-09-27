@@ -61,7 +61,15 @@
   }
   function draw(s){
     view=s;
-    dCardsEl.innerHTML=''; s.dealer.forEach((c,i)=>dCardsEl.appendChild(C.renderCard(c,i===1&&!s.revealDealer,true)));
+    // Même retournement animé qu'en solo (blackjack.js) : carte déjà affichée → juste enlever
+    // .is-back (transition CSS) ; sinon reconstruction normale, comme avant.
+    const holeCardEl=dCardsEl.children[1]&&dCardsEl.children[1].querySelector('.card-flip.is-back');
+    if(s.revealDealer&&holeCardEl&&dCardsEl.children.length===s.dealer.length){
+      holeCardEl.classList.remove('is-back');
+      C.sound&&C.sound('card');
+    } else {
+      dCardsEl.innerHTML=''; s.dealer.forEach((c,i)=>dCardsEl.appendChild(C.renderCard(c,i===1&&!s.revealDealer,true)));
+    }
     dScoreEl.textContent=s.dealerScore;
     seatsEl.innerHTML='';
     s.seats.forEach((seat,i)=>{
