@@ -10,8 +10,26 @@
   const cardsEl=document.getElementById('vp-cards'), dealBtn=document.getElementById('vp-dealBtn');
   const betMinus=document.getElementById('vp-betMinus'), betPlus=document.getElementById('vp-betPlus');
   const paytableEl=document.getElementById('vp-paytable');
+  const demoBtn=document.getElementById('vp-demoBtn'), demoBanner=document.getElementById('vp-demoBanner'), demoBalEl=document.getElementById('vp-demoBal');
   const minBet=5, maxBet=100, betStep=5;
   let bet=20, deck=[], hand=[], held=[false,false,false,false,false], phase='idle';
+  // ---- Partie d'essai : jetons fictifs, séparés du solde réel (jamais lu ni modifié tant
+  // qu'elle est active). Aucun recordGame en démo : stats/historique/missions/VIP restent
+  // intacts, exactement comme si la partie n'avait jamais eu lieu. ----
+  let demoMode=false, demoBalance=500;
+  const bal=()=>demoMode?demoBalance:C.state.balance;
+  function toggleDemo(){
+    if(phase==='dealt') return; // pas de bascule en pleine main, pour éviter toute confusion
+    demoMode=!demoMode; demoBalance=500;
+    demoBtn.textContent=demoMode?'🎓 Quitter la partie d’essai':'🎓 Partie d’essai';
+    demoBanner.classList.toggle('show',demoMode);
+    demoBalEl.textContent=demoBalance;
+    hand=[]; held=[false,false,false,false,false]; phase='idle';
+    cardsEl.classList.remove('vp-win'); highlightPaytable(-1);
+    msg.textContent=demoMode?'Partie d’essai — place une mise fictive puis distribue.':'Place ta mise puis distribue.';
+    renderCards(); render();
+  }
+  demoBtn.addEventListener('click',toggleDemo);
 
   function rankValue(r){ if(r==='A') return 14; if(r==='K') return 13; if(r==='Q') return 12; if(r==='J') return 11; return parseInt(r,10); }
   function evaluateHand(cards){
@@ -68,16 +86,17 @@
   function render(){
     betEl.textContent=bet;
     dealBtn.textContent=phase==='dealt'?'ÉCHANGER':'DISTRIBUER';
-    dealBtn.disabled=phase==='idle'&&(bet<=0||C.state.balance<bet);
+    dealBtn.disabled=phase==='idle'&&(bet<=0||bal()<bet);
     betMinus.disabled=betPlus.disabled=(phase==='dealt');
+    demoBtn.disabled=phase==='dealt';
   }
   betMinus.addEventListener('click',()=>{ if(phase==='idle'){ bet=Math.max(minBet,bet-betStep); render(); } });
   betPlus.addEventListener('click',()=>{ if(phase==='idle'){ bet=Math.min(maxBet,bet+betStep); render(); } });
   document.addEventListener('balance-changed',render);
 
   function deal(){
-    if(C.state.balance<bet){ msg.textContent='Solde insuffisant.'; return; }
-    C.state.balance-=bet; C.trackWager(bet); C.saveBalance(); C.renderBalance();
+    if(bal()<bet){ msg.textContent='Solde insuffisant.'; return; }
+    if(demoMode){ demoBalance-=bet; demoBalEl.textContent=demoBalance; } else { C.state.balance-=bet; C.trackWager(bet); C.saveBalance(); C.renderBalance(); }
     deck=C.newDeck(); hand=[deck.pop(),deck.pop(),deck.pop(),deck.pop(),deck.pop()]; held=[false,false,false,false,false];
     C.sound&&C.sound('card');
     phase='dealt';
@@ -90,13 +109,16 @@
     C.sound&&C.sound('card');
     const res=evaluateHand(hand);
     const win=res.mult>0?bet*res.mult:0;
-    C.state.balance+=win; C.saveBalance(); C.renderBalance();
+    if(demoMode) demoBalance+=win; else { C.state.balance+=win; C.saveBalance(); C.renderBalance(); }
+    if(demoMode) demoBalEl.textContent=demoBalance;
     phase='idle'; held=[false,false,false,false,false];
     renderCards(); render(); highlightPaytable(res.mult);
     cardsEl.classList.remove('vp-win'); void cardsEl.offsetWidth;
-    if(win>0){ msg.textContent=res.name+' ! +'+win+' jetons'; cardsEl.classList.add('vp-win'); C.flashWin(msg); }
-    else { msg.textContent=res.name+'.'; C.flashLoss(cardsEl); }
-    C.recordGame('videopoker', bet, win);
+    if(win>0){ msg.textContent=res.name+' ! +'+win+' jetons'+(demoMode?' (essai)':''); cardsEl.classList.add('vp-win'); C.flashWin(msg); }
+    else { msg.textContent=res.name+(demoMode?' (essai).':'.'); C.flashLoss(cardsEl); }
+    // Pas de recordGame en partie d'essai : stats, historique, missions et VIP ne doivent
+    // refléter que les vraies parties, jamais l'entraînement.
+    if(!demoMode) C.recordGame('videopoker', bet, win);
   }
   dealBtn.addEventListener('click',()=>{ phase==='dealt'?draw():deal(); });
   renderCards(); render();

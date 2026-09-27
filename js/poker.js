@@ -78,6 +78,7 @@
   const rAmountEl=el('pk-rAmount'), rMinus=el('pk-rMinus'), rPlus=el('pk-rPlus'), raiseBtn=el('pk-raiseBtn');
   const dealBtn=el('pk-dealBtn'), dealRow=el('pk-dealRow'), tablesEl=el('pk-tables');
   const mpEl=el('pk-mp'), mpInfo=el('pk-mpInfo'), fillEl=el('pk-fill');
+  const demoBtn=el('pk-demoBtn'), demoBanner=el('pk-demoBanner'), demoBalEl=el('pk-demoBal');
   const F=()=>C.friends;
 
   // ---------- État de la partie ----------
@@ -94,6 +95,11 @@
   let timer=null, turnTimer=null, inHandler=null;
   let view=null, raiseTo=0, lastActKey='', renderedBoard=0, renderedBoardNo=-1;
   let guestMode=false, guestInvested=0;   // guestMode : je suis assis à la table d'un ami (hôte)
+  // ---- Partie d'essai : jetons fictifs, séparés du solde réel (jamais lus ni modifiés tant
+  // qu'elle est active), et jamais de recordGame en démo (stats/historique/missions/VIP
+  // intacts). Restreinte au mode classique (pas de démo en multijoueur, où le solde d'un ami
+  // pourrait être impliqué) : le sélecteur de mode et le bouton démo se désactivent l'un l'autre.
+  let demoMode=false, demoBalance=500;
   // Deux modes séparés : 'ai' = classique, contre les IA (les amis connectés sont ignorés) ;
   // 'multi' = contre de vrais joueurs (salon entre amis), complété ou non par des IA.
   const MODE_KEY='grand-casino-mode-poker';
@@ -102,7 +108,8 @@
   const switchBox=document.querySelector('.mode-switch[data-mode-for="poker"]');
 
   function resetP(p){ p.hole=[]; p.folded=false; p.allIn=false; p.bet=0; p.total=0; p.acted=false; p.lastAction=''; p.reveal=false; p.handName=''; p.won=0; p.score=0; }
-  const stackOf=p=>p.kind==='local'?C.state.balance:p.stack;
+  const bal=()=>demoMode?demoBalance:C.state.balance;
+  const stackOf=p=>p.kind==='local'?bal():p.stack;
   const potTotal=()=>players.reduce((s,p)=>s+p.total,0);
   const canAct=p=>!p.folded&&!p.allIn;
   const isHostRole=()=>!!(F()&&F().role()==='host');
@@ -110,7 +117,7 @@
 
   function putIn(p,amt){
     amt=Math.max(0,Math.min(amt,stackOf(p)));
-    if(p.kind==='local'){ C.state.balance-=amt; C.trackWager(amt); C.saveBalance(); C.renderBalance(); }
+    if(p.kind==='local'){ if(demoMode){ demoBalance-=amt; demoBalEl.textContent=demoBalance; } else { C.state.balance-=amt; C.trackWager(amt); C.saveBalance(); C.renderBalance(); } }
     else { p.stack-=amt; if(p.kind==='remote'&&amt>0) F().sendPeer(p.peerId,{t:'pk_chips',delta:-amt}); }
     p.bet+=amt; p.total+=amt;
     if(stackOf(p)===0) p.allIn=true;
@@ -176,7 +183,7 @@
     meEl.innerHTML=''; if(s.seats[s.me]) meEl.appendChild(seatEl(s.seats[s.me],s.me,true,s));
     msg.textContent=s.msg;
     dealRow.style.display=(s.handActive||guestMode)?'none':'flex';
-    dealBtn.disabled=s.handActive||guestMode||C.state.balance<bb;
+    dealBtn.disabled=s.handActive||guestMode||bal()<bb;
     tablesEl.style.display=guestMode?'none':'';
     tablesEl.querySelectorAll('button').forEach(b=>b.disabled=s.handActive);
     updateActions(s);
@@ -197,7 +204,8 @@
   }
   function updateMp(){
     switchBtns.forEach(b=>b.classList.toggle('sel',b.dataset.mode===gameMode));
-    if(switchBox) switchBox.style.display=guestMode?'none':'';
+    if(switchBox) switchBox.style.display=(guestMode||demoMode)?'none':'';
+    demoBtn.disabled=handActive||guestMode;
     if(!mpEl) return;
     const role=F()&&F().role(), n=(F()&&role==='host')?F().peers().length:0;
     if(guestMode||role==='guest'){ mpEl.style.display='flex'; mpInfo.textContent=guestMode?'🤝 Tu joues à la table de l’hôte — c’est lui qui lance les mains.':'🤝 Connecté à un salon : l’hôte peut lancer une partie de poker.'; fillEl.parentNode.style.display='none'; }
@@ -209,7 +217,7 @@
     else { mpEl.style.display='none'; }
   }
   function setMode(m){
-    if(handActive||guestMode||(m!=='ai'&&m!=='multi')) return;
+    if(handActive||guestMode||(demoMode&&m==='multi')||(m!=='ai'&&m!=='multi')) return;
     gameMode=m; try{ localStorage.setItem(MODE_KEY,m); }catch(e){}
     say(m==='ai'?'Mode classique : tu joues contre les IA.':'Mode multijoueur : joue avec tes amis (salon entre amis).');
     updateMp();
@@ -224,7 +232,7 @@
   const schedule=(fn,ms)=>{ clearTimeout(timer); timer=setTimeout(fn,ms); };
   function startHand(){
     if(handActive||guestMode) return;
-    if(C.state.balance<bb){ say('Solde insuffisant pour ces blinds ('+bb+' minimum).'); return; }
+    if(bal()<bb){ say('Solde insuffisant pour ces blinds ('+bb+' minimum).'); return; }
     const peers=(gameMode==='multi'&&isHostRole())?F().peers():[];
     if(gameMode==='multi'&&!peers.length){ say('Mode multijoueur : ouvre un salon (« Salon entre amis ») et invite au moins un ami — ou passe en mode classique.'); return; }
     if(!peers.length) return begin([]);
@@ -375,20 +383,22 @@
     });
     players.forEach((p,i)=>{
       p.won=win[i];
-      if(p.kind==='local') C.state.balance+=win[i];
+      if(p.kind==='local'){ if(demoMode){ demoBalance+=win[i]; demoBalEl.textContent=demoBalance; } else C.state.balance+=win[i]; }
       else { p.stack+=win[i]; if(p.kind==='remote') F().sendPeer(p.peerId,{t:'pk_end',total:p.total,won:win[i]}); }
     });
-    C.saveBalance(); C.renderBalance();
+    if(!demoMode){ C.saveBalance(); C.renderBalance(); }
     const me=players[0];
     const winners=players.filter(p=>p.won>0);
     // Sans abattage (tout le monde s'est couché), le gagnant montre quand même sa main.
     winners.forEach(p=>{ p.reveal=true; });
     const txt=winners.map(p=>(p.kind==='local'&&p.name==='Toi'?'Tu remportes ':p.icon+' '+p.name+' remporte ')+p.won+(showdown&&p.handName?' ('+p.handName+')':'')).join(' · ');
-    say((showdown?'Abattage — ':'')+txt+'.');
-    C.recordGame('poker',me.total,me.won);
+    say((showdown?'Abattage — ':'')+txt+'.'+(demoMode?' (essai)':''));
+    // Pas de recordGame en partie d'essai : stats, historique, missions et VIP ne doivent
+    // refléter que les vraies mains, jamais l'entraînement.
+    if(!demoMode) C.recordGame('poker',me.total,me.won);
     if(me.won>me.total) C.flashWin(msg); else if(me.won===0) C.flashLoss(feltEl);
     render();
-    if(C.state.balance<bb) say(lastMsg+' Solde insuffisant pour la prochaine main.');
+    if(bal()<bb) say(lastMsg+' Solde insuffisant pour la prochaine main.');
   }
 
   // ---------- Commandes du joueur (local : hôte/solo ou invité) ----------
@@ -423,7 +433,20 @@
     if(players.length) render(); else updateMp();
   }));
   dealBtn.addEventListener('click',startHand);
-  document.addEventListener('balance-changed',()=>{ if(!handActive&&!guestMode) dealBtn.disabled=C.state.balance<bb; });
+  document.addEventListener('balance-changed',()=>{ if(!handActive&&!guestMode) dealBtn.disabled=bal()<bb; });
+
+  // ---------- Partie d'essai ----------
+  function toggleDemo(){
+    if(handActive||guestMode) return;
+    demoMode=!demoMode; demoBalance=500; demoBalEl.textContent=demoBalance;
+    demoBtn.textContent=demoMode?'🎓 Quitter la partie d’essai':'🎓 Partie d’essai';
+    demoBanner.classList.toggle('show',demoMode);
+    if(demoMode&&gameMode!=='ai') setMode('ai');
+    if(switchBox) switchBox.style.display=(guestMode||demoMode)?'none':'';
+    say(demoMode?'Partie d’essai — jetons fictifs, ton solde réel n’est pas touché.':'Choisis tes blinds puis lance une main.');
+    previewTable();
+  }
+  demoBtn.addEventListener('click',toggleDemo);
 
   // ---------- Réseau (via la connexion du « Salon entre amis ») ----------
   function guestReset(text){

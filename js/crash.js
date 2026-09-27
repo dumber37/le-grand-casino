@@ -14,7 +14,19 @@
   document.getElementById('cr-betMinus').addEventListener('click',()=>{if(!active){bet=Math.max(5,bet-5);render();}});
   document.getElementById('cr-betPlus').addEventListener('click',()=>{if(!active){bet=Math.min(100,bet+5);render();}});
   document.addEventListener('balance-changed',render);
-  function genCrashPoint(){ const r=Math.random(); lastR=r; let cp=0.99/(1-r); cp=Math.min(cp,50); return Math.max(1.0, Math.round(cp*100)/100); }
+  function crashPointFromR(r){ let cp=0.99/(1-r); cp=Math.min(cp,50); return Math.max(1.0, Math.round(cp*100)/100); }
+  function genCrashPoint(){ const r=Math.random(); lastR=r; return crashPointFromR(r); }
+  // Règles exposées telles quelles pour le multijoueur (multi-crash.js) : MÊME formule de
+  // tirage du point de crash, MÊME conversion temps écoulé → multiplicateur, MÊME courbe
+  // d'affichage (yFor) — aucune règle/probabilité dupliquée, aucun risque de drift entre
+  // le solo et le multijoueur. genCrashPoint() ici ne touche pas lastR (propre à l'écran
+  // « mode transparence » du solo) : un tirage multijoueur ne doit pas polluer cet affichage.
+  C.crashRules = {
+    RATE: 0.15, MAXMULT,
+    genCrashPoint: function(){ return crashPointFromR(Math.random()); },
+    multFromElapsed: function(elapsed){ return Math.exp(0.15*elapsed); },
+    yFor: function(mult){ return yFor(mult); }
+  };
   // Mode transparence : explique la formule, avec les chiffres réels de la dernière manche
   // une fois qu'une manche a eu lieu — purement pédagogique, ne change rien au tirage.
   function renderCrashInfo(){

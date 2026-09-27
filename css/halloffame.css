@@ -1,0 +1,28 @@
+/* ============================================================
+   HALL OF FAME PERSONNEL — mise en valeur visuelle de records déjà
+   suivis ailleurs (stats.biggestWin, stats.crashBestMult, la série de
+   jours) : aucune donnée nouvelle, juste des cartes plus soignées que
+   les lignes toutes simples de la page Statistiques.
+   ============================================================ */
+#view-halloffame .panel{border-color:var(--gold-bright)}
+
+.hof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.hof-card{
+  position:relative;text-align:center;padding:22px 14px 18px;border-radius:16px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(212,175,55,.16), transparent 65%),
+    var(--glass);
+  border:1px solid var(--gold);overflow:hidden;
+  box-shadow:0 10px 26px rgba(0,0,0,.35);
+}
+/* Léger filet doré tournant, discret, purement décoratif (transform/opacity seulement) */
+.hof-card::before{
+  content:'';position:absolute;inset:-40% -40% auto -40%;height:180%;
+  background:conic-gradient(from 0deg, transparent 0 85%, rgba(242,214,117,.35) 92%, transparent 100%);
+  animation:hofSpin 7s linear infinite;opacity:.5;
+}
+@keyframes hofSpin{to{transform:rotate(360deg)}}
+.hof-icon{position:relative;font-size:2rem;margin-bottom:8px;filter:drop-shadow(0 0 10px rgba(242,214,117,.5))}
+.hof-label{position:relative;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.hof-value{position:relative;font-size:1.4rem;color:var(--gold-bright);font-weight:bold;text-shadow:0 0 14px rgba(242,214,117,.4);margin-bottom:6px}
+.hof-sub{position:relative;font-size:.72rem;color:var(--muted)}

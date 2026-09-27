@@ -1,0 +1,33 @@
+/* ============================================================
+   DÉFIS PERSONNELS — capital fictif + temps limité, sur un jeu déjà
+   existant (aucune règle dupliquée : le défi se contente d'échanger
+   temporairement C.state.balance avant de rejouer le vrai jeu choisi,
+   via la navigation [data-view] déjà en place). Le chrono flottant
+   (#chHud) reste visible par-dessus n'importe quelle vue, sur le
+   même principe que #toastContainer / #screenFlash.
+   ============================================================ */
+#view-challenges .panel{border-color:#f2d675}
+
+#ch-gameGrid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+#ch-gameGrid button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px}
+#ch-gameGrid .ch-g-icon{font-size:1.3rem}
+
+.ch-record-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px dashed var(--border);font-size:.82rem}
+.ch-record-row span:first-child{display:flex;align-items:center;gap:8px;color:var(--cream)}
+.ch-record-row b{color:var(--gold-bright)}
+
+/* ---- Chrono flottant : visible sur toutes les vues tant qu'un défi tourne ---- */
+.ch-hud-float{
+  position:fixed;top:70px;right:14px;z-index:90;width:180px;
+  background:var(--glass-2);border:1px solid var(--gold);border-radius:12px;padding:10px 12px;
+  backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.5);text-align:center;
+  animation:chHudIn .25s ease;
+}
+@keyframes chHudIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.ch-hud-top{display:flex;justify-content:space-between;align-items:center;font-size:.72rem;color:var(--muted);margin-bottom:4px}
+.ch-hud-top #ch-hudTime{color:var(--gold-bright);font-weight:bold;font-variant-numeric:tabular-nums}
+.ch-hud-bal{font-size:.9rem;color:var(--cream);margin-bottom:8px}
+.ch-hud-bal b{color:var(--gold-bright);font-variant-numeric:tabular-nums}
+#ch-quitBtn{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px;font-family:inherit;font-size:.7rem;cursor:pointer}
+#ch-quitBtn:hover{border-color:var(--red);color:var(--red)}
+@media (max-width:880px){ .ch-hud-float{top:auto;bottom:90px;right:10px;width:160px} }

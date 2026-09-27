@@ -9,7 +9,8 @@ window.Casino = (function(){
 
   // ====== MODULE: State & Storage — solde, mise cumulée, série de jours ======
   const BAL_KEY='grand-casino-balance', WAG_KEY='grand-casino-wagered', STREAK_KEY='grand-casino-streak', LAST_KEY='grand-casino-lastplay', THEME_KEY='grand-casino-theme';
-  C.state = { balance:500, totalWagered:0, streak:1 };
+  const BEST_STREAK_KEY='grand-casino-beststreak';
+  C.state = { balance:500, totalWagered:0, streak:1, bestStreak:1 };
   // Bonus quotidien (jour 1→7, cyclique) : détecté ici au même moment que la série de jours
   // (dont il réutilise directement le calcul), mais crédité plus bas dans le fichier une fois
   // les modules Notifications/Son chargés — voir DAILY_BONUS_TABLE et son octroi en fin de script.
@@ -27,6 +28,10 @@ window.Casino = (function(){
       // Pas de bonus sur la toute première visite (last===null) : le solde de départ suffit déjà.
       if(last!==null) dailyBonusPending=((C.state.streak-1)%7)+1;
     }
+    // Meilleure série jamais atteinte : simple maximum posé à côté de la série courante
+    // (même bloc, même moment de calcul) — pas un système de suivi séparé.
+    C.state.bestStreak=Math.max(parseInt(localStorage.getItem(BEST_STREAK_KEY)||'0',10)||1, C.state.streak);
+    localStorage.setItem(BEST_STREAK_KEY,String(C.state.bestStreak));
     if(localStorage.getItem(THEME_KEY)==='light') document.documentElement.setAttribute('data-theme','light');
   }catch(e){}
 
@@ -51,7 +56,13 @@ window.Casino = (function(){
     let pg=stats.perGame[gameKey]; if(!pg||typeof pg!=='object') pg={count:0,wins:0,wagered:0,won:0};
     pg.count++; pg.wagered+=betAmount; if(winAmount>0){ pg.wins++; pg.won+=winAmount; }
     stats.perGame[gameKey]=pg;
-    if(winAmount>stats.biggestWin) stats.biggestWin=winAmount;
+    // Hall of Fame : mêmes champs `stats` déjà sauvegardés/exportés, juste deux de plus par
+    // record (jeu + date) pour ne pas se contenter d'un nombre nu — aucun tracking séparé.
+    if(winAmount>stats.biggestWin){ stats.biggestWin=winAmount; stats.biggestWinGame=gameKey; stats.biggestWinTime=Date.now(); }
+    if(gameKey==='crash'&&winAmount>0&&betAmount>0){
+      const mult=winAmount/betAmount;
+      if(mult>(stats.crashBestMult||0)){ stats.crashBestMult=mult; stats.crashBestMultTime=Date.now(); }
+    }
     if(winAmount>0) stats.totalWon+=winAmount;
     saveStats();
     history.unshift({game:gameKey, bet:betAmount, win:winAmount, net:winAmount-betAmount, time:Date.now()});
@@ -240,8 +251,13 @@ window.Casino = (function(){
       if(m.progress>=tpl.target){
         m.progress=tpl.target; m.completed=true;
         // Récompense créditée directement au solde — pas de recordGame ici pour ne pas fausser les stats par jeu.
-        C.state.balance+=tpl.reward; C.saveBalance(); C.renderBalance();
-        showToast('🎯 Mission complétée : '+tpl.desc+' (+'+tpl.reward+' jetons)');
+        // Pendant un Défi personnel, le solde affiché est temporairement le capital fictif du
+        // défi (voir C.challengeActive) : la récompense est quand même acquise, mais mise de
+        // côté pour être ajoutée au VRAI solde à la fin du défi (challenges.js) plutôt que
+        // perdue au moment où le vrai solde est restauré.
+        if(C.challengeActive) C.state.pendingChallengeCredit=(C.state.pendingChallengeCredit||0)+tpl.reward;
+        else { C.state.balance+=tpl.reward; C.saveBalance(); C.renderBalance(); }
+        showToast('🎯 Mission complétée : '+tpl.desc+' (+'+tpl.reward+' jetons'+(C.challengeActive?', crédités à la fin du défi':'')+')');
         C.sound&&C.sound('achievement');
       }
     });
@@ -387,6 +403,33 @@ window.Casino = (function(){
     set('st-games', stats.gamesPlayed); set('st-won', stats.totalWon); set('st-biggest', stats.biggestWin); set('st-fav', favName);
     renderPerGameStats(); renderProfile();
   }
+  // ====== MODULE: Hall of Fame personnel ======
+  // Purement un affichage soigné de records déjà suivis ailleurs (stats.biggestWin/Game/Time,
+  // stats.crashBestMult/Time, C.state.bestStreak) : aucun nouveau tracking ici, juste la mise
+  // en valeur visuelle de données que recordGame() et le calcul de série alimentent déjà.
+  function renderHallOfFame(){
+    const gridEl=document.getElementById('hof-grid'), emptyEl=document.getElementById('hof-empty');
+    if(!gridEl) return;
+    const cards=[];
+    if(stats.biggestWin>0){
+      cards.push({icon:'💰', label:'Plus gros gain', value:'+'+stats.biggestWin+' 🪙',
+        sub:(GAME_NAMES[stats.biggestWinGame]||stats.biggestWinGame||'Jeu inconnu')+(stats.biggestWinTime?' — '+formatTime(stats.biggestWinTime):' — partie ancienne')});
+    }
+    if(C.state.bestStreak>1){
+      cards.push({icon:'🔥', label:'Plus longue série de jours', value:C.state.bestStreak+(C.state.bestStreak>1?' jours':' jour'),
+        sub:C.state.bestStreak===C.state.streak?'Série actuelle — continue comme ça !':'Série record — à rebattre !'});
+    }
+    if(stats.crashBestMult>0){
+      cards.push({icon:'🚀', label:'Meilleur multiplicateur — Crash', value:'x'+stats.crashBestMult.toFixed(2),
+        sub:stats.crashBestMultTime?formatTime(stats.crashBestMultTime):'—'});
+    }
+    gridEl.innerHTML=cards.map(c=>
+      '<div class="hof-card"><div class="hof-icon">'+c.icon+'</div><div class="hof-label">'+c.label+'</div>'
+      +'<div class="hof-value">'+c.value+'</div><div class="hof-sub">'+c.sub+'</div></div>'
+    ).join('');
+    if(emptyEl) emptyEl.style.display=cards.length?'none':'block';
+  }
+
   C.flashWin = function(el){ el.classList.remove('win-flash'); void el.offsetWidth; el.classList.add('win-flash'); showToast(el.textContent); C.sound&&C.sound('win'); };
   // Perte : assombrissement bref et discret, jamais agressif.
   C.flashLoss = function(el){ if(!el) return; el.classList.remove('loss-flash'); void el.offsetWidth; el.classList.add('loss-flash'); C.sound&&C.sound('loss'); };
@@ -394,7 +437,13 @@ window.Casino = (function(){
   C.flashScreen = function(){ const el=document.getElementById('screenFlash'); if(!el) return; el.classList.remove('flash-gold'); void el.offsetWidth; el.classList.add('flash-gold'); C.sound&&C.sound('flash'); };
 
   // ====== MODULE: Balance ======
-  C.saveBalance = function(){ try{ localStorage.setItem(BAL_KEY,String(C.state.balance)); localStorage.setItem(WAG_KEY,String(C.state.totalWagered)); }catch(e){} };
+  // C.challengeActive (posé/retiré par challenges.js pendant un Défi personnel) suspend
+  // TOUTE écriture du solde/total misé en localStorage tant qu'un défi tourne : C.state.balance
+  // et C.state.totalWagered reflètent alors temporairement le capital fictif du défi, jamais
+  // persistés ni confondus avec les vraies valeurs. challenges.js restaure les deux à la fin et
+  // rappelle C.saveBalance() une fois — c'est ce dernier appel qui persiste, normalement.
+  C.challengeActive = false;
+  C.saveBalance = function(){ try{ if(C.challengeActive) return; localStorage.setItem(BAL_KEY,String(C.state.balance)); localStorage.setItem(WAG_KEY,String(C.state.totalWagered)); }catch(e){} };
   C.trackWager = function(amount){ C.state.totalWagered+=amount; };
   C.renderBalance = function(){
     ['hdrBalance','home-balance','pf-balance'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=C.state.balance; });
@@ -418,8 +467,8 @@ window.Casino = (function(){
   // valider ce même format pour tout restaurer. Après import réussi, la page est rechargée pour
   // que chaque module se réinitialise proprement depuis le localStorage restauré, plutôt que de
   // resynchroniser à la main les nombreuses variables en mémoire de chaque module.
-  const SAVE_KEYS=[BAL_KEY,WAG_KEY,STREAK_KEY,LAST_KEY,THEME_KEY,STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,MISSIONS_KEY,PSEUDO_KEY,AVATAR_KEY,'grand-casino-sound'];
-  const SAVE_JSON_KEYS=[STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,MISSIONS_KEY];
+  const SAVE_KEYS=[BAL_KEY,WAG_KEY,STREAK_KEY,BEST_STREAK_KEY,LAST_KEY,THEME_KEY,STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,MISSIONS_KEY,PSEUDO_KEY,AVATAR_KEY,'grand-casino-sound','grand-casino-challenges'];
+  const SAVE_JSON_KEYS=[STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,MISSIONS_KEY,'grand-casino-challenges'];
   function exportSave(){
     const data={};
     SAVE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
@@ -474,7 +523,7 @@ window.Casino = (function(){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     const target=document.getElementById('view-'+name); if(target) target.classList.add('active');
     document.querySelectorAll('.side-nav button[data-view], .bottom-nav button[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
-    const titles={home:'Accueil',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',profil:'Profil',parametres:'Paramètres'};
+    const titles={home:'Accueil',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',profil:'Profil',parametres:'Paramètres'};
     document.getElementById('viewTitle').textContent=titles[name]||name;
     document.getElementById('sidebar').classList.remove('open');
     // Rendu différé : chaque vue de progression ne reconstruit son contenu qu'à son ouverture,
@@ -484,6 +533,8 @@ window.Casino = (function(){
     else if(name==='achievements') renderAchievements();
     else if(name==='profil') renderProfile();
     else if(name==='vip') renderVip();
+    else if(name==='halloffame') renderHallOfFame();
+    else if(name==='challenges'&&C.renderChallenges) C.renderChallenges();
   }
   document.addEventListener('click',(e)=>{
     const viewEl=e.target.closest('[data-view]'); if(viewEl){ switchView(viewEl.dataset.view); return; }

@@ -33,11 +33,18 @@
 <link rel="stylesheet" href="css/vip.css">
 <link rel="stylesheet" href="css/ambiance.css">
 <link rel="stylesheet" href="css/floor.css">
+<link rel="stylesheet" href="css/halloffame.css">
+<link rel="stylesheet" href="css/challenges.css">
 </head>
 <body>
 <div id="ambientLayer" class="ambient-layer"></div>
 <div id="toastContainer"></div>
 <div id="screenFlash" class="screen-flash"></div>
+<div id="chHud" class="ch-hud-float" style="display:none">
+  <div class="ch-hud-top"><span id="ch-hudGame">—</span><span id="ch-hudTime">0:00</span></div>
+  <div class="ch-hud-bal">Solde du défi : <b id="ch-hudBalance">0</b></div>
+  <button id="ch-quitBtn">Abandonner</button>
+</div>
 <div class="shell">
 
   <aside class="sidebar" id="sidebar">
@@ -65,7 +72,8 @@
       <button data-view="achievements">🏆 Achievements</button>
       <button data-view="missions">🎯 Missions</button>
       <button data-view="vip">💎 Statut VIP</button>
-      <button class="soon" disabled>🏆 Tournois <span class="tag">Bientôt</span></button>
+      <button data-view="halloffame">🏆 Hall of Fame</button>
+      <button data-view="challenges">🎯 Défis</button>
       <button class="soon" disabled>📊 Classement <span class="tag">Bientôt</span></button>
       <button data-view="profil">👤 Profil</button>
     </nav>
@@ -417,6 +425,10 @@
 
       <section class="view" id="view-crash"><div class="panel">
         <div class="scene-header"><span class="sh-icon">🚀</span><div><div class="sh-name">Crash</div><div class="sh-desc">Le multiplicateur grimpe, encaisse avant le crash</div></div></div>
+        <div class="mode-switch" data-mode-for="crash">
+          <button data-mode="ai" class="sel">🤖 Classique</button><button data-mode="multi">👥 Multijoueur</button>
+        </div>
+        <div id="crash-solo">
         <div class="crash-display">
           <div class="crash-mult" id="cr-mult">x1.00</div>
           <div class="crash-graph-wrap">
@@ -439,10 +451,41 @@
         </div>
         <div class="kbd-hint"><kbd>Espace</kbd> pour jouer</div>
         <div class="actions" id="cr-actions" style="display:none"><button id="cr-cashoutBtn">Encaisser</button></div>
+        </div>
+
+        <div id="crash-multi" style="display:none">
+          <div class="pk-mp" id="crm-mp">
+            <span id="crm-mpInfo"></span>
+            <button class="fr-copy" id="crm-friendsBtn">Salon entre amis</button>
+          </div>
+          <div class="crash-display">
+            <div class="crash-mult" id="crm-mult">x1.00</div>
+            <div class="crash-graph-wrap">
+              <svg id="crm-svg" viewBox="0 0 300 160" preserveAspectRatio="none">
+                <defs><linearGradient id="crmGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#d4af37"/><stop offset="100%" stop-color="#4fce85"/></linearGradient></defs>
+                <polyline id="crm-line" points="" fill="none" stroke="url(#crmGrad)" stroke-width="3"/>
+              </svg>
+              <div class="crash-rocket" id="crm-rocket">🚀</div>
+            </div>
+            <div class="crash-history" id="crm-history"></div>
+          </div>
+          <div id="crm-seats" class="fr-players"></div>
+          <div class="message" id="crm-message">Valide ta mise, puis l'hôte lance la fusée.</div>
+          <div class="bet-row" id="crm-betBox">
+            <div class="bet-group"><button id="crm-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="crm-betAmount">20</span><button id="crm-betPlus" aria-label="Augmenter la mise">+</button></div>
+            <button class="primary-btn" id="crm-betBtn">VALIDER MA MISE</button>
+          </div>
+          <div class="actions" id="crm-actions" style="display:none"><button id="crm-cashoutBtn">Encaisser</button></div>
+          <button class="primary-btn" id="crm-startBtn" style="width:100%;margin-top:8px;display:none">LANCER LA FUSÉE (hôte)</button>
+        </div>
       </div></section>
 
       <section class="view" id="view-videopoker"><div class="panel">
         <div class="scene-header"><span class="sh-icon">♠️</span><div><div class="sh-name">Vidéo Poker</div><div class="sh-desc">Jacks or Better — garde tes cartes, échange le reste, forme la meilleure main</div></div></div>
+        <div class="demo-row">
+          <div class="demo-banner" id="vp-demoBanner">🎓 Partie d'essai — jetons fictifs, solde : <b id="vp-demoBal">500</b> (ton solde réel n'est pas touché)</div>
+          <button class="fr-copy" id="vp-demoBtn">🎓 Partie d'essai</button>
+        </div>
         <div class="bj-table">
           <div class="vp-cards" id="vp-cards"></div>
         </div>
@@ -467,6 +510,10 @@
 
       <section class="view" id="view-poker"><div class="panel">
         <div class="scene-header"><span class="sh-icon">♣️</span><div><div class="sh-name">Poker Texas Hold'em</div><div class="sh-desc">Affronte 3 joueurs IA — blinds, relances, tapis et abattage</div></div></div>
+        <div class="demo-row">
+          <div class="demo-banner" id="pk-demoBanner">🎓 Partie d'essai — jetons fictifs, solde : <b id="pk-demoBal">500</b> (ton solde réel n'est pas touché)</div>
+          <button class="fr-copy" id="pk-demoBtn">🎓 Partie d'essai</button>
+        </div>
         <div class="mode-switch" data-mode-for="poker">
           <button data-mode="ai" class="sel">🤖 Classique (contre l'IA)</button><button data-mode="multi">👥 Multijoueur</button>
         </div>
@@ -652,6 +699,33 @@
         <div id="vip-list"></div>
       </div></section>
 
+      <section class="view" id="view-halloffame"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🏆</span><div><div class="sh-name">Hall of Fame</div><div class="sh-desc">Tes plus beaux exploits, calculés à partir de tes statistiques</div></div></div>
+        <div class="hof-grid" id="hof-grid"></div>
+        <p class="empty-state" id="hof-empty" style="display:none">Joue quelques parties pour débloquer ton Hall of Fame — reviens ensuite voir tes records ici.</p>
+      </div></section>
+
+      <section class="view" id="view-challenges"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🎯</span><div><div class="sh-name">Défis personnels</div><div class="sh-desc">Capital fixe, temps limité — vise le meilleur solde possible. Ton solde réel n'est jamais touché</div></div></div>
+        <div id="ch-setup">
+          <p style="color:var(--muted);font-size:.8rem;margin:0 4px 12px">Choisis un jeu, un capital de départ et une durée. Le score final (meilleur solde atteint pendant le défi) devient ton record personnel pour ce jeu.</p>
+          <h2 class="section-title" style="margin-top:0">Jeu</h2>
+          <div class="roulette-grid" id="ch-gameGrid"></div>
+          <h2 class="section-title">Capital de départ</h2>
+          <div class="roulette-grid" id="ch-capitalGrid">
+            <button data-capital="100" class="sel">100 🪙</button><button data-capital="250">250 🪙</button><button data-capital="500">500 🪙</button>
+          </div>
+          <h2 class="section-title">Durée</h2>
+          <div class="roulette-grid" id="ch-durationGrid">
+            <button data-duration="180" class="sel">3 minutes</button><button data-duration="300">5 minutes</button>
+          </div>
+          <button class="primary-btn" id="ch-startBtn" style="width:100%;margin-top:14px">LANCER LE DÉFI</button>
+          <h2 class="section-title">Tes records</h2>
+          <div id="ch-records"></div>
+        </div>
+        <p class="empty-state" id="ch-runningNote" style="display:none">Un défi est en cours — regarde en haut de l'écran pour le chrono, et joue sur la page du jeu choisi.</p>
+      </div></section>
+
       <section class="view" id="view-parametres"><div class="panel">
         <div class="settings-row"><span>🌙 Thème sombre</span><button class="toggle on" id="themeToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row"><span>🔊 Son</span><button class="toggle on" id="soundToggle" aria-pressed="true">Activé</button></div>
@@ -697,8 +771,10 @@
 <script src="js/poker.js"></script>
 <script src="js/multi-blackjack.js"></script>
 <script src="js/multi-bus.js"></script>
+<script src="js/multi-crash.js"></script>
 <script src="js/shortcuts.js"></script>
 <script src="js/floor.js"></script>
+<script src="js/challenges.js"></script>
 <script src="js/ambiance.js"></script>
 <script src="js/sw-register.js"></script>
 </body>
