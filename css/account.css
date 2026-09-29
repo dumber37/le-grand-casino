@@ -1,0 +1,21 @@
+/* ============================================================
+   CONNEXION / SYNCHRONISATION CLOUD — page optionnelle. Réutilise les
+   composants déjà existants (.primary-btn, .fr-copy, .profile-row,
+   .demo-banner) plutôt que d'en recréer des nouveaux.
+   ============================================================ */
+#view-account .panel{border-color:#7aa0c9}
+#view-account .scene-header .sh-name{color:#a8cdf0}
+
+.acc-block textarea,.acc-block input{
+  width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);
+  border-radius:8px;padding:9px;font-family:inherit;font-size:.85rem;margin-bottom:4px;
+}
+.acc-block input:focus{outline:2px solid var(--gold-bright);outline-offset:1px}
+.acc-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.acc-row button{flex:1;min-width:140px}
+
+.acc-config-box{flex-direction:column;align-items:flex-start;gap:6px}
+.acc-steps{margin:6px 0 0;padding-left:18px;font-size:.76rem;color:var(--muted);line-height:1.7}
+.acc-steps b{color:var(--cream)}
+.acc-steps code{background:var(--bg-deep);border:1px solid var(--border);border-radius:4px;padding:0 4px;color:var(--gold-bright)}
+.acc-hint{color:var(--muted);font-size:.8rem;margin:0 4px 12px;line-height:1.5}

@@ -548,6 +548,7 @@ window.Casino = (function(){
     else if(name==='vip') renderVip();
     else if(name==='halloffame') renderHallOfFame();
     else if(name==='challenges'&&C.renderChallenges) C.renderChallenges();
+    else if(name==='account'&&C.renderAccount) C.renderAccount();
   }
   document.addEventListener('click',(e)=>{
     const viewEl=e.target.closest('[data-view]'); if(viewEl){ switchView(viewEl.dataset.view); return; }

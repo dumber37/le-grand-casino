@@ -35,6 +35,7 @@
 <link rel="stylesheet" href="css/floor.css">
 <link rel="stylesheet" href="css/halloffame.css">
 <link rel="stylesheet" href="css/challenges.css">
+<link rel="stylesheet" href="css/account.css">
 </head>
 <body>
 <div id="ambientLayer" class="ambient-layer"></div>
@@ -78,6 +79,7 @@
       <button data-view="profil">👤 Profil</button>
     </nav>
     <div class="side-bottom">
+      <button data-view="account">🔐 Connexion</button>
       <button data-view="parametres">⚙️ Paramètres</button>
     </div>
   </aside>
@@ -726,6 +728,45 @@
         <p class="empty-state" id="ch-runningNote" style="display:none">Un défi est en cours — regarde en haut de l'écran pour le chrono, et joue sur la page du jeu choisi.</p>
       </div></section>
 
+      <section class="view" id="view-account"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🔐</span><div><div class="sh-name">Connexion</div><div class="sh-desc">Optionnel — retrouve ta progression sur un autre appareil</div></div></div>
+
+        <div id="acc-anon" class="acc-block">
+          <p class="acc-hint">Par défaut, ta progression reste uniquement sur cet appareil, exactement comme aujourd'hui. Un compte gratuit permet de la retrouver sur un autre navigateur ou téléphone — ce n'est jamais nécessaire pour jouer.</p>
+          <button class="primary-btn" id="acc-showLoginBtn" style="width:100%">Se connecter pour synchroniser</button>
+        </div>
+
+        <div id="acc-notConfigured" class="demo-banner acc-config-box" style="display:none">
+          <b>La synchronisation n'est pas encore activée sur ce site</b>
+          <p class="acc-hint" style="margin:6px 0 0">Pour l'activer (gratuit, sans carte bancaire, ~10 minutes) :</p>
+          <ol id="acc-steps" class="acc-steps"></ol>
+        </div>
+
+        <div id="acc-login" class="acc-block" style="display:none">
+          <label class="fr-label" for="acc-email">Email</label>
+          <input type="email" id="acc-email" placeholder="toi@exemple.com" autocomplete="email">
+          <label class="fr-label" for="acc-password">Mot de passe</label>
+          <input type="password" id="acc-password" placeholder="6 caractères minimum" autocomplete="current-password">
+          <div class="acc-row">
+            <button class="primary-btn" id="acc-signinBtn">Se connecter</button>
+            <button class="fr-copy" id="acc-signupBtn">Créer un compte</button>
+          </div>
+          <button class="fr-copy" id="acc-cancelBtn" style="width:100%;margin-top:8px">Annuler</button>
+        </div>
+
+        <div id="acc-connected" class="acc-block" style="display:none">
+          <div class="profile-row"><span>Connecté</span><b id="acc-userEmail">—</b></div>
+          <div class="profile-row"><span>Dernière synchro</span><b id="acc-lastSync">—</b></div>
+          <div class="acc-row" style="margin:14px 0">
+            <button class="primary-btn" id="acc-uploadBtn">⬆️ Envoyer ma sauvegarde</button>
+            <button class="fr-copy" id="acc-downloadBtn">⬇️ Récupérer depuis le cloud</button>
+          </div>
+          <button class="fr-copy" id="acc-signoutBtn" style="width:100%">Se déconnecter</button>
+        </div>
+
+        <div class="message" id="acc-message"></div>
+      </div></section>
+
       <section class="view" id="view-parametres"><div class="panel">
         <div class="settings-row"><span>🌙 Thème sombre</span><button class="toggle on" id="themeToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row"><span>🔊 Son</span><button class="toggle on" id="soundToggle" aria-pressed="true">Activé</button></div>
@@ -775,6 +816,8 @@
 <script src="js/shortcuts.js"></script>
 <script src="js/floor.js"></script>
 <script src="js/challenges.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/cloud-sync.js"></script>
 <script src="js/ambiance.js"></script>
 <script src="js/sw-register.js"></script>
 </body>
