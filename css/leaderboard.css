@@ -1,0 +1,25 @@
+/* ============================================================
+   CLASSEMENT — comparaison locale avec des amis, à partir de leur
+   sauvegarde exportée (même fichier .json que Paramètres → Exporter).
+   Pas de serveur central dans ce projet : ceci reste la seule façon
+   honnête de comparer deux joueurs sans rien envoyer nulle part.
+   ============================================================ */
+#view-leaderboard .panel{border-color:#8fd3e8}
+#view-leaderboard .scene-header .sh-name{color:#a8e6f5}
+
+.lb-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0 18px}
+.lb-controls select{
+  background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;
+  padding:9px 10px;font-family:inherit;font-size:.82rem;flex:1;min-width:170px;
+}
+.lb-controls .primary-btn{flex:none;padding:9px 16px}
+
+.lb-row{display:flex;align-items:center;gap:10px;padding:11px 8px;border-bottom:1px dashed var(--border);font-size:.82rem;flex-wrap:wrap}
+.lb-row.lb-me{background:rgba(212,175,55,.09);border-radius:10px}
+.lb-rank{color:var(--muted);font-variant-numeric:tabular-nums;width:20px;text-align:center;flex-shrink:0;font-weight:bold}
+.lb-row:first-child .lb-rank{color:var(--gold-bright)}
+.lb-name{display:flex;align-items:center;gap:8px;color:var(--cream);flex:1;min-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-vip{font-size:.72rem;white-space:nowrap;flex-shrink:0;color:var(--muted)}
+.lb-metric{color:var(--gold-bright);font-weight:bold;font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0;min-width:56px;text-align:right}
+.lb-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:4px;flex-shrink:0;border-radius:6px}
+.lb-remove:hover{color:var(--red);background:rgba(163,53,47,.12)}

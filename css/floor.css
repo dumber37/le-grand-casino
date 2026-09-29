@@ -14,14 +14,25 @@
        .floor-plane → tourné à 45°, fond en grille + lueurs ; les
                       zones sont positionnées en % à l'intérieur
          .floor-zone → contre-tournée à -45° pour rester lisible
+
+   Responsive : le plan isométrique reste net jusqu'à 640px (défilement
+   horizontal si besoin, comme la table de roulette). En dessous, sur
+   téléphone, la mise en page bascule entièrement en LISTE VERTICALE
+   (grille de cartes) plutôt que de continuer à rétrécir le losange —
+   un losange isométrique devient illisible en dessous d'une certaine
+   taille (texte minuscule, zones qui se chevauchent visuellement) ;
+   une liste verticale, elle, reste parfaitement lisible à n'importe
+   quelle largeur. Même HTML dans les deux cas (généré une seule fois
+   par floor.js) : seule la mise en page CSS change avec la largeur
+   d'écran — aucune duplication de structure ni de logique JS.
    ============================================================ */
 
 #view-floor .panel{overflow:visible}
-.floor-hint{text-align:center;color:var(--muted);font-size:.78rem;margin-top:10px}
+.floor-hint{text-align:center;color:var(--muted);font-size:.78rem;margin-top:12px}
 
 .floor-stage{
   overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
-  display:flex;justify-content:center;padding:26px 10px 46px;
+  display:flex;justify-content:center;padding:30px 10px 54px;
 }
 .floor-scale{
   flex-shrink:0;
@@ -29,61 +40,85 @@
   transform-origin:50% 0;
 }
 .floor-plane{
-  position:relative;width:640px;height:560px;flex-shrink:0;
+  position:relative;width:780px;height:680px;flex-shrink:0;
   transform:rotate(45deg);
-  border-radius:26px;border:3px solid var(--gold);
-  box-shadow:0 30px 60px rgba(0,0,0,.6), inset 0 0 50px rgba(0,0,0,.55);
+  border-radius:28px;border:3px solid var(--gold);
+  box-shadow:0 34px 70px rgba(0,0,0,.6), inset 0 0 60px rgba(0,0,0,.55);
   background:
-    repeating-linear-gradient(0deg, rgba(212,175,55,.12) 0 1px, transparent 1px 64px),
-    repeating-linear-gradient(90deg, rgba(212,175,55,.12) 0 1px, transparent 1px 64px),
-    radial-gradient(circle at 28% 22%, rgba(212,175,55,.20), transparent 45%),
-    radial-gradient(circle at 78% 72%, rgba(163,53,47,.16), transparent 45%),
+    repeating-linear-gradient(0deg, rgba(212,175,55,.12) 0 1px, transparent 1px 68px),
+    repeating-linear-gradient(90deg, rgba(212,175,55,.12) 0 1px, transparent 1px 68px),
+    radial-gradient(circle at 26% 20%, rgba(212,175,55,.24), transparent 46%),
+    radial-gradient(circle at 80% 74%, rgba(163,53,47,.18), transparent 46%),
+    radial-gradient(circle at 60% 46%, rgba(255,47,179,.08), transparent 40%),
     linear-gradient(135deg, var(--felt-dark), var(--felt-deep));
 }
 
 /* ---- Zones / tables ---- */
 .floor-zone{
   position:absolute;transform:translate(-50%,-50%) rotate(-45deg);
-  display:flex;flex-direction:column;align-items:center;gap:6px;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
   background:none;border:none;padding:0;margin:0;cursor:pointer;font-family:inherit;
   transition:transform .18s ease;
 }
-.floor-zone:hover,.floor-zone:focus-visible{transform:translate(-50%,-50%) rotate(-45deg) translateY(-10px)}
-.floor-zone:hover .fz-face,.floor-zone:focus-visible .fz-face{box-shadow:0 18px 26px rgba(0,0,0,.6), inset 0 0 16px rgba(212,175,55,.22);border-color:var(--gold-bright)}
+.floor-zone:hover,.floor-zone:focus-visible{transform:translate(-50%,-50%) rotate(-45deg) translateY(-12px)}
+.floor-zone:hover .fz-face,.floor-zone:focus-visible .fz-face{box-shadow:0 20px 30px rgba(0,0,0,.6), inset 0 0 18px rgba(212,175,55,.24);border-color:var(--gold-bright)}
 
 .fz-face{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  width:92px;height:92px;border-radius:16px;
-  background:linear-gradient(180deg,rgba(20,32,27,.94),rgba(8,14,12,.94));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  width:112px;height:112px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(20,32,27,.95),rgba(8,14,12,.95));
   border:2px solid var(--gold);
-  box-shadow:0 10px 18px rgba(0,0,0,.55), inset 0 0 12px rgba(212,175,55,.1);
+  box-shadow:0 12px 20px rgba(0,0,0,.55), inset 0 0 14px rgba(212,175,55,.1);
   transition:box-shadow .18s ease,border-color .18s ease;
 }
-.fz-icon{font-size:1.7rem;line-height:1}
-.fz-label{font-size:.6rem;color:var(--gold-bright);text-align:center;line-height:1.15;padding:0 5px}
+.fz-icon{font-size:2.05rem;line-height:1}
+.fz-label{font-size:.7rem;color:var(--gold-bright);text-align:center;line-height:1.2;padding:0 6px;font-weight:bold}
 
 /* Petites variantes de teinte par type de zone, cohérentes avec le thème existant */
-.fz-gold .fz-face{box-shadow:0 10px 18px rgba(0,0,0,.55), inset 0 0 16px rgba(212,175,55,.28)}
-.fz-neon .fz-face{border-color:#ff2fb3;box-shadow:0 0 16px rgba(255,47,179,.45), 0 10px 18px rgba(0,0,0,.55)}
-.fz-neon:hover .fz-face,.fz-neon:focus-visible .fz-face{border-color:#ff8fdc;box-shadow:0 0 22px rgba(255,47,179,.7)}
-.fz-vip .fz-face{border-color:var(--gold-bright);box-shadow:0 0 20px rgba(242,214,117,.5), 0 10px 18px rgba(0,0,0,.55)}
+.fz-gold .fz-face{box-shadow:0 12px 20px rgba(0,0,0,.55), inset 0 0 18px rgba(212,175,55,.3)}
+.fz-neon .fz-face{border-color:#ff2fb3;box-shadow:0 0 18px rgba(255,47,179,.48), 0 12px 20px rgba(0,0,0,.55)}
+.fz-neon:hover .fz-face,.fz-neon:focus-visible .fz-face{border-color:#ff8fdc;box-shadow:0 0 24px rgba(255,47,179,.72)}
+.fz-vip .fz-face{border-color:var(--gold-bright);box-shadow:0 0 22px rgba(242,214,117,.52), 0 12px 20px rgba(0,0,0,.55)}
 
 /* ---- Petites tables groupées (ex. les 4 jeux rapides) ---- */
-.fz-pips{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:108px}
+.fz-pips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:128px}
 .floor-pip{
-  width:30px;height:30px;border-radius:50%;padding:0;
-  display:flex;align-items:center;justify-content:center;font-size:.95rem;font-family:inherit;
+  width:34px;height:34px;border-radius:50%;padding:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.05rem;font-family:inherit;
   background:var(--bg-deep);border:1.5px solid var(--border);color:inherit;cursor:pointer;
   transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;
 }
 .floor-pip:hover,.floor-pip:focus-visible{transform:translateY(-4px);border-color:var(--gold-bright);box-shadow:0 6px 12px rgba(0,0,0,.5)}
 
+/* ---- Palier tablette : plan un peu plus compact, toujours isométrique ---- */
 @media (max-width:880px){
-  .floor-plane{width:520px;height:460px}
-  .fz-face{width:80px;height:80px}
-  .fz-icon{font-size:1.5rem}
+  .floor-plane{width:640px;height:560px}
+  .fz-face{width:98px;height:98px}
+  .fz-icon{font-size:1.85rem}
+  .fz-label{font-size:.66rem}
 }
-@media (max-width:520px){
-  .floor-stage{padding:18px 6px 34px}
-  .floor-scale{transform:scaleY(.52)}
+
+/* ---- Palier téléphone : liste verticale, plus d'isométrique du tout ----
+   En dessous de cette largeur, le losange devient trop petit pour rester
+   lisible. On neutralise toutes les transforms (rotate/scaleY/translate)
+   et .floor-plane redevient une grille de cartes en 2 colonnes, chacune
+   pleinement lisible (icône + nom complet, jamais tronqué). */
+@media (max-width:640px){
+  .floor-stage{overflow-x:visible;padding:6px 4px 10px;display:block}
+  .floor-scale{transform:none;width:100%}
+  .floor-plane{
+    transform:none;width:100%;height:auto;flex-shrink:1;
+    border-radius:18px;padding:14px;
+    display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+    box-shadow:0 14px 30px rgba(0,0,0,.5), inset 0 0 30px rgba(0,0,0,.4);
+  }
+  .floor-zone{
+    position:static;transform:none;gap:8px;
+  }
+  .floor-zone:hover,.floor-zone:focus-visible{transform:translateY(-4px)}
+  .fz-face{width:100%;height:auto;aspect-ratio:1;border-radius:16px}
+  .fz-icon{font-size:2rem}
+  .fz-label{font-size:.74rem}
+  .fz-pips{max-width:none}
+  .floor-pip{width:32px;height:32px}
 }

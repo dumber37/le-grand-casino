@@ -304,6 +304,9 @@ window.Casino = (function(){
     {key:'legende', name:'Légende', icon:'👑', color:'#f2d675', min:150000}
   ];
   function vipTierIndex(wagered){ let idx=0; VIP_TIERS.forEach((t,i)=>{ if(wagered>=t.min) idx=i; }); return idx; }
+  // Exposés pour le Classement (js/leaderboard.js) : réutilise exactement le même barème,
+  // jamais une copie qui pourrait diverger si les paliers changent un jour.
+  C.VIP_TIERS=VIP_TIERS; C.vipTierIndex=vipTierIndex;
   function fmtNum(n){ return n.toLocaleString('fr-FR'); }
   function renderVip(){
     const idx=vipTierIndex(C.state.totalWagered), tier=VIP_TIERS[idx], next=VIP_TIERS[idx+1];
@@ -514,6 +517,7 @@ window.Casino = (function(){
   }
   C.buildSaveObject = buildSaveObject;
   C.applySaveObject = applySaveObject;
+  C.validateSaveData = payload=>validateSaveData(payload); // exposé après coup, voir plus bas (fonction hoisted)
   C.reloadAfterImport = function(msg){ showToast(msg||'✅ Sauvegarde importée — rechargement...'); setTimeout(()=>location.reload(), 900); };
   function exportSave(){
     const payload=buildSaveObject();
@@ -564,7 +568,7 @@ window.Casino = (function(){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     const target=document.getElementById('view-'+name); if(target) target.classList.add('active');
     document.querySelectorAll('.side-nav button[data-view], .bottom-nav button[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
-    const titles={home:'Accueil',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',profil:'Profil',parametres:'Paramètres'};
+    const titles={home:'Accueil',floor:'Plan du casino',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',challenges:'Défis',leaderboard:'Classement',account:'Connexion',profil:'Profil',parametres:'Paramètres'};
     document.getElementById('viewTitle').textContent=titles[name]||name;
     document.getElementById('sidebar').classList.remove('open');
     // Rendu différé : chaque vue de progression ne reconstruit son contenu qu'à son ouverture,
@@ -577,6 +581,7 @@ window.Casino = (function(){
     else if(name==='halloffame') renderHallOfFame();
     else if(name==='challenges'&&C.renderChallenges) C.renderChallenges();
     else if(name==='account'&&C.renderAccount) C.renderAccount();
+    else if(name==='leaderboard'&&C.renderLeaderboard) C.renderLeaderboard();
   }
   document.addEventListener('click',(e)=>{
     const viewEl=e.target.closest('[data-view]'); if(viewEl){ switchView(viewEl.dataset.view); return; }

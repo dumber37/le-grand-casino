@@ -36,6 +36,7 @@
 <link rel="stylesheet" href="css/halloffame.css">
 <link rel="stylesheet" href="css/challenges.css">
 <link rel="stylesheet" href="css/account.css">
+<link rel="stylesheet" href="css/leaderboard.css">
 </head>
 <body>
 <div id="ambientLayer" class="ambient-layer"></div>
@@ -75,7 +76,7 @@
       <button data-view="vip">💎 Statut VIP</button>
       <button data-view="halloffame">🏆 Hall of Fame</button>
       <button data-view="challenges">🎯 Défis</button>
-      <button class="soon" disabled>📊 Classement <span class="tag">Bientôt</span></button>
+      <button data-view="leaderboard">📊 Classement</button>
       <button data-view="profil">👤 Profil</button>
     </nav>
     <div class="side-bottom">
@@ -767,6 +768,24 @@
         <div class="message" id="acc-message"></div>
       </div></section>
 
+      <section class="view" id="view-leaderboard"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">📊</span><div><div class="sh-name">Classement</div><div class="sh-desc">Compare ta progression avec tes amis</div></div></div>
+        <p class="acc-hint">Ce site n'a pas de serveur central : pour comparer ton score à celui d'un ami, demande-lui d'exporter sa sauvegarde (Paramètres → « Exporter ma sauvegarde ») et importe son fichier ici. Rien n'est envoyé nulle part — tout reste sur cet appareil.</p>
+        <div class="lb-controls">
+          <select id="lb-sort" aria-label="Trier le classement par">
+            <option value="totalWon">Total gagné</option>
+            <option value="totalWagered">Total misé</option>
+            <option value="biggestWin">Plus gros gain</option>
+            <option value="crashBestMult">Meilleur multiplicateur Crash</option>
+            <option value="gamesPlayed">Parties jouées</option>
+          </select>
+          <button class="primary-btn" id="lb-addBtn">+ Ajouter un ami</button>
+          <input type="file" id="lb-fileInput" accept="application/json,.json" style="display:none">
+        </div>
+        <div id="lb-list"></div>
+        <p class="empty-state" id="lb-empty" style="display:none">Ajoute la sauvegarde d'un ami pour commencer à comparer.</p>
+      </div></section>
+
       <section class="view" id="view-parametres"><div class="panel">
         <div class="settings-row"><span>🌙 Thème sombre</span><button class="toggle on" id="themeToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row"><span>🔊 Son</span><button class="toggle on" id="soundToggle" aria-pressed="true">Activé</button></div>
@@ -818,6 +837,7 @@
 <script src="js/challenges.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/cloud-sync.js"></script>
+<script src="js/leaderboard.js"></script>
 <script src="js/ambiance.js"></script>
 <script src="js/sw-register.js"></script>
 </body>
