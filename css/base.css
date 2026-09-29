@@ -55,7 +55,7 @@ body{
 /* La liste de navigation (de plus en plus longue au fil des jeux ajoutés) défile seule dans
    l'espace disponible ; le logo en haut et "Paramètres" en bas restent toujours visibles. */
 .side-nav{display:flex;flex-direction:column;gap:3px;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
-.side-bottom{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+.side-bottom{display:flex;flex-direction:column;gap:3px;flex-shrink:0;margin-top:auto;border-top:1px solid var(--border);padding-top:10px}
 .side-nav button,.side-bottom button{
   display:flex;align-items:center;gap:8px;justify-content:flex-start;text-align:left;
   background:none;border:none;color:var(--muted);font-family:inherit;font-size:.85rem;
@@ -65,7 +65,6 @@ body{
 .side-nav button:hover:not(.active):not(:disabled){background:rgba(255,255,255,.04);color:var(--cream)}
 .side-nav button.soon{cursor:default;opacity:.55}
 .side-nav button .tag{margin-left:auto;font-size:.6rem;background:var(--glass-2);border:1px solid var(--border);border-radius:10px;padding:1px 7px;color:var(--muted)}
-.side-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:10px}
 .sidebar-overlay{display:none}
 .main{flex:1;margin-left:230px;display:flex;flex-direction:column;min-height:100vh}
 .topbar{
