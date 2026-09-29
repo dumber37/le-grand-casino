@@ -592,6 +592,26 @@ window.Casino = (function(){
     const starEl=e.target.closest('.fav-star'); if(starEl){ toggleFavorite(starEl.dataset.game); return; }
   });
   document.getElementById('burgerBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+  // ---- Plein écran (bonus au resserrement général de la mise en page ci-dessus) : utile sur
+  // les petites fenêtres/portables où même une mise en page compacte peut encore nécessiter de
+  // défiler pour un jeu chargé (Blackjack...). Bouton masqué si l'API n'est pas disponible
+  // (ex. certains navigateurs mobiles) plutôt que de laisser un bouton mort. ----
+  const fsBtn=document.getElementById('fsToggleBtn');
+  if(fsBtn){
+    if(!document.documentElement.requestFullscreen){
+      fsBtn.style.display='none'; // API indisponible (ex. certains navigateurs mobiles) : pas de bouton mort
+    } else {
+      fsBtn.addEventListener('click',()=>{
+        if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+        else document.exitFullscreen().catch(()=>{});
+      });
+      document.addEventListener('fullscreenchange',()=>{
+        const on=!!document.fullscreenElement;
+        fsBtn.setAttribute('aria-pressed',String(on));
+        fsBtn.title=on?'Quitter le plein écran':'Plein écran';
+      });
+    }
+  }
   document.getElementById('sidebarOverlay').addEventListener('click',()=>document.getElementById('sidebar').classList.remove('open'));
   document.getElementById('themeToggle').addEventListener('click',(e)=>{
     const isLight=document.documentElement.getAttribute('data-theme')==='light';
