@@ -80,10 +80,14 @@ window.Casino = (function(){
     return (sameDay?'Aujourd’hui':d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}))+' — '+hh+':'+mm;
   }
   function renderHistory(){
-    const listEl=document.getElementById('hist-list'), emptyEl=document.getElementById('hist-empty'), filterEl=document.getElementById('hist-filter');
+    const listEl=document.getElementById('hist-list'), emptyEl=document.getElementById('hist-empty'), filterEl=document.getElementById('hist-filter'), sortEl=document.getElementById('hist-sort');
     if(!listEl) return;
     const filter=filterEl?filterEl.value:'all';
     const rows=history.filter(h=>filter==='all'||h.game===filter);
+    const sort=sortEl?sortEl.value:'recent';
+    if(sort==='net-desc') rows.sort((a,b)=>b.net-a.net);
+    else if(sort==='net-asc') rows.sort((a,b)=>a.net-b.net);
+    // 'recent' : déjà l'ordre naturel de `history` (le plus récent en tête, voir recordGame).
     listEl.innerHTML='';
     emptyEl.style.display=rows.length?'none':'block';
     rows.forEach(h=>{
@@ -594,6 +598,15 @@ window.Casino = (function(){
     if(isLight){ document.documentElement.removeAttribute('data-theme'); e.target.textContent='Activé'; e.target.classList.add('on'); e.target.setAttribute('aria-pressed','true'); try{localStorage.setItem(THEME_KEY,'dark');}catch(err){} }
     else { document.documentElement.setAttribute('data-theme','light'); e.target.textContent='Désactivé'; e.target.classList.remove('on'); e.target.setAttribute('aria-pressed','false'); try{localStorage.setItem(THEME_KEY,'light');}catch(err){} }
   });
+  // Lien profond (raccourcis PWA, manifest.json → shortcuts) : si l'URL charge avec un
+  // fragment reconnu (#slots, #missions...), on clique le bouton de navigation correspondant —
+  // exactement comme un vrai clic de l'utilisateur, aucune logique de navigation dupliquée.
+  (function openDeepLink(){
+    const hash=(location.hash||'').replace('#','');
+    if(!hash) return;
+    const btn=document.querySelector('[data-view="'+hash+'"]');
+    if(btn) btn.click();
+  })();
 
   // ====== MODULE: Aide aux cartes (réutilisée par blackjack, baccarat, ride the bus) ======
   const SUITS=['♠','♥','♦','♣'];
@@ -613,6 +626,7 @@ window.Casino = (function(){
   };
 
   document.getElementById('hist-filter').addEventListener('change', renderHistory);
+  document.getElementById('hist-sort').addEventListener('change', renderHistory);
   renderHome();
   renderStats();
   C.renderBalance();

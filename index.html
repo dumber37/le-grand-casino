@@ -93,6 +93,7 @@
       <div class="topbar-stats">
         <span>💰 <b id="hdrBalance">500</b></span>
         <span>🏆 Niv. <b id="hdrLevel">1</b></span>
+        <span id="hdrCloudBadge" class="hdr-cloud" data-view="account" title="Connexion" style="display:none">☁️</span>
       </div>
     </header>
 
@@ -659,6 +660,11 @@
             <option value="videopoker">Vidéo Poker</option>
             <option value="poker">Poker Texas Hold'em</option>
             <option value="cases">Ouverture de Caisses</option>
+          </select>
+          <select id="hist-sort">
+            <option value="recent">Plus récentes d'abord</option>
+            <option value="net-desc">Plus gros gains d'abord</option>
+            <option value="net-asc">Plus grosses pertes d'abord</option>
           </select>
         </div>
         <div id="hist-list"></div>

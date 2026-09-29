@@ -32,13 +32,16 @@ window.Casino=window.Casino||{};
     'Colle cette configuration dans <b>js/firebase-config.js</b>, à la place de <code>null</code>, puis redéploie.'
   ].map(s=>'<li>'+s+'</li>').join('');
 
+  const cloudBadge=$('hdrCloudBadge');
   function say(t){ msgEl.textContent=t; }
   function showLoggedOut(){
     anonEl.style.display=''; loginEl.style.display='none'; connectedEl.style.display='none';
+    if(cloudBadge) cloudBadge.style.display='none';
   }
   function showLoggedIn(email){
     anonEl.style.display='none'; loginEl.style.display='none'; connectedEl.style.display='block';
     userEmailEl.textContent=email;
+    if(cloudBadge){ cloudBadge.style.display='inline'; cloudBadge.title='Connecté : '+email; }
   }
   // Exposé pour core.js : appelé à chaque ouverture de la vue (switchView), comme les autres
   // rendus différés (renderStats, renderChallenges...). Ne déclenche jamais de chargement du

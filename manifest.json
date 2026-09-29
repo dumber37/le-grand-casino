@@ -12,5 +12,11 @@
   "icons": [
     { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Machines à sous", "short_name": "Slots", "url": "./index.html#slots", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Fortune Dragon", "short_name": "Dragon", "url": "./index.html#dragon", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Missions du jour", "short_name": "Missions", "url": "./index.html#missions", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Crash", "short_name": "Crash", "url": "./index.html#crash", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] }
   ]
 }

@@ -76,8 +76,11 @@ body{
 }
 .burger{display:none;background:none;border:1px solid var(--border);color:var(--gold-bright);border-radius:8px;width:34px;height:34px;font-size:1rem;cursor:pointer}
 .topbar-title{font-size:1rem;color:var(--gold-bright);flex:1}
-.topbar-stats{display:flex;gap:14px;font-size:.82rem;color:var(--muted)}
+.topbar-stats{display:flex;gap:14px;font-size:.82rem;color:var(--muted);align-items:center}
 .topbar-stats b{color:var(--gold-bright);font-variant-numeric:tabular-nums}
+/* Badge discret : visible dès qu'une session cloud est active (voir cloud-sync.js), clique
+   vers la page Connexion (data-view, même délégation de clic que partout ailleurs). */
+.hdr-cloud{cursor:pointer;font-size:.9rem;filter:drop-shadow(0 0 4px rgba(168,205,240,.6))}
 .content{padding:20px;max-width:760px;width:100%;margin:0 auto;padding-bottom:90px}
 
 /* ---- Accueil ---- */
@@ -139,8 +142,8 @@ body{
 @media (max-width:880px){ #toastContainer{left:14px;right:14px;top:auto;bottom:80px;max-width:none} }
 
 /* ---- Historique ---- */
-.hist-filter-row{margin-bottom:14px}
-.hist-filter-row select{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:9px;font-family:inherit;font-size:.85rem}
+.hist-filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.hist-filter-row select{flex:1;min-width:160px;background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:9px;font-family:inherit;font-size:.85rem}
 .hist-row{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px dashed var(--border);font-size:.82rem}
 .hist-main{display:flex;flex-direction:column}
 .hist-main span{color:var(--muted);font-size:.72rem}
