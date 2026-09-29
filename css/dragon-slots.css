@@ -73,6 +73,11 @@
 #view-dragon .reel{background:#160707;border:1px solid #c9302c}
 #view-dragon .reel.spin-active{border-color:#ffd479;box-shadow:0 0 14px rgba(201,48,44,.65)}
 #view-dragon .reels{background:#0c0303;border:1px solid rgba(201,48,44,.4)}
+/* Grille 3 lignes x 5 rouleaux (voir slot-engine.js, mode rows>1) : 5 colonnes serrées avec un
+   espacement plus fin que la machine classique (3 rouleaux), chaque colonne bien plus haute pour
+   accueillir ses 3 symboles empilés. */
+#view-dragon .reels{gap:4px;padding:8px 6px}
+#view-dragon .reel.reel-grid{min-height:190px;padding:4px 2px;gap:2px}
 
 #view-dragon .lever-col{background:rgba(20,4,4,.7);border-color:#c9302c}
 #view-dragon .lever-track{border-color:#c9302c}
@@ -80,8 +85,10 @@
 
 #view-dragon .win-line{background:linear-gradient(90deg,transparent,#ffd479,transparent);box-shadow:0 0 10px 2px rgba(255,212,121,.85)}
 
-/* Le dragon est le symbole jackpot : flourish rouge/or plus intense que le générique */
-#view-dragon .reel.jackpot-flourish{animation:dragonJackpot .7s ease-in-out 2}
+/* Le dragon est le symbole jackpot : flourish rouge/or plus intense que le générique.
+   Cible .jackpot-flourish seul (pas .reel.jackpot-flourish) car en grille c'est chaque .symbol
+   individuel qui reçoit la classe, pas toute la colonne. */
+#view-dragon .jackpot-flourish{animation:dragonJackpot .7s ease-in-out 2}
 @keyframes dragonJackpot{
   0%,100%{transform:scale(1);filter:brightness(1)}
   50%{transform:scale(1.2);filter:brightness(1.9) drop-shadow(0 0 10px #ff3b30) drop-shadow(0 0 22px #ffd479)}

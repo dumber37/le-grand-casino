@@ -5,6 +5,15 @@
    ============================================================ */
 
 .vp-cards{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:4px 0}
+/* Pas d'animation par défaut : garder une carte reconstruit toute la main (voir video-poker.js),
+   seules les cartes fraîchement distribuées/échangées (.vp-fresh) doivent "sortir de la banque". */
+.vp-cards .card-3d{animation:none}
+.vp-cards .card-3d.vp-fresh{animation:cardPopIn .38s cubic-bezier(.18,.72,.24,1) backwards}
+.vp-slot:nth-child(1) .card-3d.vp-fresh{animation-delay:0s}
+.vp-slot:nth-child(2) .card-3d.vp-fresh{animation-delay:.08s}
+.vp-slot:nth-child(3) .card-3d.vp-fresh{animation-delay:.16s}
+.vp-slot:nth-child(4) .card-3d.vp-fresh{animation-delay:.24s}
+.vp-slot:nth-child(5) .card-3d.vp-fresh{animation-delay:.32s}
 .vp-slot{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:transform .15s ease}
 .vp-slot:hover{transform:translateY(-3px)}
 .vp-slot.vp-empty{width:62px;height:90px;border:2px dashed var(--border);border-radius:9px;opacity:.4}

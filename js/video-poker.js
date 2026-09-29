@@ -56,7 +56,10 @@
     return {name:'Rien — perdu',mult:0};
   }
 
-  function renderCards(){
+  // animateMask (tableau de 5 booléens, optionnel) : seules les cartes marquées y rejouent
+  // l'animation "sortie de la banque" — sans ça, garder une carte (clic sur "GARDÉE") reconstruit
+  // toute la main et ferait revoler TOUTES les cartes à chaque clic, y compris celles déjà en jeu.
+  function renderCards(animateMask){
     cardsEl.innerHTML='';
     if(!hand.length){
       for(let i=0;i<5;i++){ const ph=document.createElement('div'); ph.className='vp-slot vp-empty'; cardsEl.appendChild(ph); }
@@ -64,7 +67,9 @@
     }
     hand.forEach((c,i)=>{
       const slot=document.createElement('div'); slot.className='vp-slot'+(held[i]?' vp-held':'');
-      slot.appendChild(C.renderCard(c,false,true));
+      const cardEl=C.renderCard(c,false,true);
+      if(animateMask&&animateMask[i]) cardEl.classList.add('vp-fresh');
+      slot.appendChild(cardEl);
       const tag=document.createElement('div'); tag.className='vp-hold-tag'; tag.textContent=held[i]?'GARDÉE':'';
       slot.appendChild(tag);
       if(phase==='dealt'){
@@ -102,9 +107,10 @@
     phase='dealt';
     cardsEl.classList.remove('vp-win'); highlightPaytable(-1);
     msg.textContent='Choisis les cartes à garder, puis échange.';
-    renderCards(); render();
+    renderCards([true,true,true,true,true]); render();
   }
   function draw(){
+    const wasHeld=held.slice();
     for(let i=0;i<5;i++){ if(!held[i]) hand[i]=deck.pop(); }
     C.sound&&C.sound('card');
     const res=evaluateHand(hand);
@@ -112,7 +118,7 @@
     if(demoMode) demoBalance+=win; else { C.state.balance+=win; C.saveBalance(); C.renderBalance(); }
     if(demoMode) demoBalEl.textContent=demoBalance;
     phase='idle'; held=[false,false,false,false,false];
-    renderCards(); render(); highlightPaytable(res.mult);
+    renderCards(wasHeld.map(h=>!h)); render(); highlightPaytable(res.mult);
     cardsEl.classList.remove('vp-win'); void cardsEl.offsetWidth;
     if(win>0){ msg.textContent=res.name+' ! +'+win+' jetons'+(demoMode?' (essai)':''); cardsEl.classList.add('vp-win'); C.flashWin(msg); }
     else { msg.textContent=res.name+(demoMode?' (essai).':'.'); C.flashLoss(cardsEl); }

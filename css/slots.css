@@ -11,16 +11,24 @@
 .reel{background:var(--felt-dark);border:1px solid var(--border);border-radius:8px;height:72px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;overflow:hidden;transition:box-shadow .2s ease,border-color .2s ease}
 .reel.spin-active{border-color:var(--gold-bright);box-shadow:0 0 14px rgba(212,175,55,.5);animation:reelPulse .5s ease-in-out infinite alternate}
 @keyframes reelPulse{from{box-shadow:0 0 6px rgba(212,175,55,.3)}to{box-shadow:0 0 18px rgba(212,175,55,.6)}}
+/* Mode grille (plusieurs symboles empilés par rouleau, ex. Fortune Dragon 3x5, voir
+   slot-engine.js) : le rouleau devient une colonne de cellules .symbol plutôt qu'un symbole
+   unique centré. Le clignotement gagnant (.symbol-blink/.jackpot-flourish) cible directement
+   la cellule concernée, pas toute la colonne. */
+.reel.reel-grid{flex-direction:column;padding:3px 2px;gap:3px;font-size:0;min-width:0}
+.reel.reel-grid .symbol{flex:1;width:100%;min-width:0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:clamp(.8rem,4.2vw,1.7rem)}
 
 /* ---- Animations du moteur de machine à sous (partagées par toutes les machines) ---- */
 /* Rouleau qui s'arrête avec un léger rebond */
 .reel.reel-bounce{animation:reelBounce .42s cubic-bezier(.34,1.56,.64,1)}
 @keyframes reelBounce{0%{transform:translateY(-14px) scale(1.05)}55%{transform:translateY(4px) scale(.97)}100%{transform:translateY(0) scale(1)}}
-/* Symboles gagnants qui clignotent */
-.reel.symbol-blink{animation:symbolBlink .5s ease-in-out 3}
+/* Symboles gagnants qui clignotent — ciblent soit un rouleau entier (machine classique, 1 seul
+   symbole par rouleau) soit un .symbol individuel (mode grille, plusieurs symboles empilés par
+   rouleau — voir Fortune Dragon) : le sélecteur ne dépend plus de .reel pour couvrir les deux. */
+.symbol-blink{animation:symbolBlink .5s ease-in-out 3}
 @keyframes symbolBlink{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.35;filter:brightness(1.8)}}
 /* Alignement jackpot — flourish plus impressionnant (couleur ajustable par thème) */
-.reel.jackpot-flourish{animation:jackpotFlourish .7s ease-in-out 2}
+.jackpot-flourish{animation:jackpotFlourish .7s ease-in-out 2}
 @keyframes jackpotFlourish{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.14);filter:brightness(1.7) drop-shadow(0 0 12px var(--gold-bright))}}
 /* Ligne lumineuse reliant les symboles gagnants */
 .win-line{position:absolute;left:8px;right:8px;top:50%;height:3px;margin-top:-1.5px;border-radius:3px;
@@ -44,6 +52,26 @@
 /* Petite secousse de toute la cabine sur jackpot — réutilise exactement le keyframe mineShake
    déjà partagé (Mines, Crash) plutôt que d'en écrire un nouveau. */
 .cab.jackpot-shake{animation:mineShake .4s ease}
+/* Texte de gain qui s'envole au-dessus des rouleaux, sur CHAQUE gain (pas seulement jackpot) —
+   ancré sur .cab comme les pièces, purement décoratif. */
+.win-burst{
+  position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;
+  font-size:1.5rem;font-weight:bold;color:var(--gold-bright);white-space:nowrap;
+  text-shadow:0 0 10px rgba(212,175,55,.9),0 2px 4px rgba(0,0,0,.6);
+  animation:winBurst 1.3s cubic-bezier(.2,.7,.3,1) forwards;
+}
+.win-burst.win-burst-jackpot{font-size:2rem;color:#fff;text-shadow:0 0 14px var(--gold-bright),0 0 28px rgba(212,175,55,.8),0 2px 4px rgba(0,0,0,.7)}
+@keyframes winBurst{
+  0%{opacity:0;transform:translate(-50%,-38%) scale(.5)}
+  16%{opacity:1;transform:translate(-50%,-62%) scale(1.15)}
+  32%{transform:translate(-50%,-62%) scale(1)}
+  78%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-98%) scale(1.05)}
+}
+/* Halo qui traverse toute la cabine sur chaque gain — version discrète du jackpot-shake,
+   pour que la machine se sente vivante même sur un petit gain. */
+.cab.win-glow{animation:cabWinGlow .9s ease}
+@keyframes cabWinGlow{0%,100%{filter:brightness(1)}45%{filter:brightness(1.4)}}
 
 .lever-col{width:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--glass-2);border:1px solid var(--border);border-radius:14px;padding:10px 0}
 .lever-track{width:16px;height:150px;background:var(--bg-deep);border-radius:10px;border:1px solid var(--border);position:relative}

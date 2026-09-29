@@ -10,7 +10,7 @@
 /* Pas d'animation d'apparition à chaque rendu : seules les cartes du tableau
    fraîchement distribuées (.pk-new) "pop". */
 .pk-table .card-3d{animation:none}
-.pk-table .card-3d.pk-new{animation:cardPopIn .35s ease}
+.pk-table .card-3d.pk-new{animation:cardPopIn .38s cubic-bezier(.18,.72,.24,1) backwards}
 
 .pk-seats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
 .pk-seat{

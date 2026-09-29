@@ -9,6 +9,7 @@
     prefix: 'sd',
     gameKey: 'dragon',
     defaultBet: 10, minBet: 5, maxBet: 100, betStep: 5,
+    rows: 3, cols: 5,
     jackpotIcon: '🐉',
     // Embrase la bannière GRAND de la cabine quand le dragon d'or tombe — purement décoratif,
     // n'affecte jamais le calcul du gain (déjà déterminé par le moteur avant cet appel).

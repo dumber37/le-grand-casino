@@ -261,9 +261,33 @@ body{
 
 /* ---- Cartes 3D (vraie carte à deux faces, recto/verso) — sortie de C.renderCard,
    utilisée par blackjack, baccarat, ride the bus. ---- */
-.card-3d{width:38px;height:56px;flex-shrink:0;perspective:320px;animation:cardPopIn .3s ease}
+/* La carte "sort de la banque" : translation + légère rotation depuis un point au-dessus de la
+   table (côté croupier) qui retombe à sa place, plutôt qu'un simple pop-in sur place. N'anime QUE
+   .card-3d (le conteneur externe) — jamais .card-flip/.card-face/.card-back (backface-visibility) —
+   donc aucun risque de retomber dans le bug 3D-transform + @keyframes + backface-visibility déjà
+   rencontré sur cette page. "backwards" : pendant animation-delay (cartes suivantes d'une même
+   main, voir stagger ci-dessous), la carte reste invisible/décalée au lieu de clignoter à sa place. */
+.card-3d{width:38px;height:56px;flex-shrink:0;perspective:320px;animation:cardPopIn .38s cubic-bezier(.18,.72,.24,1) backwards}
 .card-3d.lg{width:62px;height:90px}
-@keyframes cardPopIn{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}
+@keyframes cardPopIn{
+  0%{opacity:0;transform:translate(-52px,-60px) rotate(-20deg) scale(.7)}
+  100%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}
+}
+/* Distribution en cascade : chaque carte d'une même main part un peu après la précédente,
+   comme un croupier qui distribue une à une plutôt que toutes en même temps. */
+.cards .card-3d:nth-child(1),.pk-cards .card-3d:nth-child(1),.bus-cards .card-3d:nth-child(1){animation-delay:0s}
+.cards .card-3d:nth-child(2),.pk-cards .card-3d:nth-child(2),.bus-cards .card-3d:nth-child(2){animation-delay:.08s}
+.cards .card-3d:nth-child(3),.pk-cards .card-3d:nth-child(3),.bus-cards .card-3d:nth-child(3){animation-delay:.16s}
+.cards .card-3d:nth-child(4),.pk-cards .card-3d:nth-child(4),.bus-cards .card-3d:nth-child(4){animation-delay:.24s}
+.cards .card-3d:nth-child(5),.pk-cards .card-3d:nth-child(5),.bus-cards .card-3d:nth-child(5){animation-delay:.32s}
+.cards .card-3d:nth-child(6),.pk-cards .card-3d:nth-child(6){animation-delay:.4s}
+.cards .card-3d:nth-child(7),.pk-cards .card-3d:nth-child(7){animation-delay:.48s}
+.cards .card-3d:nth-child(8),.pk-cards .card-3d:nth-child(8){animation-delay:.56s}
+#pk-board .card-3d.pk-new:nth-child(1){animation-delay:0s}
+#pk-board .card-3d.pk-new:nth-child(2){animation-delay:.08s}
+#pk-board .card-3d.pk-new:nth-child(3){animation-delay:.16s}
+#pk-board .card-3d.pk-new:nth-child(4){animation-delay:.24s}
+#pk-board .card-3d.pk-new:nth-child(5){animation-delay:.32s}
 .card-flip{
   /* Rotation pilotée par CSS transition (jamais par @keyframes, la combinaison qui avait
      cassé le rendu du backface-visibility dans ce moteur) : exactement la même technique
