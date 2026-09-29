@@ -158,14 +158,32 @@ window.Casino = (function(){
   let unlockedAch=[];
   try{ const raw=localStorage.getItem(ACH_KEY); if(raw) unlockedAch=JSON.parse(raw); }catch(e){}
   function saveUnlockedAch(){ try{ localStorage.setItem(ACH_KEY, JSON.stringify(unlockedAch)); }catch(e){} }
+  // pgCount : petit raccourci réutilisé par plusieurs succès/missions ci-dessous pour lire le
+  // nombre de parties d'un jeu dans stats.perGame, sans répéter la même garde à chaque fois.
+  const pgCount=key=>(stats.perGame[key]&&stats.perGame[key].count)||0;
   const ACHIEVEMENTS=[
     {id:'first-spin', icon:'🎰', label:'Premier tour — jouer sa première partie', cond:()=>stats.gamesPlayed>=1},
     {id:'big-win', icon:'💰', label:'Premier gros gain — gagner 500 jetons d’un coup', cond:()=>stats.biggestWin>=500},
-    {id:'blackjack-fan', icon:'🃏', label:'Joueur de blackjack — 10 parties de blackjack', cond:()=>((stats.perGame.blackjack&&stats.perGame.blackjack.count)||0)>=10},
-    {id:'roulette-fan', icon:'🎡', label:'Tour de roulette — 10 parties de roulette', cond:()=>((stats.perGame.roulette&&stats.perGame.roulette.count)||0)>=10},
+    {id:'blackjack-fan', icon:'🃏', label:'Joueur de blackjack — 10 parties de blackjack', cond:()=>pgCount('blackjack')>=10},
+    {id:'roulette-fan', icon:'🎡', label:'Tour de roulette — 10 parties de roulette', cond:()=>pgCount('roulette')>=10},
     {id:'streak-3', icon:'🔥', label:'Série — 3 jours consécutifs', cond:()=>C.state.streak>=3},
     {id:'high-roller', icon:'💎', label:'High Roller — 5 000 jetons misés au total', cond:()=>C.state.totalWagered>=5000},
-    {id:'thousand-won', icon:'👑', label:'1 000 jetons gagnés au total', cond:()=>stats.totalWon>=1000}
+    {id:'thousand-won', icon:'👑', label:'1 000 jetons gagnés au total', cond:()=>stats.totalWon>=1000},
+    // ---- Ajoutés pour couvrir les jeux/fonctionnalités arrivés depuis (Crash, Poker, Vidéo
+    // Poker, Caisses, Ride the Bus, Mines, VIP, série longue, Défis, Connexion cloud) — tous
+    // calculés à partir de données déjà suivies ailleurs (stats.perGame, C.state, ou un simple
+    // indicateur déjà posé par un autre module), jamais un nouveau système de suivi. ----
+    {id:'poker-shark', icon:'♣️', label:'Requin du poker — 10 mains de Poker Texas Hold’em', cond:()=>pgCount('poker')>=10},
+    {id:'video-poker-pro', icon:'♠️', label:'Habitué du vidéo poker — 10 parties de Vidéo Poker', cond:()=>pgCount('videopoker')>=10},
+    {id:'bus-rider', icon:'🚌', label:'Voyageur régulier — 10 parties de Ride the Bus', cond:()=>pgCount('bus')>=10},
+    {id:'mines-master', icon:'💣', label:'Démineur — 10 parties de Mines', cond:()=>pgCount('mines')>=10},
+    {id:'crash-flyer', icon:'🚀', label:'Haut vol — atteindre x10 sur Crash avant d’encaisser', cond:()=>(stats.crashBestMult||0)>=10},
+    {id:'case-opener', icon:'📦', label:'Collectionneur — 10 caisses ouvertes', cond:()=>pgCount('cases')>=10},
+    {id:'all-rounder', icon:'🎯', label:'Touche-à-tout — avoir joué à tous les jeux au moins une fois', cond:()=>GAMES_META.every(g=>pgCount(g.key)>=1)},
+    {id:'streak-7', icon:'📅', label:'Semaine complète — 7 jours consécutifs', cond:()=>(C.state.bestStreak||0)>=7},
+    {id:'legende-vip', icon:'👑', label:'Statut Légende — le plus haut niveau VIP atteint', cond:()=>vipTierIndex(C.state.totalWagered)>=VIP_TIERS.length-1},
+    {id:'challenge-champion', icon:'🏆', label:'Recordman — battre un premier record dans un Défi personnel', cond:()=>{ try{ return Object.keys(JSON.parse(localStorage.getItem('grand-casino-challenges')||'{}')).length>=1; }catch(e){ return false; } }},
+    {id:'cloud-linked', icon:'🔐', label:'Connecté — synchronisation cloud activée au moins une fois', cond:()=>{ try{ return localStorage.getItem('grand-casino-had-session')==='1'; }catch(e){ return false; } }}
   ];
   // Le rendu de la liste (#ach-list) est différé à l'ouverture de la vue Achievements
   // (voir switchView) : seule la détection de déblocage (+ toast) doit tourner à chaque partie.
@@ -194,7 +212,17 @@ window.Casino = (function(){
     {id:'spin-10',     desc:'Faire tourner une machine à sous 10 fois',   type:'count',    games:['slots','dragon'],    target:10,  reward:80},
     {id:'win-500',     desc:'Gagner 500 jetons au total aujourd’hui', type:'won',      games:null,                 target:500, reward:150},
     {id:'play-3-diff', desc:'Jouer à 3 jeux différents',                  type:'distinct', games:null,                 target:3,   reward:100},
-    {id:'wager-300',   desc:'Miser un total de 300 jetons',               type:'wagered',  games:null,                 target:300, reward:90}
+    {id:'wager-300',   desc:'Miser un total de 300 jetons',               type:'wagered',  games:null,                 target:300, reward:90},
+    // ---- Ajoutées pour couvrir les jeux arrivés depuis (Crash, Poker, Vidéo Poker, Caisses,
+    // Mines) et proposer plus de variété au tirage quotidien (3 tirées parmi toutes celles-ci). ----
+    {id:'play-3-crash', desc:'Jouer 3 parties de Crash',                  type:'count',    games:['crash'],            target:3,   reward:70},
+    {id:'play-3-mines', desc:'Jouer 3 parties de Mines',                  type:'count',    games:['mines'],            target:3,   reward:70},
+    {id:'open-2-cases', desc:'Ouvrir 2 caisses',                          type:'count',    games:['cases'],            target:2,   reward:80},
+    {id:'play-2-poker', desc:'Jouer 2 mains de Poker Texas Hold’em',      type:'count',    games:['poker'],            target:2,   reward:90},
+    {id:'play-3-vp',    desc:'Jouer 3 parties de Vidéo Poker',            type:'count',    games:['videopoker'],       target:3,   reward:70},
+    {id:'play-5-diff',  desc:'Jouer à 5 jeux différents',                 type:'distinct', games:null,                 target:5,   reward:180},
+    {id:'win-800',      desc:'Gagner 800 jetons au total aujourd’hui',    type:'won',      games:null,                 target:800, reward:200},
+    {id:'wager-600',    desc:'Miser un total de 600 jetons',              type:'wagered',  games:null,                 target:600, reward:160}
   ];
   const MISSION_BY_ID={}; MISSION_POOL.forEach(m=>MISSION_BY_ID[m.id]=m);
   let missions=null;
