@@ -47,13 +47,30 @@ window.Casino = window.Casino || {};
       blinkTimer=setTimeout(()=>list.forEach(r=>r.classList.remove('symbol-blink','jackpot-flourish')), jackpot?1500:1600);
     }
     function showWinLine(){ if(!winLine) return; winLine.classList.remove('show'); void winLine.offsetWidth; winLine.classList.add('show'); }
-    function spawnCoins(){
-      if(!reelsWrap) return;
-      for(let i=0;i<10;i++){
-        const c=document.createElement('span'); c.className='coin-fall'; c.textContent='🪙';
-        c.style.left=(6+Math.random()*88)+'%'; c.style.animationDelay=(Math.random()*250)+'ms';
-        reelsWrap.appendChild(c);
-        setTimeout(()=>c.remove(), 1200);
+    // Pluie de pièces retombant sur TOUTE la cabine (pas juste la fenêtre des rouleaux) : plus
+    // spectaculaire sur un gros gain, encore plus sur un jackpot (pièces plus grosses + quelques
+    // étincelles mêlées + flash plein écran déjà utilisé ailleurs dans l'app, ex. Crash). Purement
+    // décoratif — ne touche jamais au calcul du gain, déjà déterminé avant cet appel.
+    const cabEl=reelsWrap&&reelsWrap.closest('.cab');
+    function spawnCoins(tier){
+      if(!cabEl) return;
+      const jackpot=tier==='jackpot';
+      const count=jackpot?26:(tier==='big'?14:6);
+      for(let i=0;i<count;i++){
+        const spark=jackpot&&i%4===0;
+        const c=document.createElement('span');
+        c.className='coin-fall'+(jackpot?' coin-big':'')+(spark?' coin-spark':'');
+        c.textContent=spark?'✨':'🪙';
+        c.style.left=(2+Math.random()*96)+'%';
+        c.style.animationDelay=(Math.random()*(jackpot?450:280))+'ms';
+        c.style.setProperty('--fall-x',(Math.random()*60-30)+'px');
+        c.style.setProperty('--fall-dist',(jackpot?280:200)+Math.random()*60+'px');
+        cabEl.appendChild(c);
+        setTimeout(()=>c.remove(), 1700);
+      }
+      if(jackpot){
+        C.flashScreen&&C.flashScreen();
+        if(cabEl){ cabEl.classList.remove('jackpot-shake'); void cabEl.offsetWidth; cabEl.classList.add('jackpot-shake'); }
       }
     }
 
@@ -86,8 +103,8 @@ window.Casino = window.Casino || {};
             const jackpot=jackpotIcon!==null&&icons[0]===jackpotIcon;
             msg.textContent=(jackpot?'JACKPOT ! +':'Gagné ! +')+win+' jetons';
             blinkReels(reels, jackpot); showWinLine();
-            if(jackpot){ C.sound&&C.sound('jackpot'); }
-            if(jackpot||results[0].payout>=15) spawnCoins();
+            if(jackpot){ C.sound&&C.sound('jackpot'); if(opts.onJackpot) opts.onJackpot(); }
+            spawnCoins(jackpot?'jackpot':(results[0].payout>=15?'big':'small'));
           } else if(icons[0]===icons[1]||icons[1]===icons[2]||icons[0]===icons[2]){
             win=Math.round(bet*pairMultiplier); msg.textContent='Petite paire, +'+win+' jetons';
             const matched=icons[0]===icons[1]?[reels[0],reels[1]]:(icons[1]===icons[2]?[reels[1],reels[2]]:[reels[0],reels[2]]);

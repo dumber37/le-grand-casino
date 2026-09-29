@@ -25,9 +25,16 @@
   background:#0b0203;border:3px solid #ff2a2a;box-shadow:0 0 18px rgba(255,42,42,.75),inset 0 0 22px rgba(255,42,42,.3)}
 .dr-title{font-size:1.2rem;font-weight:bold;letter-spacing:.13em;color:#ffd479;text-shadow:0 0 8px #ff3b30,0 0 22px #ff3b30}
 .dr-fu{font-size:1.5rem;color:#ffd479;text-shadow:0 0 10px #ff3b30}
+/* Bandeau défilant façon vraie cabine — purement décoratif, texte inventé (aucune marque
+   réelle). Désactivé (texte statique) si le joueur préfère moins d'animation. */
+.dr-ticker{overflow:hidden;white-space:nowrap;margin-top:6px;padding:5px 0;background:#0b0203;border-radius:8px;border:1px solid rgba(255,42,42,.4)}
+.dr-ticker span{display:inline-block;color:#ffd479;font-size:.64rem;letter-spacing:.1em;font-weight:bold;padding-left:100%}
+@media (prefers-reduced-motion: no-preference){ .dr-ticker span{animation:drTicker 16s linear infinite} }
+@media (prefers-reduced-motion: reduce){ .dr-ticker span{padding-left:8px} }
+@keyframes drTicker{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 .dr-jackpots{margin-top:8px;display:flex;flex-direction:column;gap:5px}
 .dr-jp,.dr-jp-row{border-radius:10px}
-.dr-jp{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:.78rem;font-weight:bold;letter-spacing:.06em;border:2px solid rgba(0,0,0,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.dr-jp{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:.78rem;font-weight:bold;letter-spacing:.06em;border:2px solid rgba(0,0,0,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
 .dr-jp b{font-size:1rem;font-variant-numeric:tabular-nums}
 .dr-grand{background:linear-gradient(180deg,#ffe27a,#c8901a);color:#6a0a0a;font-size:.9rem}
 .dr-major{background:linear-gradient(180deg,#8a0f18,#4a060b);color:#ffe27a;border-color:#3b78ff}
@@ -35,6 +42,23 @@
 .dr-jp-row .dr-jp{flex:1}
 .dr-minor{background:linear-gradient(180deg,#9b3fd0,#4c1275);color:#ffe6ff}
 .dr-mini{background:linear-gradient(180deg,#ff5a8a,#a2124a);color:#fff}
+/* Bandeau "vivant" : un reflet lumineux balaie chaque bannière jackpot en continu, façon
+   cabine sous tension — purement décoratif (::after, jamais les vraies valeurs affichées),
+   désactivé si le joueur préfère moins d'animation. */
+@media (prefers-reduced-motion: no-preference){
+  .dr-jp::after{
+    content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+    animation:drSheen 3.2s ease-in-out infinite;
+  }
+  .dr-major::after{animation-delay:.4s}
+  .dr-minor::after{animation-delay:.8s}
+  .dr-mini::after{animation-delay:1.2s}
+  @keyframes drSheen{0%{left:-60%}35%,100%{left:130%}}
+}
+/* La bannière GRAND s'embrase quand le dragon (symbole jackpot) tombe */
+.dr-grand.dr-hit{animation:drGrandHit .9s ease-in-out 2}
+@keyframes drGrandHit{0%,100%{filter:brightness(1);transform:scale(1)}50%{filter:brightness(1.6) drop-shadow(0 0 14px #ffd479);transform:scale(1.04)}}
 .dr-screen{margin-top:8px;background:#050101;border:3px solid #d4af37;border-radius:12px;padding:10px;box-shadow:inset 0 0 22px rgba(0,0,0,.9)}
 .dr-screen .message{margin:10px 0 0}
 #view-dragon .reels{box-shadow:inset 0 8px 14px rgba(0,0,0,.7),0 0 0 2px #7a1a10}

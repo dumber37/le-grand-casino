@@ -28,9 +28,22 @@
   box-shadow:0 0 10px 2px rgba(212,175,55,.8);opacity:0;transform:scaleX(.2);pointer-events:none}
 .win-line.show{animation:winLineGrow .9s ease forwards}
 @keyframes winLineGrow{0%{opacity:0;transform:scaleX(.2)}30%{opacity:1;transform:scaleX(1)}80%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1)}}
-/* Pluie de pièces sur gros gain */
-.coin-fall{position:absolute;top:-10px;font-size:1.1rem;pointer-events:none;animation:coinFall 900ms cubic-bezier(.4,.6,.6,1) forwards}
-@keyframes coinFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(90px) rotate(280deg);opacity:0}}
+/* Pluie de pièces sur gros gain — retombe sur TOUTE la cabine (voir .cab position:relative
+   plus bas), pas juste la fenêtre des rouleaux : c'est ce qui donne l'effet "jetons partout".
+   --fall-x pilote une légère dérive horizontale aléatoire (posée en JS par jeu de pièce),
+   --fall-dist la distance de chute (plus grande pour la variante jackpot). */
+.coin-fall{position:absolute;top:-16px;font-size:1.2rem;pointer-events:none;animation:coinFall 1100ms cubic-bezier(.4,.6,.6,1) forwards;will-change:transform,opacity}
+@keyframes coinFall{
+  0%{transform:translate(0,-16px) rotate(0deg);opacity:1}
+  70%{opacity:1}
+  100%{transform:translate(var(--fall-x,0px),var(--fall-dist,220px)) rotate(360deg);opacity:0}
+}
+.coin-fall.coin-big{font-size:1.55rem;filter:drop-shadow(0 0 6px rgba(212,175,55,.7))}
+/* Petite étincelle mêlée à la pluie de pièces sur jackpot uniquement */
+.coin-fall.coin-spark{font-size:.9rem;animation-duration:850ms}
+/* Petite secousse de toute la cabine sur jackpot — réutilise exactement le keyframe mineShake
+   déjà partagé (Mines, Crash) plutôt que d'en écrire un nouveau. */
+.cab.jackpot-shake{animation:mineShake .4s ease}
 
 .lever-col{width:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--glass-2);border:1px solid var(--border);border-radius:14px;padding:10px 0}
 .lever-track{width:16px;height:150px;background:var(--bg-deep);border-radius:10px;border:1px solid var(--border);position:relative}
@@ -54,7 +67,9 @@
     linear-gradient(180deg,#12081f,#07040d);
 }
 #view-slots .scene-header .sh-name{color:#ff8fdc;text-shadow:0 0 10px rgba(255,47,179,.6)}
-.cab{max-width:440px;margin:0 auto}
+/* position:relative : ancre la pluie de pièces (.coin-fall, position:absolute) sur TOUTE la
+   cabine plutôt que juste la fenêtre des rouleaux — effet "jetons qui pleuvent partout". */
+.cab{max-width:440px;margin:0 auto;position:relative;overflow:visible}
 .cab-neon{
   position:relative;padding:14px;border-radius:22px;
   background:linear-gradient(180deg,#1b0c2e,#09030f);

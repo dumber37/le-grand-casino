@@ -10,6 +10,12 @@
     gameKey: 'dragon',
     defaultBet: 10, minBet: 5, maxBet: 100, betStep: 5,
     jackpotIcon: '🐉',
+    // Embrase la bannière GRAND de la cabine quand le dragon d'or tombe — purement décoratif,
+    // n'affecte jamais le calcul du gain (déjà déterminé par le moteur avant cet appel).
+    onJackpot: function(){
+      const b=document.getElementById('dr-grandBand'); if(!b) return;
+      b.classList.remove('dr-hit'); void b.offsetWidth; b.classList.add('dr-hit');
+    },
     symbols: [
       {icon:'🐱', weight:38, payout:3},   // chat porte-bonheur (maneki-neko)
       {icon:'🏮', weight:26, payout:5},   // lanterne rouge
