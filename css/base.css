@@ -211,6 +211,19 @@ body{
 .ach-item.unlocked .ach-status{color:#4fce85}
 .profile-row{display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px dashed var(--border);font-size:.85rem}
 .profile-row:last-child{border-bottom:none}
+/* ---- Graphique d'évolution du solde (Statistiques) — courbe SVG, voir stats-chart.js ---- */
+.stchart-wrap{position:relative;margin-bottom:10px}
+.stchart-svg{width:100%;height:140px;display:block;cursor:crosshair}
+.stchart-baseline{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
+.stchart-area{fill:rgba(212,175,55,.16);stroke:none}
+.stchart-line{fill:none;stroke:var(--gold-bright);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.stchart-cursor{stroke:var(--border);stroke-width:1}
+.stchart-dot{fill:var(--gold-bright);stroke:var(--bg-deep);stroke-width:2}
+.stchart-tooltip{
+  position:absolute;top:2px;background:var(--glass-2);border:1px solid var(--gold);border-radius:8px;
+  padding:4px 9px;font-size:.72rem;color:var(--gold-bright);white-space:nowrap;pointer-events:none;
+  box-shadow:0 6px 14px rgba(0,0,0,.35);
+}
 .settings-row{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px dashed var(--border)}
 .toggle{background:var(--glass-2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-family:inherit;color:var(--cream);cursor:pointer;font-size:.8rem}
 .toggle.on{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05}

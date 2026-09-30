@@ -40,6 +40,7 @@ window.Casino = (function(){
   let stats={gamesPlayed:0,totalWon:0,biggestWin:0,perGame:{}};
   try{ const raw=localStorage.getItem(STATS_KEY); if(raw) stats=JSON.parse(raw); }catch(e){}
   const GAME_NAMES={slots:'Machine à sous',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',dragon:'Fortune Dragon',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno'};
+  C.gameName = k=>GAME_NAMES[k]||k;
   function saveStats(){ try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){} }
 
   // ====== MODULE: History (100 dernières parties) ======
@@ -580,7 +581,7 @@ window.Casino = (function(){
     // Rendu différé : chaque vue de progression ne reconstruit son contenu qu'à son ouverture,
     // avec les données déjà sauvegardées par recordGame (jamais périmées, jamais reconstruites en trop).
     if(name==='history') renderHistory();
-    else if(name==='stats') renderStats();
+    else if(name==='stats'){ renderStats(); if(C.renderBalanceChart) C.renderBalanceChart(); }
     else if(name==='achievements') renderAchievements();
     else if(name==='profil') renderProfile();
     else if(name==='vip') renderVip();
