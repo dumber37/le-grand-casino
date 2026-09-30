@@ -75,6 +75,7 @@
       <button data-view="cases">📦 Ouverture de Caisses</button>
       <div class="side-section">Progression</div>
       <button data-view="wheel">🎡 Roue quotidienne</button>
+      <button data-view="daily">🗓️ Défi du jour</button>
       <button data-view="stats">📊 Statistiques</button>
       <button data-view="history">🕘 Historique</button>
       <button data-view="achievements">🏆 Achievements</button>
@@ -696,6 +697,15 @@
         <div class="kbd-hint"><kbd>Espace</kbd> pour tourner</div>
       </div></section>
 
+      <section class="view" id="view-daily"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🗓️</span><div><div class="sh-name">Défi du jour</div><div class="sh-desc">Le même tirage pour tout le monde aujourd'hui — compare tes numéros trouvés avec tes amis</div></div></div>
+        <div class="kn-grid" id="dc-grid"></div>
+        <div class="message" id="dc-message">Choisis jusqu'à 10 numéros, puis valide.</div>
+        <div class="paytable" id="dc-result"></div>
+        <button class="primary-btn" id="dc-validateBtn" style="width:100%">VALIDER MES NUMÉROS</button>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour valider</div>
+      </div></section>
+
       <section class="view" id="view-stats"><div class="panel">
         <div class="profile-row"><span>Parties jouées</span><b id="st-games">0</b></div>
         <div class="profile-row"><span>Total gagné</span><b id="st-won">0</b></div>
@@ -726,6 +736,7 @@
             <option value="poker">Poker Texas Hold'em</option>
             <option value="cases">Ouverture de Caisses</option>
             <option value="wheel">Roue de la chance</option>
+            <option value="daily">Défi du jour</option>
           </select>
           <select id="hist-sort">
             <option value="recent">Plus récentes d'abord</option>
@@ -900,6 +911,7 @@
 <script src="js/keno.js"></script>
 <script src="js/stats-chart.js"></script>
 <script src="js/wheel.js"></script>
+<script src="js/daily-challenge.js"></script>
 <script src="js/mines.js"></script>
 <script src="js/crash.js"></script>
 <script src="js/video-poker.js"></script>
