@@ -10,7 +10,11 @@
   const dealBtn=document.getElementById('bj-dealBtn'), hitBtn=document.getElementById('bj-hitBtn'), standBtn=document.getElementById('bj-standBtn');
   const doubleBtn=document.getElementById('bj-doubleBtn'), splitBtn=document.getElementById('bj-splitBtn');
   function cardValue(c){ if(c.r==='A') return 11; if(['J','Q','K'].includes(c.r)) return 10; return parseInt(c.r,10); }
-  function handScore(cards){ let s=cards.reduce((a,c)=>a+cardValue(c),0); let aces=cards.filter(c=>c.r==='A').length; while(s>21&&aces>0){s-=10;aces--;} return s; }
+  // Score + "main souple" (un as encore compté 11) en un seul passage — seule implémentation de
+  // ce calcul dans ce fichier, réutilisée par handScore ci-dessous ET par la règle de décision
+  // de tirage IA (bjRules.aiShouldHit) : avant, les deux avaient chacune leur propre copie.
+  function scoreInfo(cards){ let s=cards.reduce((a,c)=>a+cardValue(c),0), aces=cards.filter(c=>c.r==='A').length; while(s>21&&aces>0){s-=10;aces--;} return {score:s,soft:aces>0}; }
+  function handScore(cards){ return scoreInfo(cards).score; }
   // Règles exposées telles quelles (mêmes calculs que le solo) pour le Blackjack multijoueur —
   // aucune règle dupliquée : js/multi-blackjack.js appelle exactement ce code.
   function payoutFor(pCards,dCards,betAmt,doubled){
@@ -23,9 +27,7 @@
     return {win:0,cls:'hand-loss',label:'perdu'};
   }
   C.bjRules={cardValue,handScore,payoutFor,dealerShouldHit:h=>handScore(h)<17,aiShouldHit:(cards,dealerUp,risky)=>{
-    let s=cards.reduce((a,c)=>a+cardValue(c),0), aces=cards.filter(c=>c.r==='A').length;
-    while(s>21&&aces>0){ s-=10; aces--; }
-    const soft=aces>0, up=cardValue(dealerUp);
+    const {score:s,soft}=scoreInfo(cards), up=cardValue(dealerUp);
     if(s>=21) return false;
     if(risky) return s<=16||(soft&&s<=17);
     if(soft) return s<=17||(s===18&&up>=9);
@@ -41,23 +43,8 @@
   const AI_SEATS=[{name:'Léa',icon:'🦊',risky:false},{name:'Marco',icon:'🎩',risky:true}];
   let aiHands=AI_SEATS.map(()=>({cards:[],result:''}));
   const aiSeatsEl=document.getElementById('bj-aiSeats');
-  function handInfo(cards){
-    let s=cards.reduce((a,c)=>a+cardValue(c),0), aces=cards.filter(c=>c.r==='A').length;
-    while(s>21&&aces>0){ s-=10; aces--; }
-    return {s, soft:aces>0};
-  }
-  function aiShouldHit(cards,risky){
-    const {s,soft}=handInfo(cards); const up=cardValue(dealerHand[0]);
-    if(s>=21) return false;
-    if(risky) return s<=16||(soft&&s<=17);
-    if(soft) return s<=17||(s===18&&up>=9);
-    if(s<=11) return true;
-    if(s===12) return !(up>=4&&up<=6);
-    if(s<=16) return up>=7;
-    return false;
-  }
   function playAiHands(){
-    aiHands.forEach((h,i)=>{ while(h.cards.length&&aiShouldHit(h.cards,AI_SEATS[i].risky)){ h.cards.push(deck.pop()); C.sound&&C.sound('card'); } });
+    aiHands.forEach((h,i)=>{ while(h.cards.length&&C.bjRules.aiShouldHit(h.cards,dealerHand[0],AI_SEATS[i].risky)){ h.cards.push(deck.pop()); C.sound&&C.sound('card'); } });
   }
   function resolveAi(){
     const d=handScore(dealerHand), dealerBJ=d===21&&dealerHand.length===2;
@@ -145,7 +132,23 @@
     renderTable(false); render(); msg.textContent='À toi de jouer.';
     if(handScore(hands[0].cards)===21){ hands[0].done=true; finishFlow(); }
   }
-  function hit(){ const hand=hands[currentIdx]; hand.cards.push(deck.pop()); C.sound&&C.sound('card'); const score=handScore(hand.cards); renderTable(false); render(); if(score>=21){ hand.done=true; finishFlow(); } }
+  function hit(){
+    const hand=hands[currentIdx]; hand.cards.push(deck.pop()); C.sound&&C.sound('card');
+    const score=handScore(hand.cards);
+    // Ajoute juste la nouvelle carte à la main courante plutôt que de tout reconstruire
+    // (renderTable rejouerait l'animation de distribution sur TOUTES les mains à chaque tirage,
+    // y compris celles qui n'ont pas bougé — inutile et visuellement faux en cas de split).
+    const block=playerZonesEl.children[currentIdx];
+    if(block){
+      block.querySelector('.cards').appendChild(C.renderCard(hand.cards[hand.cards.length-1],false,true));
+      // lastElementChild (pas un sélecteur "span:last-child") : l'avatar dans .zl-me contient
+      // lui-même un <span> qui serait sinon pris pour le score (premier span "dernier de son
+      // propre parent" rencontré dans le document, avant le vrai span du score).
+      block.querySelector('.zone-label').lastElementChild.textContent=score;
+    } else { renderTable(false); }
+    render();
+    if(score>=21){ hand.done=true; finishFlow(); }
+  }
   function stand(){ hands[currentIdx].done=true; finishFlow(); }
   function doubleDown(){
     const hand=hands[currentIdx]; C.state.balance-=hand.bet; C.trackWager(hand.bet); hand.bet*=2; hand.doubled=true; hand.cards.push(deck.pop()); hand.done=true;

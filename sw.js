@@ -6,7 +6,7 @@
    versionné : à chaque changement de fichiers, incrémenter le
    suffixe fait automatiquement place nette de l'ancien cache.
    ============================================================ */
-const CACHE_NAME = 'grand-casino-v19';
+const CACHE_NAME = 'grand-casino-v20';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './css/base.css', './css/slots.css', './css/dragon-slots.css', './css/blackjack.css',
@@ -17,7 +17,7 @@ const ASSETS = [
   './js/dragon-slots.js', './js/blackjack.js', './js/roulette.js', './js/bus.js',
   './js/baccarat.js', './js/coinflip.js', './js/mines.js', './js/crash.js',
   './js/video-poker.js', './js/cases.js', './js/poker.js', './js/friends.js', './js/avatars.js', './js/chips.js', './js/multi-blackjack.js', './js/multi-bus.js', './js/multi-crash.js', './js/floor.js', './js/challenges.js', './js/firebase-config.js', './js/cloud-sync.js', './js/leaderboard.js', './js/shortcuts.js', './js/ambiance.js',
-  './assets/icon-192.png', './assets/icon-512.png'
+  './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-192.png', './assets/icon-maskable-512.png'
 ];
 
 self.addEventListener('install', (e)=>{

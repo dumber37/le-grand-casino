@@ -11,6 +11,10 @@
   --border:rgba(212,175,55,.35);
   --bg-deep:#05070a; --glass:rgba(14,22,19,.68); --glass-2:rgba(9,14,12,.85);
   --muted:#93a89a;
+  /* Couleur fixe des cartes à jouer (recto physique, toujours pâle) : NE JAMAIS la faire
+     dépendre de --cream, qui elle bascule en thème clair (voir bloc [data-theme="light"]
+     plus bas) — sinon les cartes deviendraient sombres sur fond sombre en thème clair. */
+  --card-bg:#f4ecd8;
 
   /* ---- Habillage "casino chic" : texture de feutre, filigranes de cartes à
      jouer, bordures façon jeton de poker / roue de roulette — uniquement des
@@ -22,6 +26,32 @@
   --suit-watermark-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Ctext x='130' y='195' font-size='230' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.05'%3E%E2%99%A0%3C/text%3E%3C/svg%3E");
   --suit-watermark-sm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ctext x='100' y='150' font-size='175' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.04'%3E%E2%99%A6%3C/text%3E%3C/svg%3E");
   --suit-watermark-hero: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Ctext x='160' y='235' font-size='280' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.045'%3E%E2%99%A3%3C/text%3E%3C/svg%3E");
+}
+/* ---- Thème clair (bascule #themeToggle, voir core.js) ----
+   Le bouton existait déjà (state persisté, attribut data-theme posé sur <html>) mais aucune
+   règle CSS n'y réagissait nulle part : cliquer changeait juste le libellé, sans rien à l'écran.
+   Ne redéfinit QUE les variables "chrome d'appli" (fond de page, panneaux, bordures, texte) —
+   dont dépend tout le reste de l'app (sidebar, topbar, panels, boutons, historique...). Les
+   couleurs "physiques" (--felt*, --gold, --red, --card-bg) restent identiques dans les deux
+   thèmes : une table feutrée verte ou une carte à jouer ont la même couleur qu'il fasse jour
+   ou nuit, tout comme les cabines de machines à sous (néon, dragon) qui gardent leur propre
+   palette fixe — seul le "chrome" (l'habillage autour des jeux) bascule. */
+:root[data-theme="light"]{
+  --bg-deep:#f3ecdb; --glass:rgba(255,252,244,.78); --glass-2:rgba(255,255,255,.92);
+  --border:rgba(150,108,24,.4); --muted:#746b53;
+  --cream:#2b2415; --gold-bright:#93650d;
+}
+:root[data-theme="light"] body{
+  background-image:radial-gradient(circle at 15% -10%, rgba(212,175,55,.14), transparent 45%),
+                    radial-gradient(circle at 100% 0%, rgba(163,53,47,.07), transparent 40%);
+}
+/* .panel (conteneur principal de CHAQUE vue) a un dégradé de fond fige en dur, pas une variable
+   — sans ce correctif il resterait sombre sur fond de page clair (texte sombre sur fond sombre). */
+:root[data-theme="light"] .panel{
+  background:
+    var(--suit-watermark-sm) bottom -15px right -10px no-repeat,
+    var(--felt-weave),
+    linear-gradient(180deg,rgba(255,253,247,.9),rgba(250,242,224,.92));
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -251,7 +281,7 @@ body{
 /* ---- Cartes à jouer (réutilisées par blackjack, baccarat, ride the bus) ----
    Réservé aux emplacements "pas encore distribué" (voir ride the bus) : cartes
    réellement distribuées passent désormais par C.renderCard / .card-3d ci-dessous. */
-.card{background:var(--cream);color:#1a1a1a;border-radius:6px;width:38px;height:56px;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,.3);animation:cardIn .25s ease}
+.card{background:var(--card-bg);color:#1a1a1a;border-radius:6px;width:38px;height:56px;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,.3);animation:cardIn .25s ease}
 @keyframes cardIn{from{transform:scale(.5) rotateY(90deg);opacity:0}to{transform:scale(1) rotateY(0deg);opacity:1}}
 .card.red{color:var(--red)}
 .card.hidden{background:var(--felt-dark);color:var(--gold);border:1px dashed var(--gold)}
@@ -306,7 +336,7 @@ body{
   box-shadow:0 3px 6px rgba(0,0,0,.35);
   transform:translateZ(0); /* force chaque face dans son propre plan 3D pour un backface-visibility fiable */
 }
-.card-face{background:var(--cream);color:#1a1a1a;font-size:.9rem}
+.card-face{background:var(--card-bg);color:#1a1a1a;font-size:.9rem}
 .card-face.red{color:var(--red)}
 .card-back{
   transform:rotateY(180deg) translateZ(0);border:2px solid var(--gold);

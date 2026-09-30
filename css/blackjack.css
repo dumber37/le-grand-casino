@@ -34,7 +34,9 @@
 .chip.c25{background:#1f6b3a}
 .chip.c50{background:#1c4f91}
 .chip.c100{background:#151515;border-color:var(--gold);color:var(--gold-bright)}
-.chip.clear{background:var(--glass-2);border-style:solid;border-color:var(--border);font-size:.68rem}
+/* color:var(--cream) et non le blanc hérité de .chip : ce jeton utilise un fond adaptatif
+   (var(--glass-2), clair en thème clair) — un texte blanc fixe y deviendrait invisible. */
+.chip.clear{background:var(--glass-2);border-style:solid;border-color:var(--border);font-size:.68rem;color:var(--cream)}
 
 /* Palier "compact" (hauteur de fenêtre limitée) : voir base.css pour l'explication complète.
    Vit ici (et pas dans base.css) car .hand-block/.chip-rail/.chip sont définis ici en premier
