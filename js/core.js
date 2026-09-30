@@ -165,6 +165,7 @@ window.Casino = (function(){
   let unlockedAch=[];
   try{ const raw=localStorage.getItem(ACH_KEY); if(raw) unlockedAch=JSON.parse(raw); }catch(e){}
   function saveUnlockedAch(){ try{ localStorage.setItem(ACH_KEY, JSON.stringify(unlockedAch)); }catch(e){} }
+  C.isAchUnlocked = id=>unlockedAch.includes(id);
   // pgCount : petit raccourci réutilisé par plusieurs succès/missions ci-dessous pour lire le
   // nombre de parties d'un jeu dans stats.perGame, sans répéter la même garde à chaque fois.
   const pgCount=key=>(stats.perGame[key]&&stats.perGame[key].count)||0;
@@ -583,7 +584,7 @@ window.Casino = (function(){
     if(name==='history') renderHistory();
     else if(name==='stats'){ renderStats(); if(C.renderBalanceChart) C.renderBalanceChart(); }
     else if(name==='achievements') renderAchievements();
-    else if(name==='profil') renderProfile();
+    else if(name==='profil'){ renderProfile(); if(C.avatars&&C.avatars.refreshFrameLocks) C.avatars.refreshFrameLocks(); }
     else if(name==='vip') renderVip();
     else if(name==='halloffame') renderHallOfFame();
     else if(name==='challenges'&&C.renderChallenges) C.renderChallenges();

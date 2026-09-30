@@ -8,6 +8,19 @@
   border:1.5px solid var(--gold);box-shadow:0 2px 6px rgba(0,0,0,.5)}
 .av svg{display:block;width:100%;height:100%}
 
+/* ---- Cadres cosmétiques débloquables (voir avatars.js) — un anneau décoratif autour de TON
+   avatar uniquement, jamais le visage lui-même. inset négatif : dépasse légèrement du cercle sans
+   pousser le texte voisin (le span porte les mêmes dimensions que .av, position:relative). ---- */
+.av-frame{display:inline-block;vertical-align:middle;position:relative;border-radius:50%;flex-shrink:0}
+.av-frame::after{content:'';position:absolute;inset:-3px;border-radius:50%;pointer-events:none;border:2px solid transparent}
+.av-frame.frame-bronze::after{border-color:#a3661f;box-shadow:0 0 6px rgba(163,102,31,.65)}
+.av-frame.frame-silver::after{border-color:#c7d0d8;box-shadow:0 0 6px rgba(199,208,216,.6)}
+.av-frame.frame-gold::after{border-color:var(--gold-bright);box-shadow:0 0 8px rgba(242,214,117,.75)}
+.av-frame.frame-diamond::after{border-color:#8fd3ff;box-shadow:0 0 9px rgba(143,211,255,.8)}
+.av-frame.frame-fire::after{border-color:#ff6a3d;box-shadow:0 0 10px rgba(255,106,61,.85);animation:frameFirePulse 1.6s ease-in-out infinite}
+@keyframes frameFirePulse{0%,100%{filter:brightness(1) saturate(1)}50%{filter:brightness(1.35) saturate(1.3)}}
+@media (prefers-reduced-motion:reduce){ .av-frame.frame-fire::after{animation:none} }
+
 /* Taille réduite (96px → 64px) : le croupier reste un joli détail décoratif, mais ne doit pas
    à lui seul pousser le contenu utile (mains, actions) hors de l'écran sans défiler. */
 .dealer{display:flex;flex-direction:column;align-items:center;gap:1px;margin:0 auto 2px;pointer-events:none}
@@ -34,6 +47,7 @@
 .avx-opts,.avx-sws{display:flex;flex-wrap:wrap;gap:6px}
 .avx-opts button,.avx-actions button{background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:5px 10px;font-family:inherit;font-size:.74rem;cursor:pointer}
 .avx-opts button.sel{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;font-weight:bold}
+.avx-opts button:disabled{opacity:.4;cursor:not-allowed}
 .avx-sw{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.25);cursor:pointer;padding:0}
 .avx-sw.sel{border-color:var(--gold-bright);box-shadow:0 0 0 2px rgba(242,214,117,.55)}
 .avx-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}

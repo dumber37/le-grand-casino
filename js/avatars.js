@@ -80,14 +80,42 @@ window.Casino=window.Casino||{};
     return s+'</svg>';
   }
 
+  // ---------- Cadres cosmétiques débloquables (liés aux achievements existants, voir core.js) ----------
+  // Purement décoratif — un simple anneau autour de l'avatar, jamais le visage lui-même (qui reste
+  // librement personnalisable via l'éditeur ci-dessous, sans déblocage). Débloqué = achievement déjà
+  // obtenu (C.isAchUnlocked, calculé en direct depuis core.js, jamais un second suivi ici) ; équipé =
+  // un simple choix persisté, séparé du déblocage.
+  const FRAME_KEY='grand-casino-avatar-frame';
+  const FRAMES=[
+    {id:'none',    name:'Aucun',    icon:'⚪', achId:null},
+    {id:'bronze',  name:'Bronze',   icon:'🥉', achId:'first-spin'},
+    {id:'silver',  name:'Argent',   icon:'🥈', achId:'blackjack-fan'},
+    {id:'gold',    name:'Or',       icon:'🥇', achId:'high-roller'},
+    {id:'fire',    name:'Flamme',   icon:'🔥', achId:'streak-7'},
+    {id:'diamond', name:'Diamant',  icon:'💎', achId:'legende-vip'}
+  ];
+  let equippedFrame=null;
+  try{ equippedFrame=localStorage.getItem(FRAME_KEY)||null; }catch(e){}
+  function frameUnlocked(f){ return !f.achId || (C.isAchUnlocked && C.isAchUnlocked(f.achId)); }
+  function setFrame(id){
+    const f=FRAMES.find(x=>x.id===id); if(!f||!frameUnlocked(f)) return;
+    equippedFrame=id==='none'?null:id;
+    try{ if(equippedFrame) localStorage.setItem(FRAME_KEY,equippedFrame); else localStorage.removeItem(FRAME_KEY); }catch(e){}
+  }
+
   // ---------- API visage ----------
   const cache={};
   const wrap=(svg,size)=>'<span class="av" style="width:'+(size||24)+'px;height:'+(size||24)+'px">'+svg+'</span>';
   function face(name){ return cache[name]||(cache[name]=faceSvg(traitsFor(name))); }
   // 'Toi' = ton avatar personnalisé ; bot connu = son visage ; ami = ses traits reçus ; sinon visage
-  // généré de façon stable depuis le nom.
+  // généré de façon stable depuis le nom. Le cadre équipé n'entoure QUE ton propre avatar ('Toi'),
+  // jamais celui des autres joueurs/bots — c'est une distinction personnelle, pas un trait transmis.
   function html(name,size){
-    if(name==='Toi') return wrap(faceSvg(myTraits()),size);
+    if(name==='Toi'){
+      const inner=wrap(faceSvg(myTraits()),size);
+      if(!equippedFrame) return inner;
+      return '<span class="av-frame frame-'+equippedFrame+'" style="width:'+(size||24)+'px;height:'+(size||24)+'px">'+inner+'</span>';
+    }
     return wrap(face(name),size);
   }
   // Visage à partir de traits fournis (ex. instantané d'une table reçu de l'hôte).
@@ -110,29 +138,45 @@ window.Casino=window.Casino||{};
     const t=myTraits();
     box.querySelectorAll('[data-k]').forEach(b=>b.classList.toggle('sel',t[b.dataset.k]===b.dataset.v));
     box.querySelectorAll('[data-t]').forEach(b=>{ const on=!!t[b.dataset.t]; b.classList.toggle('sel',on); b.setAttribute('aria-pressed',String(on)); });
+    box.querySelectorAll('[data-frame]').forEach(b=>b.classList.toggle('sel', (equippedFrame||'none')===b.dataset.frame));
     refreshProfileAvatar();
   }
-  function buildEditor(){
-    const box=document.getElementById('av-editor'); if(!box) return;
+  // Reconstruit le HTML de l'éditeur (appelable plusieurs fois, ex. à chaque ouverture de Profil,
+  // pour que les cadres nouvellement débloqués apparaissent sans recharger la page) SANS jamais
+  // rattacher de deuxième écouteur de clic — celui-ci n'est posé qu'une fois dans buildEditor().
+  function frameButtonHtml(f){
+    const unlocked=frameUnlocked(f);
+    return '<button data-frame="'+f.id+'"'+(unlocked?'':' disabled title="Débloqué par : '+f.name+'"')+'>'+f.icon+' '+f.name+(unlocked?'':' 🔒')+'</button>';
+  }
+  function renderEditorHtml(box){
     let h='<div class="avx-preview" id="av-preview"></div>';
     h+='<div class="avx-row"><span>Coiffure</span><div class="avx-opts">'+OPTS.style.map(o=>'<button data-k="style" data-v="'+o[0]+'">'+o[1]+'</button>').join('')+'</div></div>';
     ['skin','hair','shirt','bg'].forEach(k=>{
       h+='<div class="avx-row"><span>'+LABELS[k]+'</span><div class="avx-sws">'+OPTS[k].map(c=>'<button class="avx-sw" data-k="'+k+'" data-v="'+c+'" style="background:'+c+'" aria-label="'+LABELS[k]+' '+c+'"></button>').join('')+'</div></div>';
     });
     h+='<div class="avx-row"><span>Accessoires</span><div class="avx-opts">'+ACCESS.map(a=>'<button data-t="'+a[0]+'" aria-pressed="false">'+a[1]+'</button>').join('')+'</div></div>';
+    h+='<div class="avx-row"><span>Cadre</span><div class="avx-opts">'+FRAMES.map(frameButtonHtml).join('')+'</div></div>';
     h+='<div class="avx-actions"><button data-act="random">🎲 Aléatoire</button><button data-act="reset">↺ Automatique (selon mon pseudo)</button></div>';
     box.innerHTML=h;
+    refreshEditor(box);
+  }
+  function refreshFrameLocks(){
+    const box=document.getElementById('av-editor'); if(box) renderEditorHtml(box);
+  }
+  function buildEditor(){
+    const box=document.getElementById('av-editor'); if(!box) return;
+    renderEditorHtml(box);
     const change=patch=>{ saveCustom(Object.assign({},myTraits(),patch)); refreshEditor(box); document.dispatchEvent(new Event('avatar-changed')); };
     box.addEventListener('click',e=>{
       const b=e.target.closest('button'); if(!b) return;
       if(b.dataset.k) change({[b.dataset.k]:b.dataset.v});
       else if(b.dataset.t) change({[b.dataset.t]:!myTraits()[b.dataset.t]});
+      else if(b.dataset.frame){ setFrame(b.dataset.frame); refreshEditor(box); document.dispatchEvent(new Event('avatar-changed')); }
       else if(b.dataset.act==='random'){
         const r=a=>a[Math.floor(Math.random()*a.length)];
         change({bg:r(BGS),skin:r(SKINS),hair:r(HAIRS),shirt:r(SHIRTS),style:r(['short','long','bob','bald']),glasses:Math.random()<.3,mustache:Math.random()<.15,beard:Math.random()<.12,hat:Math.random()<.1,foxEars:Math.random()<.08});
       } else if(b.dataset.act==='reset'){ saveCustom(null); refreshEditor(box); document.dispatchEvent(new Event('avatar-changed')); }
     });
-    refreshEditor(box);
   }
 
   // ---------- Croupier / croupière ----------
@@ -178,6 +222,6 @@ window.Casino=window.Casino||{};
     C.sound=function(name){ if(name==='card'||name==='spin') pulseDealers(); return baseSound.apply(this,arguments); };
   }
 
-  C.avatars={html,htmlTraits,face,pseudo,mountDealers,myTraits,clean,remember};
+  C.avatars={html,htmlTraits,face,pseudo,mountDealers,myTraits,clean,remember,refreshFrameLocks};
   mountDealers(); buildEditor(); refreshProfileAvatar();
 })();
