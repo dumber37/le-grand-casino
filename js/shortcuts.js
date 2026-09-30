@@ -15,7 +15,8 @@
   const PRIMARY_ACTION_BTN={
     slots:['s-lever'], dragon:['sd-lever'], blackjack:['bj-dealBtn','bjm-dealBtn'], roulette:['r-spinBtn'],
     bus:['bus-startBtn','bsm-dealBtn'], baccarat:['bc-dealBtn'], coinflip:['cf-flipBtn'], mines:['mn-startBtn'],
-    crash:['cr-startBtn','crm-startBtn'], videopoker:['vp-dealBtn'], poker:['pk-dealBtn'], friends:['fr-dealBtn'], cases:['cs-openBtn']
+    crash:['cr-startBtn','crm-startBtn'], videopoker:['vp-dealBtn'], poker:['pk-dealBtn'], friends:['fr-dealBtn'], cases:['cs-openBtn'],
+    war:['wr-playBtn'], keno:['kn-drawBtn']
   };
   document.addEventListener('keydown',(e)=>{
     // e.code==='Space' en secours : certains navigateurs/claviers ne remontent pas e.key===' '.

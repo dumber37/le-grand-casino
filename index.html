@@ -21,6 +21,8 @@
 <link rel="stylesheet" href="css/bus.css">
 <link rel="stylesheet" href="css/baccarat.css">
 <link rel="stylesheet" href="css/coinflip.css">
+<link rel="stylesheet" href="css/war.css">
+<link rel="stylesheet" href="css/keno.css">
 <link rel="stylesheet" href="css/mines.css">
 <link rel="stylesheet" href="css/crash.css">
 <link rel="stylesheet" href="css/video-poker.css">
@@ -64,6 +66,8 @@
       <button data-view="coinflip">🪙 Pile ou Face</button>
       <button data-view="mines">💣 Mines</button>
       <button data-view="crash">🚀 Crash</button>
+      <button data-view="war">⚔️ Bataille</button>
+      <button data-view="keno">🔢 Keno</button>
       <button data-view="videopoker">♠️ Vidéo Poker</button>
       <button data-view="poker">♣️ Poker (vs IA)</button>
       <button data-view="friends">🤝 Salon entre amis</button>
@@ -412,6 +416,38 @@
         <div class="kbd-hint"><kbd>Espace</kbd> pour lancer</div>
       </div></section>
 
+      <section class="view" id="view-war"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">⚔️</span><div><div class="sh-name">Bataille</div><div class="sh-desc">Une carte chacun, la plus haute gagne — égalité = guerre !</div></div></div>
+        <div class="bj-table">
+          <div class="dealer" data-dealer="cards"></div>
+          <div class="zone"><div class="zone-label"><span>Croupier</span></div><div class="cards" id="wr-dealerCard"></div></div>
+          <div class="bj-divider"></div>
+          <div class="zone"><div class="zone-label"><span>Toi</span></div><div class="cards" id="wr-playerCard"></div></div>
+        </div>
+        <div class="message" id="wr-message">Place ta mise et lance la bataille.</div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="wr-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="wr-betAmount">20</span><button id="wr-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="wr-playBtn">JOUER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour jouer</div>
+        <div class="paytable">
+          <div><span>Carte la plus haute</span><span>x2</span></div>
+          <div><span>Guerre gagnée</span><span>x3</span></div>
+        </div>
+      </div></section>
+
+      <section class="view" id="view-keno"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🔢</span><div><div class="sh-name">Keno</div><div class="sh-desc">Choisis jusqu'à 10 numéros, 10 sont tirés — plus tu en devines, plus tu gagnes</div></div></div>
+        <div class="kn-grid" id="kn-grid"></div>
+        <div class="message" id="kn-message">Choisis tes numéros (jusqu'à 10), puis tire.</div>
+        <div class="paytable" id="kn-paytable"></div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="kn-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="kn-betAmount">20</span><button id="kn-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="kn-drawBtn">TIRER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour tirer</div>
+      </div></section>
+
       <section class="view" id="view-mines"><div class="panel">
         <div class="scene-header"><span class="sh-icon">💣</span><div><div class="sh-name">Mines</div><div class="sh-desc">Révèle des cases, évite les mines, encaisse à temps</div></div></div>
         <div class="message" id="mn-message">Choisis le nombre de mines puis lance la partie.</div>
@@ -659,6 +695,8 @@
             <option value="bus">Ride the Bus</option>
             <option value="baccarat">Baccarat</option>
             <option value="coinflip">Pile ou Face</option>
+            <option value="war">Bataille</option>
+            <option value="keno">Keno</option>
             <option value="mines">Mines</option>
             <option value="crash">Crash</option>
             <option value="videopoker">Vidéo Poker</option>
@@ -834,6 +872,8 @@
 <script src="js/bus.js"></script>
 <script src="js/baccarat.js"></script>
 <script src="js/coinflip.js"></script>
+<script src="js/war.js"></script>
+<script src="js/keno.js"></script>
 <script src="js/mines.js"></script>
 <script src="js/crash.js"></script>
 <script src="js/video-poker.js"></script>

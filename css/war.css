@@ -1,0 +1,6 @@
+/* ============================================================
+   BATAILLE (WAR) — réutilise .bj-table/.cards/.zone (base.css) tels
+   quels ; seule une touche de couleur "acier" distingue ce jeu.
+   ============================================================ */
+#view-war .panel{border-color:rgba(148,163,184,.4)}
+#view-war .scene-header .sh-name{color:#cbd5e1}

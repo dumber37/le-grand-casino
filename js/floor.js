@@ -30,7 +30,9 @@ window.Casino=window.Casino||{};
       {view:'bus', icon:'🚌', name:'Ride the Bus'},
       {view:'coinflip', icon:'🪙', name:'Pile ou Face'},
       {view:'mines', icon:'💣', name:'Mines'},
-      {view:'crash', icon:'🚀', name:'Crash'}
+      {view:'crash', icon:'🚀', name:'Crash'},
+      {view:'war', icon:'⚔️', name:'Bataille'},
+      {view:'keno', icon:'🔢', name:'Keno'}
     ]},
     { label:'Salle Poker & Amis', short:'Poker & Amis', icon:'♣️', x:20, y:50, theme:'felt', games:[
       {view:'poker', icon:'♣️', name:'Poker Texas Hold’em'},
