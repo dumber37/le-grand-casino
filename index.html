@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="css/coinflip.css">
 <link rel="stylesheet" href="css/war.css">
 <link rel="stylesheet" href="css/keno.css">
+<link rel="stylesheet" href="css/wheel.css">
 <link rel="stylesheet" href="css/mines.css">
 <link rel="stylesheet" href="css/crash.css">
 <link rel="stylesheet" href="css/video-poker.css">
@@ -73,6 +74,7 @@
       <button data-view="friends">🤝 Salon entre amis</button>
       <button data-view="cases">📦 Ouverture de Caisses</button>
       <div class="side-section">Progression</div>
+      <button data-view="wheel">🎡 Roue quotidienne</button>
       <button data-view="stats">📊 Statistiques</button>
       <button data-view="history">🕘 Historique</button>
       <button data-view="achievements">🏆 Achievements</button>
@@ -123,6 +125,14 @@
           <div class="mh-body">
             <div class="mh-title">Missions du jour</div>
             <div class="mh-sub" id="mh-summary">0 / 3 complétées</div>
+          </div>
+          <span class="mh-arrow">→</span>
+        </div>
+        <div class="missions-home-card" data-view="wheel" id="wheelHomeCard">
+          <div class="mh-icon">🎡</div>
+          <div class="mh-body">
+            <div class="mh-title">Roue de la chance</div>
+            <div class="mh-sub" id="wheel-home-sub">Un spin gratuit t’attend !</div>
           </div>
           <span class="mh-arrow">→</span>
         </div>
@@ -675,6 +685,17 @@
         <div class="kbd-hint"><kbd>Espace</kbd> pour ouvrir</div>
       </div></section>
 
+      <section class="view" id="view-wheel"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🎡</span><div><div class="sh-name">Roue de la chance</div><div class="sh-desc">Un tour gratuit par jour — tente de décrocher le gros lot</div></div></div>
+        <div class="wh-stage">
+          <div class="wh-pointer"></div>
+          <div class="wh-wheel" id="wh-wheel"></div>
+        </div>
+        <div class="message" id="wh-message">Un spin gratuit t’attend aujourd’hui !</div>
+        <button class="primary-btn" id="wh-spinBtn" style="width:100%">TOURNER LA ROUE</button>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour tourner</div>
+      </div></section>
+
       <section class="view" id="view-stats"><div class="panel">
         <div class="profile-row"><span>Parties jouées</span><b id="st-games">0</b></div>
         <div class="profile-row"><span>Total gagné</span><b id="st-won">0</b></div>
@@ -704,6 +725,7 @@
             <option value="videopoker">Vidéo Poker</option>
             <option value="poker">Poker Texas Hold'em</option>
             <option value="cases">Ouverture de Caisses</option>
+            <option value="wheel">Roue de la chance</option>
           </select>
           <select id="hist-sort">
             <option value="recent">Plus récentes d'abord</option>
@@ -877,6 +899,7 @@
 <script src="js/war.js"></script>
 <script src="js/keno.js"></script>
 <script src="js/stats-chart.js"></script>
+<script src="js/wheel.js"></script>
 <script src="js/mines.js"></script>
 <script src="js/crash.js"></script>
 <script src="js/video-poker.js"></script>
