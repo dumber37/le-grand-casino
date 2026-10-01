@@ -163,6 +163,13 @@ body{
 /* Badge discret : visible dès qu'une session cloud est active (voir cloud-sync.js), clique
    vers la page Connexion (data-view, même délégation de clic que partout ailleurs). */
 .hdr-cloud{cursor:pointer;font-size:.9rem;filter:drop-shadow(0 0 4px rgba(168,205,240,.6))}
+
+/* Décor saisonnier automatique (voir js/seasonal.js) : purement cosmétique, n'importe jamais
+   --gold / --felt* / --card-bg (identité des objets physiques conservée dans tous les thèmes) —
+   un simple liseré additif au-dessus du thème choisi dans la Boutique. */
+html[data-season="halloween"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(255,140,30,.8));animation:seasonPulse 2s ease-in-out infinite}
+html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,120,.8));animation:seasonPulse 2s ease-in-out infinite}
+@keyframes seasonPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 /* padding-bottom réduit par défaut : les 90px ne sont nécessaires que pour dégager la barre de
    navigation basse fixe (.bottom-nav), qui n'existe qu'en dessous de 880px (voir plus bas) —
    les garder tout le temps gaspillait de la place inutilement sur desktop/tablette, obligeant

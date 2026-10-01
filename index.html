@@ -110,6 +110,7 @@
         <span>🏆 Niv. <b id="hdrLevel">1</b></span>
         <span id="hdrCloudBadge" class="hdr-cloud" data-view="account" title="Connexion" style="display:none">☁️</span>
         <span id="hdrOffline" class="hdr-cloud" title="Hors-ligne — tout fonctionne quand même grâce au mode hors-ligne" style="display:none">📡</span>
+        <span id="hdrSeason" class="hdr-cloud" style="display:none"></span>
       </div>
       <button class="fs-toggle" id="fsToggleBtn" title="Plein écran" aria-label="Basculer en plein écran" aria-pressed="false">⛶</button>
     </header>
@@ -405,8 +406,12 @@
         </div>
         <div class="bc-ai" id="bc-aiSeats"></div>
         <div class="message" id="bc-message">Choisis Player, Banker ou Tie.</div>
-        <div class="roulette-grid">
+        <div class="roulette-grid" id="bc-mainBets">
           <button data-bet="player">Player</button><button data-bet="banker">Banker</button><button data-bet="tie">Tie</button>
+        </div>
+        <div class="roulette-grid" style="grid-template-columns:repeat(2,1fr);margin-top:6px">
+          <button id="bc-sidePlayer" data-side-bet="player">🃏 Paire Joueur · 10🪙 · 11:1</button>
+          <button id="bc-sideBanker" data-side-bet="banker">🃏 Paire Banquier · 10🪙 · 11:1</button>
         </div>
         <div class="bet-row">
           <div class="bet-group"><button id="bc-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="bc-betAmount">25</span><button id="bc-betPlus" aria-label="Augmenter la mise">+</button></div>
@@ -797,6 +802,8 @@
         <div class="profile-row"><span>Total misé</span><b id="pf-wagered">0</b></div>
         <div class="profile-row"><span>Parties jouées</span><b id="pf-games">0</b></div>
         <div class="profile-row"><span>Jeu favori</span><b id="pf-fav">–</b></div>
+        <h2 class="section-title" style="margin-top:16px">Succès récents</h2>
+        <div id="pf-ach-log"></div>
         <button class="primary-btn" id="resetBtn" style="width:100%;margin-top:16px">Réinitialiser le solde à 500</button>
       </div></section>
 
@@ -938,6 +945,7 @@
       <section class="view" id="view-parametres"><div class="panel">
         <div class="settings-row"><span>🌙 Thème sombre</span><button class="toggle on" id="themeToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row"><span>🔊 Son</span><button class="toggle on" id="soundToggle" aria-pressed="true">Activé</button></div>
+        <div class="settings-row"><span>🎃 Décor saisonnier automatique</span><button class="toggle on" id="seasonalToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row" id="installRow" style="display:none"><span>📲 Installer l'application</span><button class="primary-btn" id="installAppBtn" style="padding:8px 16px;flex:none">Installer</button></div>
         <h2 class="section-title">Sauvegarde</h2>
         <p style="color:var(--muted);font-size:.78rem;margin:0 4px 12px">Exporte tes données (solde, stats, historique, favoris, achievements, missions...) dans un fichier, ou restaure-les sur un autre appareil.</p>
@@ -964,6 +972,7 @@
 </div>
 
 <script src="js/core.js"></script>
+<script src="js/seasonal.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/avatars.js"></script>
 <script src="js/shop.js"></script>

@@ -4,13 +4,22 @@
 (function(){
   const C=window.Casino;
   let bet=25, selected=null;
+  // Side-bets "Paire Parfaite" : mises optionnelles additives (10 jetons fixe, 11:1 si les 2
+  // premières cartes du camp choisi forment une paire de même rang) — n'affecte jamais la
+  // logique Player/Banker/Tie ci-dessous (dealRound/payout restent inchangés).
+  const SIDE_COST=10, SIDE_MULT=11;
+  let sidePlayer=false, sideBanker=false;
+  const sidePlayerBtn=document.getElementById('bc-sidePlayer'), sideBankerBtn=document.getElementById('bc-sideBanker');
+  sidePlayerBtn&&sidePlayerBtn.addEventListener('click',()=>{ sidePlayer=!sidePlayer; sidePlayerBtn.classList.toggle('sel',sidePlayer); render(); });
+  sideBankerBtn&&sideBankerBtn.addEventListener('click',()=>{ sideBanker=!sideBanker; sideBankerBtn.classList.toggle('sel',sideBanker); render(); });
+  function isPair(hand){ return hand[0].r===hand[1].r; }
   const betEl=document.getElementById('bc-betAmount'), msg=document.getElementById('bc-message'), dealBtn=document.getElementById('bc-dealBtn');
   const bankerCardsEl=document.getElementById('bc-bankerCards'), playerCardsEl=document.getElementById('bc-playerCards');
   const bankerScoreEl=document.getElementById('bc-bankerScore'), playerScoreEl=document.getElementById('bc-playerScore');
   const bankerZoneEl=bankerCardsEl.closest('.zone'), playerZoneEl=playerCardsEl.closest('.zone');
   const panelEl=document.querySelector('#view-baccarat .panel');
-  document.querySelectorAll('#view-baccarat .roulette-grid button').forEach(b=>{
-    b.addEventListener('click',()=>{ document.querySelectorAll('#view-baccarat .roulette-grid button').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); selected=b.dataset.bet; });
+  document.querySelectorAll('#bc-mainBets button').forEach(b=>{
+    b.addEventListener('click',()=>{ document.querySelectorAll('#bc-mainBets button').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); selected=b.dataset.bet; });
   });
   function bacVal(c){ if(c.r==='A') return 1; if(['10','J','Q','K'].includes(c.r)) return 0; return parseInt(c.r,10); }
   function bacTotal(cards){ return cards.reduce((s,c)=>s+bacVal(c),0)%10; }
@@ -23,7 +32,8 @@
     if(bTotal===6) return p3===6||p3===7;
     return false;
   }
-  function render(){ betEl.textContent=bet; dealBtn.disabled=C.state.balance<bet; }
+  function sideCost(){ return (sidePlayer?SIDE_COST:0)+(sideBanker?SIDE_COST:0); }
+  function render(){ betEl.textContent=bet; dealBtn.disabled=C.state.balance<(bet+sideCost()); }
   document.getElementById('bc-betMinus').addEventListener('click',()=>{bet=Math.max(5,bet-5);render();});
   document.getElementById('bc-betPlus').addEventListener('click',()=>{bet=Math.min(200,bet+5);render();});
   document.addEventListener('balance-changed',render);
@@ -79,22 +89,27 @@
 
   dealBtn.addEventListener('click',()=>{
     if(!selected){ msg.textContent='Choisis Player, Banker ou Tie.'; return; }
-    if(C.state.balance<bet){ msg.textContent='Solde insuffisant.'; return; }
-    C.state.balance-=bet; C.trackWager(bet); C.saveBalance(); C.renderBalance();
+    const totalBet=bet+sideCost();
+    if(C.state.balance<totalBet){ msg.textContent='Solde insuffisant.'; return; }
+    C.state.balance-=totalBet; C.trackWager(totalBet); C.saveBalance(); C.renderBalance();
     const {player,banker,pTotal,bTotal,outcome}=dealRound();
     bankerCardsEl.innerHTML=''; banker.forEach(c=>bankerCardsEl.appendChild(C.renderCard(c,false)));
     playerCardsEl.innerHTML=''; player.forEach(c=>playerCardsEl.appendChild(C.renderCard(c,false)));
     bankerScoreEl.textContent=bTotal; playerScoreEl.textContent=pTotal;
     const win=payout(selected,bet,outcome);
+    let sideWin=0, sideMsg='';
+    if(sidePlayer){ if(isPair(player)){ sideWin+=SIDE_COST*SIDE_MULT; sideMsg+=' · Paire Joueur +'+(SIDE_COST*SIDE_MULT); } }
+    if(sideBanker){ if(isPair(banker)){ sideWin+=SIDE_COST*SIDE_MULT; sideMsg+=' · Paire Banquier +'+(SIDE_COST*SIDE_MULT); } }
+    const totalWin=win+sideWin;
     renderAi(outcome,bet);
-    msg.textContent = win>0 ? ((outcome==='tie'&&selected!=='tie')?'Égalité — mise remboursée':'Gagné ! +'+win+' jetons') : (outcome+' gagne — perdu');
+    msg.textContent = (win>0 ? ((outcome==='tie'&&selected!=='tie')?'Égalité — mise remboursée':'Gagné ! +'+win+' jetons') : (outcome+' gagne — perdu')) + sideMsg;
     // Animation signature : la main gagnante (Player/Banker) est surlignée d'un liseré doré ; perte = assombrissement discret.
     bankerZoneEl.classList.remove('zone-win'); playerZoneEl.classList.remove('zone-win');
     if(outcome==='banker') bankerZoneEl.classList.add('zone-win');
     else if(outcome==='player') playerZoneEl.classList.add('zone-win');
-    if(win===0) C.flashLoss(panelEl);
-    C.state.balance+=win; C.saveBalance(); C.renderBalance();
-    C.recordGame('baccarat', bet, win); if(win>0) C.flashWin(msg);
+    if(totalWin===0) C.flashLoss(panelEl);
+    C.state.balance+=totalWin; C.saveBalance(); C.renderBalance();
+    C.recordGame('baccarat', totalBet, totalWin); if(totalWin>0) C.flashWin(msg);
     render();
   });
   render();

@@ -177,6 +177,13 @@ window.Casino = (function(){
   try{ const raw=localStorage.getItem(ACH_KEY); if(raw) unlockedAch=JSON.parse(raw); }catch(e){}
   function saveUnlockedAch(){ try{ localStorage.setItem(ACH_KEY, JSON.stringify(unlockedAch)); }catch(e){} }
   C.isAchUnlocked = id=>unlockedAch.includes(id);
+  // Journal des succès récents (profil) : petit horodatage séparé, posé en plus de unlockedAch
+  // (jamais à sa place) pour ne rien changer au format déjà exporté/importé par ACH_KEY — les
+  // 20 derniers déblocages suffisent pour un fil "récents", pas besoin d'historique complet.
+  const ACH_LOG_KEY='grand-casino-ach-log';
+  let achLog=[];
+  try{ const raw=localStorage.getItem(ACH_LOG_KEY); if(raw) achLog=JSON.parse(raw); }catch(e){}
+  function saveAchLog(){ try{ localStorage.setItem(ACH_LOG_KEY, JSON.stringify(achLog)); }catch(e){} }
   // pgCount : petit raccourci réutilisé par plusieurs succès/missions ci-dessous pour lire le
   // nombre de parties d'un jeu dans stats.perGame, sans répéter la même garde à chaque fois.
   const pgCount=key=>(stats.perGame[key]&&stats.perGame[key].count)||0;
@@ -218,10 +225,23 @@ window.Casino = (function(){
   function checkAchievements(){
     let changed=false;
     ACHIEVEMENTS.forEach(a=>{
-      if(a.cond() && !unlockedAch.includes(a.id)){ unlockedAch.push(a.id); showToast('🏆 Succès débloqué : '+a.label.split(' — ')[0]); C.sound&&C.sound('achievement'); changed=true; }
+      if(a.cond() && !unlockedAch.includes(a.id)){
+        unlockedAch.push(a.id); showToast('🏆 Succès débloqué : '+a.label.split(' — ')[0]); C.sound&&C.sound('achievement'); changed=true;
+        achLog.unshift({id:a.id, time:Date.now()}); if(achLog.length>20) achLog.length=20; saveAchLog();
+      }
     });
     if(changed) saveUnlockedAch();
   }
+  function renderAchLog(){
+    const el=document.getElementById('pf-ach-log'); if(!el) return;
+    if(!achLog.length){ el.innerHTML='<p class="empty-state">Débloque ton premier succès pour le voir apparaître ici.</p>'; return; }
+    el.innerHTML=achLog.map(e=>{
+      const a=ACHIEVEMENTS.find(x=>x.id===e.id);
+      if(!a) return '';
+      return '<div class="profile-row"><span>'+a.icon+' '+a.label.split(' — ')[0]+'</span><b style="font-weight:normal;color:var(--muted);font-size:.76rem">'+formatTime(e.time)+'</b></div>';
+    }).join('');
+  }
+  C.renderAchLog = renderAchLog;
   function renderAchievements(){
     const listEl=document.getElementById('ach-list'); if(!listEl) return;
     listEl.innerHTML=ACHIEVEMENTS.map(a=>{
@@ -529,8 +549,8 @@ window.Casino = (function(){
   // valider ce même format pour tout restaurer. Après import réussi, la page est rechargée pour
   // que chaque module se réinitialise proprement depuis le localStorage restauré, plutôt que de
   // resynchroniser à la main les nombreuses variables en mémoire de chaque module.
-  const SAVE_KEYS=[BAL_KEY,WAG_KEY,STREAK_KEY,BEST_STREAK_KEY,LAST_KEY,THEME_KEY,STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,MISSIONS_KEY,PSEUDO_KEY,AVATAR_KEY,'grand-casino-sound','grand-casino-challenges'];
-  const SAVE_JSON_KEYS=[STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,MISSIONS_KEY,'grand-casino-challenges'];
+  const SAVE_KEYS=[BAL_KEY,WAG_KEY,STREAK_KEY,BEST_STREAK_KEY,LAST_KEY,THEME_KEY,STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,ACH_LOG_KEY,MISSIONS_KEY,PSEUDO_KEY,AVATAR_KEY,'grand-casino-sound','grand-casino-challenges'];
+  const SAVE_JSON_KEYS=[STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,ACH_LOG_KEY,MISSIONS_KEY,'grand-casino-challenges'];
   // buildSaveObject/applySaveObject : le coeur commun de l'export/import fichier ci-dessous,
   // exposé sur C au cas où un autre module voudrait le réutiliser plus tard (même format,
   // même validation, plutôt que d'en recréer une variante).
@@ -612,7 +632,7 @@ window.Casino = (function(){
     if(name==='history') renderHistory();
     else if(name==='stats'){ renderStats(); if(C.renderBalanceChart) C.renderBalanceChart(); }
     else if(name==='achievements') renderAchievements();
-    else if(name==='profil'){ renderProfile(); if(C.avatars&&C.avatars.refreshFrameLocks) C.avatars.refreshFrameLocks(); }
+    else if(name==='profil'){ renderProfile(); if(C.avatars&&C.avatars.refreshFrameLocks) C.avatars.refreshFrameLocks(); renderAchLog(); }
     else if(name==='shop'&&C.renderShop) C.renderShop();
     else if(name==='weekly'&&C.renderWeekly) C.renderWeekly();
     else if(name==='season'&&C.renderSeason) C.renderSeason();
