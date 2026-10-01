@@ -54,6 +54,10 @@ window.Casino = (function(){
   let history=[];
   try{ const raw=localStorage.getItem(HIST_KEY); if(raw) history=JSON.parse(raw); }catch(e){}
   function saveHistory(){ try{ localStorage.setItem(HIST_KEY, JSON.stringify(history)); }catch(e){} }
+  // Source unique pour tout module qui relit l'historique (stats-chart.js, weekly.js,
+  // season.js...) : évite que chacun reparse sa propre copie de grand-casino-history
+  // depuis localStorage à chaque rendu alors que ce tableau est déjà en mémoire ici.
+  C.getHistory = function(){ return history.slice(); };
   // Stats et historique sont sauvegardés à chaque partie (toutes vues confondues), mais leur
   // rendu DOM est différé à l'ouverture de la vue concernée (voir switchView) : inutile de
   // reconstruire une liste d'historique de 100 lignes ou les cartes de stats par jeu après

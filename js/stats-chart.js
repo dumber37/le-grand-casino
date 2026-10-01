@@ -9,19 +9,14 @@
 window.Casino = window.Casino || {};
 (function(){
   const C = window.Casino;
-  const HIST_KEY = 'grand-casino-history';
   const MAX_POINTS = 30;
-
-  function readHistory(){
-    try{ const raw = localStorage.getItem(HIST_KEY); return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
-  }
 
   // history[0] = partie la plus récente. On reconstitue le solde APRÈS chaque
   // partie affichée en remontant depuis le solde actuel (balance - net de la
   // partie la plus récente = solde juste avant elle = solde juste après la
   // suivante, etc.), puis on remet tout en ordre chronologique pour le tracé.
   function buildPoints(){
-    const hist = readHistory().slice(0, MAX_POINTS);
+    const hist = C.getHistory().slice(0, MAX_POINTS);
     if(!hist.length) return [];
     let bal = C.state.balance;
     const afterNewestFirst = [];

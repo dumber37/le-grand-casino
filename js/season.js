@@ -11,7 +11,6 @@ window.Casino = window.Casino || {};
 (function(){
   const C = window.Casino;
   const KEY='grand-casino-season-pass';
-  const HIST_KEY='grand-casino-history';
   const TIERS=[
     {wager:200,   reward:50},
     {wager:500,   reward:100},
@@ -27,7 +26,6 @@ window.Casino = window.Casino || {};
 
   function seasonStr(){ const d=new Date(); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0'); }
   function seasonStartTs(){ const d=new Date(); return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),1); }
-  function readHistory(){ try{ const raw=localStorage.getItem(HIST_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
   function readState(){ try{ const raw=localStorage.getItem(KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
   function saveState(s){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
 
@@ -36,7 +34,7 @@ window.Casino = window.Casino || {};
   if(!state||state.season!==curSeason){ state={season:curSeason, claimed:[]}; saveState(state); }
 
   function wageredThisSeason(){
-    return readHistory().filter(h=>h.time>=seasonStartTs()).reduce((s,h)=>s+h.bet,0);
+    return C.getHistory().filter(h=>h.time>=seasonStartTs()).reduce((s,h)=>s+h.bet,0);
   }
   function claimTier(i){
     const t=TIERS[i];

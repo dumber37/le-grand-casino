@@ -13,7 +13,6 @@ window.Casino = window.Casino || {};
 (function(){
   const C = window.Casino;
   const WK_KEY='grand-casino-weekly-tournament';
-  const HIST_KEY='grand-casino-history';
 
   function weekStartDate(){
     const d=new Date();
@@ -22,11 +21,10 @@ window.Casino = window.Casino || {};
     return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+diff));
   }
   function weekStartStr(){ return weekStartDate().toISOString().slice(0,10); }
-  function readHistory(){ try{ const raw=localStorage.getItem(HIST_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
   function readState(){ try{ const raw=localStorage.getItem(WK_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
   function saveState(s){ try{ localStorage.setItem(WK_KEY, JSON.stringify(s)); }catch(e){} }
   function netSince(tsStart,tsEnd){
-    return readHistory().filter(h=>h.time>=tsStart && (tsEnd==null||h.time<tsEnd)).reduce((s,h)=>s+h.net,0);
+    return C.getHistory().filter(h=>h.time>=tsStart && (tsEnd==null||h.time<tsEnd)).reduce((s,h)=>s+h.net,0);
   }
   function rewardFor(net){ if(net>=1000) return 300; if(net>=500) return 150; if(net>0) return 50; return 0; }
 
