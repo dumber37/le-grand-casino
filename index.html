@@ -87,6 +87,7 @@
       <button data-view="vip">💎 Statut VIP</button>
       <button data-view="halloffame">🏆 Hall of Fame</button>
       <button data-view="challenges">🎯 Défis</button>
+      <button data-view="weekly">🏅 Tournoi hebdo</button>
       <button data-view="leaderboard">📊 Classement</button>
     </nav>
     <div class="side-bottom">
@@ -891,6 +892,17 @@
         <div class="message" id="acc-message"></div>
       </div></section>
 
+      <section class="view" id="view-weekly"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🏅</span><div><div class="sh-name">Tournoi hebdomadaire</div><div class="sh-desc">Ton solde net cette semaine — un bonus t'attend si tu termines dans le positif</div></div></div>
+        <div style="text-align:center;margin:10px 0 18px">
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Net cette semaine</div>
+          <div id="wk-net" class="hist-net" style="font-size:2rem">+0</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-top:4px">Prochaine semaine dans <span id="wk-countdown">–</span></div>
+        </div>
+        <h2 class="section-title">Semaines précédentes</h2>
+        <div id="wk-past"></div>
+      </div></section>
+
       <section class="view" id="view-leaderboard"><div class="panel">
         <div class="scene-header"><span class="sh-icon">📊</span><div><div class="sh-name">Classement</div><div class="sh-desc">Compare ta progression avec tes amis</div></div></div>
         <p class="acc-hint">Ce site n'a pas de serveur central : pour comparer ton score à celui d'un ami, demande-lui d'exporter sa sauvegarde (Paramètres → « Exporter ma sauvegarde ») et importe son fichier ici. Rien n'est envoyé nulle part — tout reste sur cet appareil.</p>
@@ -950,6 +962,7 @@
 <script src="js/war.js"></script>
 <script src="js/keno.js"></script>
 <script src="js/craps.js"></script>
+<script src="js/weekly.js"></script>
 <script src="js/stats-chart.js"></script>
 <script src="js/wheel.js"></script>
 <script src="js/daily-challenge.js"></script>
