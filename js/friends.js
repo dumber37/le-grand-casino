@@ -136,7 +136,7 @@
         const p=entry.peer, b=parseInt(m.bet,10);
         if(SIDES[m.side]&&b>0&&b<=500){ p.side=m.side; p.bet=b; } else { p.side=null; p.bet=0; }
         broadcastRoster();
-      } else if(entry.peer&&typeof m.t==='string'&&/^(pk|bj|bs|cr)_/.test(m.t)){
+      } else if(entry.peer&&typeof m.t==='string'&&/^(pk|bj|bs|cr|st)_/.test(m.t)){
         msgHandlers.forEach(f=>{ try{ f(m,entry.peer.id); }catch(x){} });
       }
     };
@@ -221,7 +221,7 @@
     if(m.t==='welcome'){ myId=m.id; role='guest'; showTable(); say('Connecté au salon de l’hôte !'); notifyChange(); }
     else if(m.t==='roster'){ roster=m.players; renderPlayers(roster); }
     else if(m.t==='result'){ applyResult(m); }
-    else if(typeof m.t==='string'&&/^(pk|bj|bs|cr)_/.test(m.t)){ msgHandlers.forEach(f=>{ try{ f(m,null); }catch(x){} }); }
+    else if(typeof m.t==='string'&&/^(pk|bj|bs|cr|st)_/.test(m.t)){ msgHandlers.forEach(f=>{ try{ f(m,null); }catch(x){} }); }
   }
   function onHostLost(){
     if(role!=='guest') return;

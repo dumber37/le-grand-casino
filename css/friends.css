@@ -22,3 +22,9 @@
 .fr-player.fr-win{background:rgba(79,206,133,.1);border-radius:6px}
 .fr-player.fr-win span:last-child{color:#4fce85}
 .fr-player.fr-loss span:last-child{color:var(--red)}
+
+/* Comparateur de stats (friends-compare.js) */
+.fr-compare-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.fr-compare-table th,.fr-compare-table td{padding:6px 8px;text-align:center;border-bottom:1px dashed var(--border);color:var(--muted)}
+.fr-compare-table th{color:var(--gold-bright);font-weight:600}
+.fr-compare-table td:first-child,.fr-compare-table th:first-child{text-align:left;color:var(--cream)}

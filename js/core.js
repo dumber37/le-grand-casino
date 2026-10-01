@@ -48,6 +48,13 @@ window.Casino = (function(){
   const GAME_NAMES={slots:'Machine à sous',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',dragon:'Fortune Dragon',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',wheel:'Roue de la chance',daily:'Défi du jour'};
   C.gameName = k=>GAME_NAMES[k]||k;
   function saveStats(){ try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){} }
+  // Résumé anonyme pour le comparateur de stats du Salon entre amis (friends-compare.js) : jamais
+  // les objets internes (stats, history) directement, juste un instantané en lecture seule.
+  C.getStatsSummary = function(){
+    const entries=Object.entries(stats.perGame).sort((a,b)=>((b[1].count||0)-(a[1].count||0)));
+    const favGame=entries.length?(GAME_NAMES[entries[0][0]]||entries[0][0]):null;
+    return {gamesPlayed:stats.gamesPlayed, totalWon:stats.totalWon, biggestWin:stats.biggestWin, favGame};
+  };
 
   // ====== MODULE: History (100 dernières parties) ======
   const HIST_KEY='grand-casino-history';
