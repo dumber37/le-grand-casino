@@ -258,6 +258,8 @@ body{
 .ach-label{font-size:.85rem}
 .ach-status{margin-left:auto;font-size:.7rem;color:var(--muted)}
 .ach-item.unlocked .ach-status{color:#4fce85}
+.ach-item.ach-secret .ach-label{font-style:italic;color:var(--muted)}
+.ach-item.ach-secret .ach-icon{opacity:.6}
 .profile-row{display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px dashed var(--border);font-size:.85rem}
 .profile-row:last-child{border-bottom:none}
 /* ---- Graphique d'évolution du solde (Statistiques) — courbe SVG, voir stats-chart.js ---- */
@@ -405,6 +407,21 @@ body{
   background:
     repeating-linear-gradient(45deg, rgba(212,175,55,.28) 0 6px, transparent 6px 12px),
     linear-gradient(160deg,#0c3d2e,#062a1f);
+}
+/* ---- Dos de carte achetables à la Boutique (voir shop.js) — un seul choke point (.card-back,
+   déjà utilisé par TOUTE carte cachée : Blackjack, Baccarat, Ride the Bus, Poker, Vidéo Poker)
+   piloté par un attribut data-cardback sur <html>, même principe que les thèmes. ---- */
+:root[data-cardback="royal"] .card-back{
+  border-color:#a855f7;
+  background:
+    repeating-linear-gradient(45deg, rgba(168,85,247,.32) 0 6px, transparent 6px 12px),
+    linear-gradient(160deg,#2d0a4e,#150425);
+}
+:root[data-cardback="dragon"] .card-back{
+  border-color:#d4af37;
+  background:
+    repeating-linear-gradient(45deg, rgba(212,175,55,.38) 0 6px, transparent 6px 12px),
+    linear-gradient(160deg,#7a0f1a,#2a0407);
 }
 .card-3d.lg .card-face{font-size:1.3rem;border-radius:9px}
 .card-3d.lg .card-back{border-radius:9px}

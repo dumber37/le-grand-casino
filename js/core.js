@@ -36,6 +36,9 @@ window.Casino = (function(){
     // d'origine — n'importe quelle valeur autre que 'dark' pose l'attribut tel quel.
     const savedTheme=localStorage.getItem(THEME_KEY);
     if(savedTheme && savedTheme!=='dark') document.documentElement.setAttribute('data-theme',savedTheme);
+    // Dos de carte achetable à la Boutique (voir shop.js/css base.css) — même principe.
+    const savedCardback=localStorage.getItem('grand-casino-cardback');
+    if(savedCardback && savedCardback!=='classic') document.documentElement.setAttribute('data-cardback',savedCardback);
   }catch(e){}
 
   // ====== MODULE: Statistics ======
@@ -194,7 +197,16 @@ window.Casino = (function(){
     {id:'streak-7', icon:'📅', label:'Semaine complète — 7 jours consécutifs', cond:()=>(C.state.bestStreak||0)>=7},
     {id:'legende-vip', icon:'👑', label:'Statut Légende — le plus haut niveau VIP atteint', cond:()=>vipTierIndex(C.state.totalWagered)>=VIP_TIERS.length-1},
     {id:'challenge-champion', icon:'🏆', label:'Recordman — battre un premier record dans un Défi personnel', cond:()=>{ try{ return Object.keys(JSON.parse(localStorage.getItem('grand-casino-challenges')||'{}')).length>=1; }catch(e){ return false; } }},
-    {id:'cloud-linked', icon:'🔐', label:'Connecté — synchronisation cloud activée au moins une fois', cond:()=>{ try{ return localStorage.getItem('grand-casino-had-session')==='1'; }catch(e){ return false; } }}
+    {id:'cloud-linked', icon:'🔐', label:'Connecté — synchronisation cloud activée au moins une fois', cond:()=>{ try{ return localStorage.getItem('grand-casino-had-session')==='1'; }catch(e){ return false; } }},
+    // ---- Succès secrets : masqués (icône/libellé remplacés par "???") tant qu'ils ne sont pas
+    // débloqués, pour un effet de découverte — voir renderAchievements. Toujours calculés à partir
+    // de données déjà suivies ailleurs (history, C.state.balance, localStorage déjà posé par
+    // avatars.js/shop.js), jamais un nouveau suivi dédié. ----
+    {id:'night-owl', icon:'🦉', label:'Noctambule — jouer une partie entre minuit et 5h du matin', hidden:true, cond:()=>{ const h=new Date().getHours(); return h>=0&&h<5; }},
+    {id:'wheel-jackpot', icon:'🎡', label:'Jackpot de la roue — décrocher le gros lot à la Roue de la chance', hidden:true, cond:()=>history.some(h=>h.game==='wheel'&&h.win>=250)},
+    {id:'rock-bottom', icon:'💸', label:'Banqueroute — voir son solde tomber à 0 jeton', hidden:true, cond:()=>C.state.balance===0},
+    {id:'millionaire', icon:'💰', label:'Millionnaire — atteindre 1 000 000 de jetons', hidden:true, cond:()=>C.state.balance>=1000000},
+    {id:'fashionista', icon:'🌈', label:'Styliste — porter le cadre Arc-en-ciel', hidden:true, cond:()=>{ try{ return localStorage.getItem('grand-casino-avatar-frame')==='rainbow'; }catch(e){ return false; } }}
   ];
   // Le rendu de la liste (#ach-list) est différé à l'ouverture de la vue Achievements
   // (voir switchView) : seule la détection de déblocage (+ toast) doit tourner à chaque partie.
@@ -209,6 +221,9 @@ window.Casino = (function(){
     const listEl=document.getElementById('ach-list'); if(!listEl) return;
     listEl.innerHTML=ACHIEVEMENTS.map(a=>{
       const unlocked=unlockedAch.includes(a.id);
+      if(a.hidden&&!unlocked){
+        return '<div class="ach-item ach-secret"><span class="ach-icon">❓</span><span class="ach-label">Succès secret — à découvrir...</span><span class="ach-status">Verrouillé</span></div>';
+      }
       return '<div class="ach-item'+(unlocked?' unlocked':'')+'"><span class="ach-icon">'+a.icon+'</span><span class="ach-label">'+a.label+'</span><span class="ach-status">'+(unlocked?'Débloqué':'Verrouillé')+'</span></div>';
     }).join('');
   }
