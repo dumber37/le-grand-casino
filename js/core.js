@@ -530,9 +530,14 @@ window.Casino = (function(){
   // buildSaveObject/applySaveObject : le coeur commun de l'export/import fichier ci-dessous,
   // exposé sur C au cas où un autre module voudrait le réutiliser plus tard (même format,
   // même validation, plutôt que d'en recréer une variante).
-  function buildSaveObject(){
+  function buildSaveObject(opts){
     const data={};
-    SAVE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
+    // skipHistory : utilisé par le transfert par QR code (voir save-transfer.js), où la place est
+    // comptée (capacité d'un QR limitée à quelques Ko) — l'historique détaillé (jusqu'à 100
+    // parties) est la partie la plus volumineuse et la moins utile à transférer d'un appareil à
+    // l'autre ; solde/stats/achievements/missions/favoris restent intacts.
+    const keys=(opts&&opts.skipHistory)?SAVE_KEYS.filter(k=>k!==HIST_KEY):SAVE_KEYS;
+    keys.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
     return {app:'grand-casino', version:1, exportedAt:new Date().toISOString(), data};
   }
   function applySaveObject(payload){

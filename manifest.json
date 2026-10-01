@@ -17,8 +17,8 @@
   ],
   "shortcuts": [
     { "name": "Machines à sous", "short_name": "Slots", "url": "./index.html#slots", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Fortune Dragon", "short_name": "Dragon", "url": "./index.html#dragon", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Missions du jour", "short_name": "Missions", "url": "./index.html#missions", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Crash", "short_name": "Crash", "url": "./index.html#crash", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Défi du jour", "short_name": "Défi du jour", "url": "./index.html#daily", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Craps", "short_name": "Craps", "url": "./index.html#craps", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Boutique", "short_name": "Boutique", "url": "./index.html#shop", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] }
   ]
 }

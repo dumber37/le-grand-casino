@@ -109,6 +109,7 @@
         <span>💰 <b id="hdrBalance">500</b></span>
         <span>🏆 Niv. <b id="hdrLevel">1</b></span>
         <span id="hdrCloudBadge" class="hdr-cloud" data-view="account" title="Connexion" style="display:none">☁️</span>
+        <span id="hdrOffline" class="hdr-cloud" title="Hors-ligne — tout fonctionne quand même grâce au mode hors-ligne" style="display:none">📡</span>
       </div>
       <button class="fs-toggle" id="fsToggleBtn" title="Plein écran" aria-label="Basculer en plein écran" aria-pressed="false">⛶</button>
     </header>
@@ -652,7 +653,8 @@
             <div id="fr-answerBox" style="display:none">
               <label class="fr-label" for="fr-answer">Ma réponse — à envoyer à l'hôte</label>
               <textarea id="fr-answer" rows="3" readonly></textarea>
-              <button data-copy="fr-answer" class="fr-copy">Copier</button>
+              <div class="fr-share-row"><button data-copy="fr-answer" class="fr-copy">Copier le code</button><button class="fr-copy" id="fr-answerLinkBtn">Copier le lien</button><button class="fr-copy" id="fr-answerQrBtn">Afficher le QR code</button></div>
+              <div class="fr-qr" id="fr-answerQr" style="display:none"></div>
             </div>
           </div>
         </div>
@@ -664,7 +666,8 @@
             <div id="fr-inviteBox" style="display:none">
               <label class="fr-label" for="fr-offer">1. Code d'invitation — envoie-le à ton ami</label>
               <textarea id="fr-offer" rows="3" readonly></textarea>
-              <button data-copy="fr-offer" class="fr-copy">Copier</button>
+              <div class="fr-share-row"><button data-copy="fr-offer" class="fr-copy">Copier le code</button><button class="fr-copy" id="fr-offerLinkBtn">Copier le lien</button><button class="fr-copy" id="fr-offerQrBtn">Afficher le QR code</button></div>
+              <div class="fr-qr" id="fr-offerQr" style="display:none"></div>
               <label class="fr-label" for="fr-answerIn">2. Réponse de ton ami — colle-la ici</label>
               <textarea id="fr-answerIn" rows="3" placeholder="GC1:..."></textarea>
               <button class="primary-btn" id="fr-connectBtn" style="width:100%;margin:8px 0">Connecter</button>
@@ -935,6 +938,7 @@
       <section class="view" id="view-parametres"><div class="panel">
         <div class="settings-row"><span>🌙 Thème sombre</span><button class="toggle on" id="themeToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row"><span>🔊 Son</span><button class="toggle on" id="soundToggle" aria-pressed="true">Activé</button></div>
+        <div class="settings-row" id="installRow" style="display:none"><span>📲 Installer l'application</span><button class="primary-btn" id="installAppBtn" style="padding:8px 16px;flex:none">Installer</button></div>
         <h2 class="section-title">Sauvegarde</h2>
         <p style="color:var(--muted);font-size:.78rem;margin:0 4px 12px">Exporte tes données (solde, stats, historique, favoris, achievements, missions...) dans un fichier, ou restaure-les sur un autre appareil.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
@@ -942,6 +946,8 @@
           <button class="primary-btn" id="importSaveBtn" style="flex:1;min-width:140px">Importer une sauvegarde</button>
         </div>
         <input type="file" id="importSaveInput" accept="application/json,.json" style="display:none">
+        <button class="fr-copy" id="showSaveQrBtn" style="width:100%;margin-top:4px">Afficher un QR de transfert (vers un autre appareil)</button>
+        <div class="fr-qr" id="saveQrBox" style="display:none;max-width:260px"></div>
         <p class="disclaimer" style="margin-top:16px;text-align:left">Jeu 100% fictif à but de divertissement. Aucun argent réel n'est en jeu, rien n'est gagné ni perdu pour de vrai.<br>Bonus quotidien automatique à la première connexion du jour (jour 1 à 7, de 50 à 300 jetons) et statut VIP basé sur le total misé — tous deux purement cosmétiques, sans effet sur les gains d'aucun jeu.</p>
       </div></section>
 
@@ -982,6 +988,8 @@
 <script src="js/crash.js"></script>
 <script src="js/video-poker.js"></script>
 <script src="js/cases.js"></script>
+<script src="js/qrcode-lib.js"></script>
+<script src="js/qrcode.js"></script>
 <script src="js/friends.js"></script>
 <script src="js/poker.js"></script>
 <script src="js/multi-blackjack.js"></script>
@@ -995,5 +1003,7 @@
 <script src="js/leaderboard.js"></script>
 <script src="js/ambiance.js"></script>
 <script src="js/sw-register.js"></script>
+<script src="js/install-prompt.js"></script>
+<script src="js/save-transfer.js"></script>
 </body>
 </html>

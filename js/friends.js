@@ -114,6 +114,14 @@
 
   // ---------- Hôte : invitations ----------
   function setupHostMessages(entry){
+    // Reconnexion automatique pour un ami DÉJÀ connecté (pas juste pendant la poignée de main
+    // initiale, déjà couverte dans invite()) : un creux réseau en pleine partie tente un ICE
+    // restart avant de considérer l'ami parti (dc.onclose, juste en dessous, gère ce cas final).
+    entry.pc.addEventListener('connectionstatechange',()=>{
+      if(entry.pc.connectionState==='disconnected'){
+        setTimeout(()=>{ if(entry.pc.connectionState==='disconnected'&&entry.pc.restartIce) entry.pc.restartIce(); },5000);
+      }
+    });
     entry.dc.onmessage=e=>{
       let m; try{ m=JSON.parse(e.data); }catch(x){ return; }
       if(m.t==='hello'){
@@ -153,7 +161,14 @@
     // à 'disconnected', souvent transitoire et qui peut se rétablir tout seul), et seulement si
     // cette invitation est toujours celle en attente (un ami a peut-être déjà rejoint entre-temps).
     pc.addEventListener('connectionstatechange',()=>{
-      if(pending===entry&&pc.connectionState==='failed'){
+      if(pc.connectionState==='disconnected'){
+        // Reconnexion automatique sur un creux réseau passager (bascule wifi, mise en veille
+        // courte...) : ICE restart sur la MÊME connexion après quelques secondes si ça ne s'est
+        // pas rétabli tout seul — jamais besoin de redemander un code. Ne fonctionne que si
+        // l'autre côté est toujours joignable quelque part sur le réseau ; sinon la connexion
+        // finit par passer à 'failed', géré juste en dessous comme avant.
+        setTimeout(()=>{ if(pc.connectionState==='disconnected'&&pc.restartIce) pc.restartIce(); },5000);
+      } else if(pending===entry&&pc.connectionState==='failed'){
         pending=null;
         say('La connexion a échoué. Génère une nouvelle invitation et réessaie — vérifiez que la case « Jouer via Internet » est cochée des deux côtés, ou que vous êtes bien sur le même réseau si elle est décochée.');
       }
@@ -179,7 +194,12 @@
     // bloqué sur « ... attends la connexion » indéfiniment. Ignoré une fois réellement connecté
     // (role==='guest') : une coupure après coup est déjà gérée par onHostLost (fermeture du canal).
     pc.addEventListener('connectionstatechange',()=>{
-      if(role!=='guest'&&pc.connectionState==='failed'){
+      if(pc.connectionState==='disconnected'){
+        // Même reconnexion automatique que côté hôte, y compris APRÈS être pleinement connecté
+        // (contrairement à la branche 'failed' ci-dessous, pas de garde sur role : un creux
+        // réseau en pleine partie doit aussi déclencher une tentative de reconnexion).
+        setTimeout(()=>{ if(pc.connectionState==='disconnected'&&pc.restartIce) pc.restartIce(); },5000);
+      } else if(role!=='guest'&&pc.connectionState==='failed'){
         say('La connexion a échoué. Redemande un nouveau code d’invitation à ton hôte et réessaie — vérifiez que la case « Jouer via Internet » est cochée des deux côtés, ou que vous êtes bien sur le même réseau si elle est décochée.');
       }
     });
@@ -266,4 +286,54 @@
     else renderPlayers(roster);
   });
   if(!supported) say('Ton navigateur ne gère pas WebRTC : le salon entre amis est indisponible.');
+
+  // ---------- Lien d'invitation cliquable + QR code ----------
+  // Même code GC1:... qu'avant, juste encodé dans l'URL (#join=.../#answer=...) pour qu'un clic
+  // suffise au lieu d'un copier-coller manuel. Le QR encode ce MÊME lien (pas le code brut) :
+  // n'importe quel appareil photo de téléphone reconnaît une URL et propose de l'ouvrir — pas
+  // besoin d'un scanner dédié dans l'app.
+  function joinLink(param,code){ return location.origin+location.pathname+'#'+param+'='+encodeURIComponent(code); }
+  function copyText(text){
+    return (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(text):Promise.reject()).then(
+      ()=>say('Lien copié !'),
+      ()=>{
+        const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); say('Lien copié !'); }catch(e){}
+        ta.remove();
+      }
+    );
+  }
+  function toggleQr(btn,qrEl,param,codeEl){
+    if(qrEl.style.display!=='none'){ qrEl.style.display='none'; btn.textContent='Afficher le QR code'; return; }
+    const link=joinLink(param,codeEl.value);
+    const svg=C.makeQrSvg?C.makeQrSvg(link,4,8):null;
+    qrEl.innerHTML=svg||'<p style="color:#900;font-size:.76rem;margin:0">Code trop long pour un QR cette fois — utilise le lien ou le code à copier.</p>';
+    qrEl.style.display='block'; btn.textContent='Masquer le QR code';
+  }
+  $('fr-offerLinkBtn').addEventListener('click',()=>copyText(joinLink('join',$('fr-offer').value)));
+  $('fr-answerLinkBtn').addEventListener('click',()=>copyText(joinLink('answer',$('fr-answer').value)));
+  $('fr-offerQrBtn').addEventListener('click',()=>toggleQr($('fr-offerQrBtn'),$('fr-offerQr'),'join',$('fr-offer')));
+  $('fr-answerQrBtn').addEventListener('click',()=>toggleQr($('fr-answerQrBtn'),$('fr-answerQr'),'answer',$('fr-answer')));
+
+  // Détecte #join=/#answer= dans l'URL : au clic sur un lien reçu, pré-remplit le bon champ au
+  // lieu d'un copier-coller. Un changement de hash seul ne recharge jamais la page (navigation
+  // interne standard) : l'hôte garde sa connexion WebRTC en mémoire même en cliquant un lien de
+  // réponse reçu pendant qu'il attend déjà — c'est justement ce qui permet au second lien (la
+  // réponse) de fonctionner sans tout recommencer.
+  function handleShareHash(){
+    const h=location.hash;
+    if(h.indexOf('#join=')===0){
+      let code; try{ code=decodeURIComponent(h.slice(6)); }catch(e){ return; }
+      const navBtn=document.querySelector('[data-view="friends"]'); if(navBtn) navBtn.click();
+      const joinBtn=$('fr-joinBtn'); if(joinBtn&&$('fr-guestBox').style.display==='none') joinBtn.click();
+      $('fr-offerIn').value=code;
+      say('Code d’invitation reçu — clique sur « Générer ma réponse ».');
+    } else if(h.indexOf('#answer=')===0){
+      let code; try{ code=decodeURIComponent(h.slice(8)); }catch(e){ return; }
+      if(pending){ $('fr-answerIn').value=code; say('Réponse de ton ami reçue — clique sur « Connecter ».'); }
+    }
+  }
+  window.addEventListener('hashchange',handleShareHash);
+  handleShareHash();
 })();

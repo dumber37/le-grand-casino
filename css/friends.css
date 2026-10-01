@@ -10,6 +10,11 @@
 #view-friends textarea{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:8px;font-family:monospace;font-size:.68rem;resize:vertical;word-break:break-all}
 .fr-copy{background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:8px 14px;font-family:inherit;font-size:.8rem;cursor:pointer;margin-top:6px}
 .fr-copy:hover{border-color:var(--gold);background:rgba(212,175,55,.1)}
+/* ---- Lien d'invitation cliquable + QR code (voir friends.js) ---- */
+.fr-share-row{display:flex;gap:6px;flex-wrap:wrap}
+.fr-share-row .fr-copy{margin-top:6px;flex:1;min-width:110px}
+.fr-qr{margin-top:10px;text-align:center;background:#fff;border-radius:12px;padding:10px;max-width:220px;margin-left:auto;margin-right:auto}
+.fr-qr svg{display:block;width:100%;height:auto}
 .fr-count{text-align:center;color:var(--muted);font-size:.8rem;margin-bottom:8px}
 .fr-players{margin:0 0 12px}
 .fr-player{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px dashed var(--border);font-size:.8rem;color:var(--muted)}

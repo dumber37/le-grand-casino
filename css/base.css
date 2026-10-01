@@ -168,6 +168,11 @@ body{
    les garder tout le temps gaspillait de la place inutilement sur desktop/tablette, obligeant
    à défiler pour des jeux au contenu déjà haut (ex. Blackjack). */
 .content{padding:20px;max-width:760px;width:100%;margin:0 auto;padding-bottom:28px}
+/* Grand écran (desktop large/double moniteur) : élargit modérément le contenu plutôt que de
+   laisser un bandeau vide des deux côtés — les grilles déjà responsives (.game-grid, auto-fit)
+   affichent simplement plus de colonnes, aucun composant à retoucher individuellement. Pas de
+   bascule au-delà : un texte trop large devient inconfortable à lire. */
+@media (min-width:1400px){ .content{max-width:1100px} }
 
 /* ---- Accueil ---- */
 .hero{text-align:center;padding:26px 10px 10px;
