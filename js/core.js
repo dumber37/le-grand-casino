@@ -32,7 +32,10 @@ window.Casino = (function(){
     // (même bloc, même moment de calcul) — pas un système de suivi séparé.
     C.state.bestStreak=Math.max(parseInt(localStorage.getItem(BEST_STREAK_KEY)||'0',10)||1, C.state.streak);
     localStorage.setItem(BEST_STREAK_KEY,String(C.state.bestStreak));
-    if(localStorage.getItem(THEME_KEY)==='light') document.documentElement.setAttribute('data-theme','light');
+    // Valeur libre depuis la Boutique (néon/émeraude/rubis...) au-delà du simple clair/sombre
+    // d'origine — n'importe quelle valeur autre que 'dark' pose l'attribut tel quel.
+    const savedTheme=localStorage.getItem(THEME_KEY);
+    if(savedTheme && savedTheme!=='dark') document.documentElement.setAttribute('data-theme',savedTheme);
   }catch(e){}
 
   // ====== MODULE: Statistics ======
@@ -576,7 +579,7 @@ window.Casino = (function(){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     const target=document.getElementById('view-'+name); if(target) target.classList.add('active');
     document.querySelectorAll('.side-nav button[data-view], .bottom-nav button[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
-    const titles={home:'Accueil',floor:'Plan du casino',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',wheel:'Roue de la chance',daily:'Défi du jour',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',challenges:'Défis',leaderboard:'Classement',account:'Connexion',profil:'Profil',parametres:'Paramètres'};
+    const titles={home:'Accueil',floor:'Plan du casino',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',wheel:'Roue de la chance',daily:'Défi du jour',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',challenges:'Défis',leaderboard:'Classement',account:'Connexion',profil:'Profil',shop:'Boutique',parametres:'Paramètres'};
     document.getElementById('viewTitle').textContent=titles[name]||name;
     document.getElementById('sidebar').classList.remove('open');
     // Rendu différé : chaque vue de progression ne reconstruit son contenu qu'à son ouverture,
@@ -585,6 +588,7 @@ window.Casino = (function(){
     else if(name==='stats'){ renderStats(); if(C.renderBalanceChart) C.renderBalanceChart(); }
     else if(name==='achievements') renderAchievements();
     else if(name==='profil'){ renderProfile(); if(C.avatars&&C.avatars.refreshFrameLocks) C.avatars.refreshFrameLocks(); }
+    else if(name==='shop'&&C.renderShop) C.renderShop();
     else if(name==='vip') renderVip();
     else if(name==='halloffame') renderHallOfFame();
     else if(name==='challenges'&&C.renderChallenges) C.renderChallenges();

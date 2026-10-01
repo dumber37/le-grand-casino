@@ -86,21 +86,43 @@ window.Casino=window.Casino||{};
   // obtenu (C.isAchUnlocked, calculé en direct depuis core.js, jamais un second suivi ici) ; équipé =
   // un simple choix persisté, séparé du déblocage.
   const FRAME_KEY='grand-casino-avatar-frame';
+  const OWNED_FRAMES_KEY='grand-casino-owned-frames';
+  // achId : débloqué par un achievement déjà existant (core.js). cost : débloqué en l'ACHETANT
+  // avec des jetons à la Boutique (voir shop.js) — deux pistes de déblocage séparées, jamais les
+  // deux à la fois sur un même cadre.
   const FRAMES=[
-    {id:'none',    name:'Aucun',    icon:'⚪', achId:null},
-    {id:'bronze',  name:'Bronze',   icon:'🥉', achId:'first-spin'},
-    {id:'silver',  name:'Argent',   icon:'🥈', achId:'blackjack-fan'},
-    {id:'gold',    name:'Or',       icon:'🥇', achId:'high-roller'},
-    {id:'fire',    name:'Flamme',   icon:'🔥', achId:'streak-7'},
-    {id:'diamond', name:'Diamant',  icon:'💎', achId:'legende-vip'}
+    {id:'none',     name:'Aucun',       icon:'⚪', achId:null},
+    {id:'bronze',   name:'Bronze',      icon:'🥉', achId:'first-spin'},
+    {id:'silver',   name:'Argent',      icon:'🥈', achId:'blackjack-fan'},
+    {id:'gold',     name:'Or',          icon:'🥇', achId:'high-roller'},
+    {id:'fire',     name:'Flamme',      icon:'🔥', achId:'streak-7'},
+    {id:'diamond',  name:'Diamant',     icon:'💎', achId:'legende-vip'},
+    {id:'emerald',  name:'Émeraude',    icon:'💚', cost:150},
+    {id:'sapphire', name:'Saphir',      icon:'🔷', cost:400},
+    {id:'rainbow',  name:'Arc-en-ciel', icon:'🌈', cost:1000}
   ];
-  let equippedFrame=null;
+  let equippedFrame=null, ownedFrames=[];
   try{ equippedFrame=localStorage.getItem(FRAME_KEY)||null; }catch(e){}
-  function frameUnlocked(f){ return !f.achId || (C.isAchUnlocked && C.isAchUnlocked(f.achId)); }
+  try{ const raw=localStorage.getItem(OWNED_FRAMES_KEY); ownedFrames=raw?JSON.parse(raw):[]; }catch(e){}
+  function saveOwnedFrames(){ try{ localStorage.setItem(OWNED_FRAMES_KEY, JSON.stringify(ownedFrames)); }catch(e){} }
+  function frameUnlocked(f){
+    if(f.achId) return !!(C.isAchUnlocked && C.isAchUnlocked(f.achId));
+    if(f.cost!=null) return ownedFrames.includes(f.id);
+    return true;
+  }
   function setFrame(id){
     const f=FRAMES.find(x=>x.id===id); if(!f||!frameUnlocked(f)) return;
     equippedFrame=id==='none'?null:id;
     try{ if(equippedFrame) localStorage.setItem(FRAME_KEY,equippedFrame); else localStorage.removeItem(FRAME_KEY); }catch(e){}
+  }
+  // Achat à la Boutique : déduit le solde ici (choke point unique, comme chaque jeu) puis
+  // marque le cadre comme possédé. Retourne true/false pour que shop.js sache si l'achat a eu lieu.
+  function buyFrame(id){
+    const f=FRAMES.find(x=>x.id===id);
+    if(!f||f.cost==null||ownedFrames.includes(id)||C.state.balance<f.cost) return false;
+    C.state.balance-=f.cost; C.saveBalance(); C.renderBalance();
+    ownedFrames.push(id); saveOwnedFrames();
+    return true;
   }
 
   // ---------- API visage ----------
@@ -222,6 +244,7 @@ window.Casino=window.Casino||{};
     C.sound=function(name){ if(name==='card'||name==='spin') pulseDealers(); return baseSound.apply(this,arguments); };
   }
 
-  C.avatars={html,htmlTraits,face,pseudo,mountDealers,myTraits,clean,remember,refreshFrameLocks};
+  C.avatars={html,htmlTraits,face,pseudo,mountDealers,myTraits,clean,remember,refreshFrameLocks,
+    FRAMES,frameUnlocked,setFrame,buyFrame,getEquippedFrame:()=>equippedFrame};
   mountDealers(); buildEditor(); refreshProfileAvatar();
 })();

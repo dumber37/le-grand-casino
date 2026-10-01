@@ -53,6 +53,55 @@
     var(--felt-weave),
     linear-gradient(180deg,rgba(255,253,247,.9),rgba(250,242,224,.92));
 }
+
+/* ---- Thèmes d'arrière-plan achetables à la Boutique (voir shop.js) ----
+   Même principe que le thème clair ci-dessus : ne redéfinissent QUE le "chrome" (fond de page,
+   panneaux, bordures, texte atténué) — jamais --gold/--felt*/--red/--card-bg, pour que les tables
+   feutrées, cartes et cabines de machines à sous gardent leur identité quel que soit le thème. */
+:root[data-theme="neon"]{
+  --bg-deep:#120a1f; --glass:rgba(45,14,66,.70); --glass-2:rgba(28,8,44,.88);
+  --border:rgba(255,47,179,.4); --muted:#b79bd6;
+}
+:root[data-theme="neon"] body{
+  background-image:radial-gradient(circle at 15% -10%, rgba(255,47,179,.18), transparent 45%),
+                    radial-gradient(circle at 100% 0%, rgba(56,210,255,.16), transparent 40%);
+}
+:root[data-theme="neon"] .panel{
+  background:
+    var(--suit-watermark-sm) bottom -15px right -10px no-repeat,
+    var(--felt-weave),
+    linear-gradient(180deg,rgba(45,16,66,.88),rgba(22,7,34,.9));
+}
+
+:root[data-theme="emerald"]{
+  --bg-deep:#03140d; --glass:rgba(10,48,34,.70); --glass-2:rgba(6,30,21,.88);
+  --border:rgba(42,212,144,.38); --muted:#8fc9ac;
+}
+:root[data-theme="emerald"] body{
+  background-image:radial-gradient(circle at 15% -10%, rgba(42,212,144,.16), transparent 45%),
+                    radial-gradient(circle at 100% 0%, rgba(212,175,55,.09), transparent 40%);
+}
+:root[data-theme="emerald"] .panel{
+  background:
+    var(--suit-watermark-sm) bottom -15px right -10px no-repeat,
+    var(--felt-weave),
+    linear-gradient(180deg,rgba(12,55,38,.88),rgba(5,24,17,.9));
+}
+
+:root[data-theme="ruby"]{
+  --bg-deep:#170406; --glass:rgba(58,10,16,.72); --glass-2:rgba(32,5,9,.88);
+  --border:rgba(242,183,5,.35); --muted:#d79a9a;
+}
+:root[data-theme="ruby"] body{
+  background-image:radial-gradient(circle at 15% -10%, rgba(242,183,5,.14), transparent 45%),
+                    radial-gradient(circle at 100% 0%, rgba(122,15,26,.22), transparent 40%);
+}
+:root[data-theme="ruby"] .panel{
+  background:
+    var(--suit-watermark-sm) bottom -15px right -10px no-repeat,
+    var(--felt-weave),
+    linear-gradient(180deg,rgba(58,12,18,.88),rgba(26,5,8,.9));
+}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{

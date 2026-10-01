@@ -19,7 +19,17 @@
 .av-frame.frame-diamond::after{border-color:#8fd3ff;box-shadow:0 0 9px rgba(143,211,255,.8)}
 .av-frame.frame-fire::after{border-color:#ff6a3d;box-shadow:0 0 10px rgba(255,106,61,.85);animation:frameFirePulse 1.6s ease-in-out infinite}
 @keyframes frameFirePulse{0%,100%{filter:brightness(1) saturate(1)}50%{filter:brightness(1.35) saturate(1.3)}}
-@media (prefers-reduced-motion:reduce){ .av-frame.frame-fire::after{animation:none} }
+/* ---- Cadres achetables à la Boutique avec des jetons (voir shop.js) ---- */
+.av-frame.frame-emerald::after{border-color:#2ad490;box-shadow:0 0 9px rgba(42,212,144,.8)}
+.av-frame.frame-sapphire::after{border-color:#38a2ff;box-shadow:0 0 9px rgba(56,162,255,.8)}
+.av-frame.frame-rainbow::after{
+  border-width:3px;border-style:solid;
+  border-image:conic-gradient(from var(--rainbow-angle,0deg),#ff3b3b,#ffb347,#ffe866,#4fce85,#38a2ff,#a35cff,#ff3b3b) 1;
+  animation:frameRainbowSpin 3s linear infinite;
+}
+@keyframes frameRainbowSpin{to{--rainbow-angle:360deg}}
+@property --rainbow-angle{syntax:'<angle>';inherits:false;initial-value:0deg}
+@media (prefers-reduced-motion:reduce){ .av-frame.frame-fire::after,.av-frame.frame-rainbow::after{animation:none} }
 
 /* Taille réduite (96px → 64px) : le croupier reste un joli détail décoratif, mais ne doit pas
    à lui seul pousser le contenu utile (mains, actions) hors de l'écran sans défiler. */

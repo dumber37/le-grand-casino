@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="css/war.css">
 <link rel="stylesheet" href="css/keno.css">
 <link rel="stylesheet" href="css/wheel.css">
+<link rel="stylesheet" href="css/shop.css">
 <link rel="stylesheet" href="css/mines.css">
 <link rel="stylesheet" href="css/crash.css">
 <link rel="stylesheet" href="css/video-poker.css">
@@ -85,6 +86,7 @@
       <button data-view="challenges">🎯 Défis</button>
       <button data-view="leaderboard">📊 Classement</button>
       <button data-view="profil">👤 Profil</button>
+      <button data-view="shop">🛍️ Boutique</button>
     </nav>
     <div class="side-bottom">
       <button data-view="account">🔐 Connexion</button>
@@ -768,6 +770,14 @@
         <button class="primary-btn" id="resetBtn" style="width:100%;margin-top:16px">Réinitialiser le solde à 500</button>
       </div></section>
 
+      <section class="view" id="view-shop"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🛍️</span><div><div class="sh-name">Boutique</div><div class="sh-desc">Dépense tes jetons pour débloquer des thèmes et des cadres d'avatar — purement cosmétique</div></div></div>
+        <h2 class="section-title">Thèmes d'arrière-plan</h2>
+        <div id="shop-themes"></div>
+        <h2 class="section-title" style="margin-top:18px">Cadres d'avatar</h2>
+        <div id="shop-frames"></div>
+      </div></section>
+
       <section class="view" id="view-achievements"><div class="panel">
         <div id="ach-list"></div>
       </div></section>
@@ -898,6 +908,7 @@
 <script src="js/core.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/avatars.js"></script>
+<script src="js/shop.js"></script>
 <script src="js/chips.js"></script>
 <script src="js/slot-engine.js"></script>
 <script src="js/slots.js"></script>
