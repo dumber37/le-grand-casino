@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="css/keno.css">
 <link rel="stylesheet" href="css/wheel.css">
 <link rel="stylesheet" href="css/shop.css">
+<link rel="stylesheet" href="css/craps.css">
 <link rel="stylesheet" href="css/mines.css">
 <link rel="stylesheet" href="css/crash.css">
 <link rel="stylesheet" href="css/video-poker.css">
@@ -70,6 +71,7 @@
       <button data-view="crash">🚀 Crash</button>
       <button data-view="war">⚔️ Bataille</button>
       <button data-view="keno">🔢 Keno</button>
+      <button data-view="craps">🎲 Craps</button>
       <button data-view="videopoker">♠️ Vidéo Poker</button>
       <button data-view="poker">♣️ Poker (vs IA)</button>
       <button data-view="friends">🤝 Salon entre amis</button>
@@ -463,6 +465,26 @@
         <div class="kbd-hint"><kbd>Espace</kbd> pour tirer</div>
       </div></section>
 
+      <section class="view" id="view-craps"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🎲</span><div><div class="sh-name">Craps</div><div class="sh-desc">Pass line : 7 ou 11 gagne d'entrée, sinon fais le point avant un 7</div></div></div>
+        <div class="cp-stage">
+          <div class="cp-dice" id="cp-dice"><div class="die" id="cp-die1"></div><div class="die" id="cp-die2"></div></div>
+          <div class="cp-point-box"><div class="cp-point-label">Point</div><div class="cp-point-value" id="cp-point">–</div></div>
+        </div>
+        <div class="message" id="cp-message">Place ta mise et lance les dés.</div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="cp-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="cp-betAmount">20</span><button id="cp-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="cp-rollBtn">LANCER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour lancer</div>
+        <div class="paytable">
+          <div><span>Naturel (7 ou 11 au premier lancer)</span><span>x2</span></div>
+          <div><span>Point refait avant un 7</span><span>x2</span></div>
+          <div><span>Craps (2, 3 ou 12 au premier lancer)</span><span>Perdu</span></div>
+          <div><span>Seven out (7 avant le point)</span><span>Perdu</span></div>
+        </div>
+      </div></section>
+
       <section class="view" id="view-mines"><div class="panel">
         <div class="scene-header"><span class="sh-icon">💣</span><div><div class="sh-name">Mines</div><div class="sh-desc">Révèle des cases, évite les mines, encaisse à temps</div></div></div>
         <div class="message" id="mn-message">Choisis le nombre de mines puis lance la partie.</div>
@@ -734,6 +756,7 @@
             <option value="coinflip">Pile ou Face</option>
             <option value="war">Bataille</option>
             <option value="keno">Keno</option>
+            <option value="craps">Craps</option>
             <option value="mines">Mines</option>
             <option value="crash">Crash</option>
             <option value="videopoker">Vidéo Poker</option>
@@ -926,6 +949,7 @@
 <script src="js/coinflip.js"></script>
 <script src="js/war.js"></script>
 <script src="js/keno.js"></script>
+<script src="js/craps.js"></script>
 <script src="js/stats-chart.js"></script>
 <script src="js/wheel.js"></script>
 <script src="js/daily-challenge.js"></script>
