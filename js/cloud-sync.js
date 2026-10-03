@@ -21,13 +21,12 @@ window.Casino=window.Casino||{};
   const userEmailEl=$('acc-userEmail'), lastSyncEl=$('acc-lastSync'), msgEl=$('acc-message');
   const SESSION_FLAG='grand-casino-had-session';
 
-  const CFG=window.CASINO_FIREBASE_CONFIG;
-  const configured=!!(CFG&&CFG.apiKey&&CFG.projectId);
+  const configured=C.firebaseConfigured;
 
   stepsEl.innerHTML=[
     'Va sur <b>console.firebase.google.com</b> et crée un projet gratuit (aucune carte bancaire).',
     'Active <b>Authentication</b> → onglet « Sign-in method » → active « E-mail/Mot de passe ».',
-    'Active <b>Firestore Database</b> (mode production) et colle les règles de sécurité fournies avec ce livrable.',
+    'Active <b>Firestore Database</b> (mode production) et colle les règles de sécurité fournies dans <code>js/firebase-config.js</code> (commentaire en haut du fichier).',
     '⚙️ Paramètres du projet → Général → « Vos applications » → crée une app Web (</>), copie sa configuration.',
     'Colle cette configuration dans <b>js/firebase-config.js</b>, à la place de <code>null</code>, puis redéploie.'
   ].map(s=>'<li>'+s+'</li>').join('');
@@ -59,12 +58,11 @@ window.Casino=window.Casino||{};
   async function loadFirebase(){
     if(fb) return fb;
     say('Chargement…');
-    const [{initializeApp}, authMod, fsMod] = await Promise.all([
-      import('https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js'),
+    const [app, authMod, fsMod] = await Promise.all([
+      C.loadFirebaseApp(),
       import('https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js'),
       import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js')
     ]);
-    const app=initializeApp(CFG);
     fb={app, auth:authMod.getAuth(app), db:fsMod.getFirestore(app), authMod, fsMod};
     return fb;
   }

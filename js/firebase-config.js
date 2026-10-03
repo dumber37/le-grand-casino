@@ -9,9 +9,27 @@
    de passe — elle identifie juste ton projet Firebase publiquement,
    c'est normal qu'elle soit visible dans le code d'un site web. Ce qui
    protège réellement les données de chaque joueur, ce sont les RÈGLES
-   DE SÉCURITÉ Firestore (déjà publiées si tu as suivi l'étape 2 du
-   guide : match /saves/{uid} { allow read, write: if request.auth.uid
-   == uid; }).
+   DE SÉCURITÉ Firestore (Firestore Database → onglet « Règles »). Colle
+   ces deux blocs (le premier protège les sauvegardes cloud, le second
+   sert aux codes de salon à 6 caractères du Salon entre amis — éphémères
+   et sans donnée sensible, donc volontairement ouverts) :
+
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /saves/{uid} {
+         allow read, write: if request.auth.uid == uid;
+       }
+       match /rooms/{code} {
+         allow read, write: if true;
+       }
+     }
+   }
+
+   Sans le second bloc, le bouton « Générer un code rapide » du Salon
+   entre amis échoue avec une erreur "permission-denied" — le Salon
+   entre amis reste utilisable via son mode avancé (code/lien/QR
+   manuels) même sans cette règle.
    ============================================================ */
 window.CASINO_FIREBASE_CONFIG = {
   apiKey: "AIzaSyAwnY44vxkSVTXrmBXUczsdGZykHuHilW8",

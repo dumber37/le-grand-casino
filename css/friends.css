@@ -23,6 +23,13 @@
 .fr-player.fr-win span:last-child{color:#4fce85}
 .fr-player.fr-loss span:last-child{color:var(--red)}
 
+/* ---- Salon rapide par code à 6 caractères (voir friends.js) ---- */
+.fr-code-input{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--gold-bright);
+  border-radius:8px;padding:10px;font-family:monospace;font-size:1.3rem;letter-spacing:.2em;text-align:center;
+  text-transform:uppercase;box-sizing:border-box}
+.fr-code-input:focus{outline:none;border-color:var(--gold)}
+.fr-room-code{font-family:monospace;font-size:2.1rem;letter-spacing:.2em;color:var(--gold-bright);font-weight:bold;margin:4px 0}
+
 /* Comparateur de stats (friends-compare.js) */
 .fr-compare-table{width:100%;border-collapse:collapse;font-size:.78rem}
 .fr-compare-table th,.fr-compare-table td{padding:6px 8px;text-align:center;border-bottom:1px dashed var(--border);color:var(--muted)}

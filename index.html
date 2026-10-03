@@ -652,31 +652,50 @@
           </div>
           <label class="fr-stun"><input type="checkbox" id="fr-stun" checked> Jouer via Internet (utilise un serveur STUN public de Google, uniquement pour trouver ton adresse — aucune donnée de jeu n'y passe). Décoche pour jouer seulement sur le même réseau.</label>
           <div id="fr-guestBox" style="display:none">
-            <label class="fr-label" for="fr-offerIn">Code d'invitation de l'hôte</label>
-            <textarea id="fr-offerIn" rows="3" placeholder="GC1:..."></textarea>
-            <button class="primary-btn" id="fr-genAnswerBtn" style="width:100%;margin:8px 0">Générer ma réponse</button>
-            <div id="fr-answerBox" style="display:none">
-              <label class="fr-label" for="fr-answer">Ma réponse — à envoyer à l'hôte</label>
-              <textarea id="fr-answer" rows="3" readonly></textarea>
-              <div class="fr-share-row"><button data-copy="fr-answer" class="fr-copy">Copier le code</button><button class="fr-copy" id="fr-answerLinkBtn">Copier le lien</button><button class="fr-copy" id="fr-answerQrBtn">Afficher le QR code</button></div>
-              <div class="fr-qr" id="fr-answerQr" style="display:none"></div>
+            <div id="fr-quickJoinBox">
+              <label class="fr-label" for="fr-quickCode">Code du salon (6 caractères, donné par ton hôte)</label>
+              <input type="text" id="fr-quickCode" maxlength="6" placeholder="EX. 7K2PQT" autocomplete="off" autocapitalize="characters" class="fr-code-input">
+              <button class="primary-btn" id="fr-quickJoinBtn" style="width:100%;margin:8px 0">Rejoindre avec le code</button>
             </div>
+            <details class="info-disclosure fr-advanced">
+              <summary>Mode avancé (code / lien / QR manuels)</summary>
+              <label class="fr-label" for="fr-offerIn">Code d'invitation de l'hôte</label>
+              <textarea id="fr-offerIn" rows="3" placeholder="GC1:..."></textarea>
+              <button class="primary-btn" id="fr-genAnswerBtn" style="width:100%;margin:8px 0">Générer ma réponse</button>
+              <div id="fr-answerBox" style="display:none">
+                <label class="fr-label" for="fr-answer">Ma réponse — à envoyer à l'hôte</label>
+                <textarea id="fr-answer" rows="3" readonly></textarea>
+                <div class="fr-share-row"><button data-copy="fr-answer" class="fr-copy">Copier le code</button><button class="fr-copy" id="fr-answerLinkBtn">Copier le lien</button><button class="fr-copy" id="fr-answerQrBtn">Afficher le QR code</button></div>
+                <div class="fr-qr" id="fr-answerQr" style="display:none"></div>
+              </div>
+            </details>
           </div>
         </div>
 
         <div id="fr-table" style="display:none">
           <div id="fr-hostBox" style="display:none">
             <div class="fr-count" id="fr-count">0 / 4 amis connectés</div>
-            <button class="primary-btn" id="fr-inviteBtn" style="width:100%;margin-bottom:8px">Inviter un ami</button>
-            <div id="fr-inviteBox" style="display:none">
-              <label class="fr-label" for="fr-offer">1. Code d'invitation — envoie-le à ton ami</label>
-              <textarea id="fr-offer" rows="3" readonly></textarea>
-              <div class="fr-share-row"><button data-copy="fr-offer" class="fr-copy">Copier le code</button><button class="fr-copy" id="fr-offerLinkBtn">Copier le lien</button><button class="fr-copy" id="fr-offerQrBtn">Afficher le QR code</button></div>
-              <div class="fr-qr" id="fr-offerQr" style="display:none"></div>
-              <label class="fr-label" for="fr-answerIn">2. Réponse de ton ami — colle-la ici</label>
-              <textarea id="fr-answerIn" rows="3" placeholder="GC1:..."></textarea>
-              <button class="primary-btn" id="fr-connectBtn" style="width:100%;margin:8px 0">Connecter</button>
+            <div id="fr-quickInviteBox">
+              <button class="primary-btn" id="fr-quickInviteBtn" style="width:100%;margin-bottom:8px">⚡ Générer un code rapide</button>
+              <div id="fr-quickCodeBox" style="display:none;text-align:center;margin-bottom:12px">
+                <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Code du salon</div>
+                <div id="fr-roomCode" class="fr-room-code">------</div>
+                <div style="font-size:.76rem;color:var(--muted)">Donne ce code à ton ami — il le saisit dans « Rejoindre un salon ».</div>
+              </div>
             </div>
+            <details class="info-disclosure fr-advanced">
+              <summary>Mode avancé (code / lien / QR manuels)</summary>
+              <button class="primary-btn" id="fr-inviteBtn" style="width:100%;margin-bottom:8px">Inviter un ami</button>
+              <div id="fr-inviteBox" style="display:none">
+                <label class="fr-label" for="fr-offer">1. Code d'invitation — envoie-le à ton ami</label>
+                <textarea id="fr-offer" rows="3" readonly></textarea>
+                <div class="fr-share-row"><button data-copy="fr-offer" class="fr-copy">Copier le code</button><button class="fr-copy" id="fr-offerLinkBtn">Copier le lien</button><button class="fr-copy" id="fr-offerQrBtn">Afficher le QR code</button></div>
+                <div class="fr-qr" id="fr-offerQr" style="display:none"></div>
+                <label class="fr-label" for="fr-answerIn">2. Réponse de ton ami — colle-la ici</label>
+                <textarea id="fr-answerIn" rows="3" placeholder="GC1:..."></textarea>
+                <button class="primary-btn" id="fr-connectBtn" style="width:100%;margin:8px 0">Connecter</button>
+              </div>
+            </details>
           </div>
           <div class="bj-table" id="fr-felt">
             <div class="dealer" data-dealer="cards"></div>
@@ -700,7 +719,7 @@
         <div class="message" id="fr-message">Crée un salon ou rejoins celui d'un ami.</div>
         <details class="info-disclosure">
           <summary>ⓘ Comment ça marche ?</summary>
-          <p>Il n'y a pas de serveur : les navigateurs se connectent directement entre eux. L'hôte clique « Inviter un ami », envoie le code à son ami (Discord, SMS...), l'ami le colle dans « Rejoindre un salon », génère sa réponse et la renvoie ; l'hôte la colle et clique « Connecter ». Jusqu'à 4 amis. L'hôte tire les cartes (mêmes règles que le Baccarat solo) ; chacun garde son propre solde, sa mise est mise de côté à la validation et son gain crédité au résultat. Si le salon reste bloqué sur « Connexion en cours », recommence l'invitation ou vérifie que la case Internet est cochée chez les deux joueurs.</p>
+          <p>Les navigateurs se connectent directement entre eux (pas de serveur de jeu) : l'hôte clique « Créer un salon » puis « Générer un code rapide », et donne le code à 6 caractères affiché à son ami (à l'oral, par SMS...) ; l'ami clique « Rejoindre un salon », saisit le code et c'est connecté. Jusqu'à 4 amis (génère un nouveau code pour chacun). L'hôte tire les cartes (mêmes règles que le Baccarat solo) ; chacun garde son propre solde, sa mise est mise de côté à la validation et son gain crédité au résultat. Si le code rapide ne fonctionne pas (pas de connexion, service indisponible...), le mode avancé en dessous permet d'échanger un code ou un lien plus long directement entre les deux appareils, sans rien d'autre. Si le salon reste bloqué sur « Connexion en cours », recommence ou vérifie que la case Internet est cochée chez les deux joueurs.</p>
         </details>
       </div></section>
 
@@ -974,6 +993,8 @@
 </div>
 
 <script src="js/core.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/firebase-shared.js"></script>
 <script src="js/seasonal.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/avatars.js"></script>
@@ -1010,7 +1031,6 @@
 <script src="js/shortcuts.js"></script>
 <script src="js/floor.js"></script>
 <script src="js/challenges.js"></script>
-<script src="js/firebase-config.js"></script>
 <script src="js/cloud-sync.js"></script>
 <script src="js/leaderboard.js"></script>
 <script src="js/ambiance.js"></script>
