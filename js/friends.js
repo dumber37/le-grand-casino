@@ -27,7 +27,14 @@
   // ---------- Codes d'échange ----------
   const enc=d=>'GC1:'+btoa(unescape(encodeURIComponent(JSON.stringify({type:d.type,sdp:d.sdp}))));
   const dec=s=>{ s=(s||'').trim(); if(s.indexOf('GC1:')!==0) throw new Error('code'); return JSON.parse(decodeURIComponent(escape(atob(s.slice(4))))); };
-  const newPc=()=>new RTCPeerConnection({iceServers:$('fr-stun').checked?[{urls:'stun:stun.l.google.com:19302'}]:[]});
+  const newPc=()=>{
+    const servers=[];
+    if($('fr-stun').checked){
+      servers.push({urls:'stun:stun.l.google.com:19302'});
+      if(window.CASINO_TURN_SERVERS) servers.push.apply(servers,window.CASINO_TURN_SERVERS);
+    }
+    return new RTCPeerConnection({iceServers:servers});
+  };
   const gathered=pc=>new Promise(res=>{
     if(pc.iceGatheringState==='complete') return res();
     const t=setTimeout(res,6000);

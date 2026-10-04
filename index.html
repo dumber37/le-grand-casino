@@ -650,7 +650,7 @@
           <div class="roulette-grid" style="grid-template-columns:repeat(2,1fr)">
             <button id="fr-createBtn">Créer un salon</button><button id="fr-joinBtn">Rejoindre un salon</button>
           </div>
-          <label class="fr-stun"><input type="checkbox" id="fr-stun" checked> Jouer via Internet (utilise un serveur STUN public de Google, uniquement pour trouver ton adresse — aucune donnée de jeu n'y passe). Décoche pour jouer seulement sur le même réseau.</label>
+          <label class="fr-stun"><input type="checkbox" id="fr-stun" checked> Jouer via Internet (serveurs STUN pour trouver ton adresse, et relais TURN en secours si la connexion directe est impossible — les données restent chiffrées de bout en bout). Décoche pour jouer seulement sur le même réseau.</label>
           <div id="fr-guestBox" style="display:none">
             <div id="fr-quickJoinBox">
               <label class="fr-label" for="fr-quickCode">Code du salon (6 caractères, donné par ton hôte)</label>
@@ -995,6 +995,7 @@
 <script src="js/core.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/firebase-shared.js"></script>
+<script src="js/turn-config.js"></script>
 <script src="js/seasonal.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/avatars.js"></script>
