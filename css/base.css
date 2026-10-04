@@ -145,7 +145,7 @@ body{
 .side-nav button.soon{cursor:default;opacity:.55}
 .side-nav button .tag{margin-left:auto;font-size:.6rem;background:var(--glass-2);border:1px solid var(--border);border-radius:10px;padding:1px 7px;color:var(--muted)}
 .sidebar-overlay{display:none}
-.main{flex:1;margin-left:230px;display:flex;flex-direction:column;min-height:100vh}
+.main{flex:1;min-width:0;margin-left:230px;display:flex;flex-direction:column;min-height:100vh}
 .topbar{
   position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
   padding:12px 20px;
@@ -174,7 +174,7 @@ html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,
    navigation basse fixe (.bottom-nav), qui n'existe qu'en dessous de 880px (voir plus bas) —
    les garder tout le temps gaspillait de la place inutilement sur desktop/tablette, obligeant
    à défiler pour des jeux au contenu déjà haut (ex. Blackjack). */
-.content{padding:20px;max-width:760px;width:100%;margin:0 auto;padding-bottom:28px}
+.content{padding:20px;max-width:760px;width:100%;min-width:0;margin:0 auto;padding-bottom:28px}
 /* Grand écran (desktop large/double moniteur) : élargit modérément le contenu plutôt que de
    laisser un bandeau vide des deux côtés — les grilles déjà responsives (.game-grid, auto-fit)
    affichent simplement plus de colonnes, aucun composant à retoucher individuellement. Pas de

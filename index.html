@@ -697,6 +697,14 @@
               </div>
             </details>
           </div>
+          <div class="fr-games" id="fr-games" role="tablist" aria-label="Choisir le jeu du salon">
+            <button data-fr-game="baccarat" class="sel">🎴 Baccarat</button>
+            <button data-fr-game="blackjack">🃏 Blackjack</button>
+            <button data-fr-game="bus">🚌 Ride the Bus</button>
+            <button data-fr-game="crash">🚀 Crash</button>
+            <button data-fr-game="poker">♣️ Poker</button>
+          </div>
+          <div class="fr-games-hint">Choisis le jeu : l'hôte lance une main et tes amis sont emmenés automatiquement à la table.</div>
           <div class="bj-table" id="fr-felt">
             <div class="dealer" data-dealer="cards"></div>
             <div class="zone"><div class="zone-label"><span>Banker</span><span id="fr-bankerScore"></span></div><div class="cards" id="fr-bankerCards"></div></div>
@@ -712,7 +720,7 @@
           <button class="primary-btn" id="fr-dealBtn" style="width:100%;margin-bottom:8px;display:none">DISTRIBUER (hôte)</button>
           <button class="fr-copy" id="fr-compareBtn" style="width:100%;margin-bottom:8px">📊 Comparer nos stats</button>
           <div id="fr-compareBox" style="display:none;margin-bottom:8px"></div>
-          <button class="fr-copy" id="fr-pokerBtn" data-view="poker" style="width:100%;margin-bottom:8px">🃏 Jouer au poker avec ce salon</button>
+          <button class="fr-copy" id="fr-pokerBtn" data-view="poker" style="display:none">🃏 Jouer au poker avec ce salon</button>
           <button class="fr-copy" id="fr-leaveBtn" style="width:100%">Quitter le salon</button>
         </div>
 

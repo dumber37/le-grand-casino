@@ -23,6 +23,13 @@
 .fr-player.fr-win span:last-child{color:#4fce85}
 .fr-player.fr-loss span:last-child{color:var(--red)}
 
+/* ---- Menu défilant de choix du jeu du salon ---- */
+.fr-games{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin:0 0 4px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.fr-games button{flex:0 0 auto;scroll-snap-align:start;background:var(--bg-deep);border:1px solid var(--border);color:var(--cream);border-radius:999px;padding:8px 14px;font-family:inherit;font-size:.82rem;cursor:pointer;white-space:nowrap}
+.fr-games button:hover:not(.sel){border-color:var(--gold);background:rgba(212,175,55,.1)}
+.fr-games button.sel{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;font-weight:bold;border-color:var(--gold)}
+.fr-games-hint{font-size:.7rem;color:var(--muted);margin:0 4px 10px}
+
 /* ---- Salon rapide par code à 6 caractères (voir friends.js) ---- */
 .fr-code-input{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--gold-bright);
   border-radius:8px;padding:10px;font-family:monospace;font-size:1.3rem;letter-spacing:.2em;text-align:center;

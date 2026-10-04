@@ -55,7 +55,7 @@
     refund();
     if(C.state.balance<myBet){ say('Solde insuffisant.'); syncMine(); return false; }
     C.state.balance-=myBet; C.trackWager(myBet); C.saveBalance(); C.renderBalance(); escrow=myBet;
-    syncMine(); say('Mise validée : '+SIDES[mySide]+' — '+myBet+'.'); return true;
+    syncMine(); say('Mise validée : '+SIDES[mySide]+' — '+myBet+'.'+(role==='guest'?' En attente de la distribution par l’hôte.':'')); return true;
   }
   function syncMine(){
     if(role==='host'){ broadcastRoster(); }
@@ -66,7 +66,21 @@
   // ---------- Liste des joueurs ----------
   const myAv=()=>C.avatars?C.avatars.myTraits():null;
   const buildRoster=()=>[{id:0,name:myName,side:escrow>0?mySide:null,bet:escrow,av:myAv()}].concat(peers.map(p=>({id:p.id,name:p.name,side:p.side,bet:p.bet,av:p.av||null})));
-  function broadcastRoster(){ const r=buildRoster(); roster=r; peers.forEach(p=>sendTo(p.dc,{t:'roster',players:r})); renderPlayers(r); }
+  function broadcastRoster(){ const r=buildRoster(); roster=r; peers.forEach(p=>sendTo(p.dc,{t:'roster',players:r})); renderPlayers(r); checkAutoDeal(r); }
+  // Les invités n'ont pas de bouton pour distribuer : sans ça, valider sa mise ne déclenchait rien
+  // tant que l'hôte ne cliquait pas lui-même. Dès que TOUS les joueurs (hôte compris) ont validé
+  // une mise, l'hôte distribue tout seul après un court délai.
+  let autoDealTimer=null;
+  function checkAutoDeal(r){
+    if(role!=='host'||autoDealTimer||r.length<2) return;
+    const ready=p=>p.bet>0&&p.side;
+    if(r.every(ready)){
+      say('Tous les joueurs ont misé — distribution...');
+      autoDealTimer=setTimeout(()=>{ autoDealTimer=null; if(role==='host'&&buildRoster().every(ready)) deal(); },1200);
+    } else if(r.slice(1).every(ready)){
+      say('Tes amis ont misé — valide ta mise ou clique sur DISTRIBUER.');
+    }
+  }
   let lastResults=null;
   function renderPlayers(list,results){
     // Le détail de la dernière manche reste affiché jusqu'à ce que quelqu'un mise à nouveau.
@@ -387,6 +401,14 @@
   $('fr-inviteBtn').addEventListener('click',invite);
   $('fr-connectBtn').addEventListener('click',acceptAnswer);
   $('fr-genAnswerBtn').addEventListener('click',joinGenerate);
+  $('fr-games').addEventListener('click',e=>{
+    const b=e.target.closest('[data-fr-game]'); if(!b) return;
+    const g=b.dataset.frGame;
+    if(g==='baccarat'){ say('Baccarat : valide ta mise — la main est distribuée dès que tout le monde a misé.'); return; }
+    if(g==='poker'){ $('fr-pokerBtn').click(); return; }
+    const nav=document.querySelector('[data-view="'+g+'"]'); if(nav) nav.click();
+    const multi=document.querySelector('.mode-switch[data-mode-for="'+g+'"] button[data-mode="multi"]'); if(multi) multi.click();
+  });
   $('fr-quickInviteBtn').addEventListener('click',quickCreateRoom);
   $('fr-quickJoinBtn').addEventListener('click',quickJoinRoom);
   $('fr-quickCode').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase().slice(0,6); });
