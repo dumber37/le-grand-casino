@@ -10,8 +10,23 @@
 window.Casino = window.Casino || {};
 (function(){
   const C = window.Casino;
-  function makeQrSvg(text, cellSize, margin){
-    if(typeof qrcode !== 'function') return null;
+  // La bibliothèque (55 Ko) n'est téléchargée qu'au premier QR demandé, plus à chaque ouverture du site.
+  let libPromise = null;
+  function loadLib(){
+    if(typeof qrcode === 'function') return Promise.resolve(true);
+    if(!libPromise){
+      libPromise = new Promise(res=>{
+        const s = document.createElement('script');
+        s.src = 'js/qrcode-lib.js';
+        s.onload = ()=>res(typeof qrcode === 'function');
+        s.onerror = ()=>{ libPromise = null; res(false); };
+        document.head.appendChild(s);
+      });
+    }
+    return libPromise;
+  }
+  async function makeQrSvg(text, cellSize, margin){
+    if(!(await loadLib())) return null;
     for(let type=1; type<=40; type++){
       try{
         const qr=qrcode(type,'L');

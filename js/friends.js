@@ -459,10 +459,10 @@
       }
     );
   }
-  function toggleQr(btn,qrEl,param,codeEl){
+  async function toggleQr(btn,qrEl,param,codeEl){
     if(qrEl.style.display!=='none'){ qrEl.style.display='none'; btn.textContent='Afficher le QR code'; return; }
     const link=joinLink(param,codeEl.value);
-    const svg=C.makeQrSvg?C.makeQrSvg(link,4,8):null;
+    const svg=C.makeQrSvg?await C.makeQrSvg(link,4,8):null;
     qrEl.innerHTML=svg||'<p style="color:#900;font-size:.76rem;margin:0">Code trop long pour un QR cette fois — utilise le lien ou le code à copier.</p>';
     qrEl.style.display='block'; btn.textContent='Masquer le QR code';
   }

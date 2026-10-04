@@ -19,9 +19,9 @@
     const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
     return location.origin + location.pathname + '#importsave=' + encoded;
   }
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click', async ()=>{
     if(box.style.display!=='none'){ box.style.display='none'; btn.textContent='Afficher un QR de transfert'; return; }
-    const svg = C.makeQrSvg ? C.makeQrSvg(qrLink(), 4, 8) : null;
+    const svg = C.makeQrSvg ? await C.makeQrSvg(qrLink(), 4, 8) : null;
     box.innerHTML = svg
       ? '<p style="font-size:.74rem;color:var(--muted);margin:0 0 8px">Scanne ce code avec l’appareil photo de l’autre appareil (solde, stats, achievements et missions inclus — pas l’historique détaillé).</p>'+svg
       : '<p style="font-size:.78rem;color:var(--red)">Sauvegarde trop volumineuse pour un QR cette fois — utilise plutôt « Exporter ma sauvegarde ».</p>';
