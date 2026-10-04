@@ -12,7 +12,7 @@
 }
 .kn-num:hover:not(.sel){border-color:var(--gold)}
 .kn-num.sel{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;box-shadow:0 4px 10px rgba(212,175,55,.35)}
-.kn-num.hit{background:#1f6b3a;border-color:#4fce85;color:#fff;box-shadow:0 0 10px rgba(79,206,133,.6);animation:knHit .4s ease}
+.kn-num.hit{background:#1f6b3a;border-color:var(--good);color:#fff;box-shadow:0 0 10px rgba(79,206,133,.6);animation:knHit .4s ease}
 .kn-num.miss{opacity:.4}
 @keyframes knHit{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
 @media (max-width:420px){ .kn-grid{grid-template-columns:repeat(5,1fr)} .kn-num{font-size:.7rem} }

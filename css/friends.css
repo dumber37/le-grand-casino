@@ -20,7 +20,7 @@
 .fr-player{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px dashed var(--border);font-size:.8rem;color:var(--muted)}
 .fr-player span:first-child{color:var(--cream)}
 .fr-player.fr-win{background:rgba(79,206,133,.1);border-radius:6px}
-.fr-player.fr-win span:last-child{color:#4fce85}
+.fr-player.fr-win span:last-child{color:var(--good)}
 .fr-player.fr-loss span:last-child{color:var(--red)}
 
 /* ---- Menu défilant de choix du jeu du salon ---- */

@@ -140,7 +140,7 @@
   cashoutBtn.addEventListener('click',myCashout);
   function renderHistory(){
     histEl.innerHTML='';
-    crashHistory.slice(-8).forEach(h=>{ const s=document.createElement('span'); s.textContent='x'+h.toFixed(2); s.style.color=h<2?'var(--red)':'#4fce85'; histEl.appendChild(s); });
+    crashHistory.slice(-8).forEach(h=>{ const s=document.createElement('span'); s.textContent='x'+h.toFixed(2); s.style.color=h<2?'var(--red)':'var(--good)'; histEl.appendChild(s); });
   }
 
   // ---------- Rendu ----------

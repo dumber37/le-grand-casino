@@ -61,7 +61,7 @@
   }
   function renderCrashHistory(){
     histEl.innerHTML='';
-    crashHistory.slice(-8).forEach(h=>{ const s=document.createElement('span'); s.textContent='x'+h.toFixed(2); s.style.color=h<2?'var(--red)':'#4fce85'; histEl.appendChild(s); });
+    crashHistory.slice(-8).forEach(h=>{ const s=document.createElement('span'); s.textContent='x'+h.toFixed(2); s.style.color=h<2?'var(--red)':'var(--good)'; histEl.appendChild(s); });
   }
   function start(){
     if(C.state.balance<bet){ msg.textContent='Solde insuffisant.'; return; }

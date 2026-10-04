@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="css/hilo.css">
 <link rel="stylesheet" href="css/scratch.css">
 <link rel="stylesheet" href="css/tower.css">
+<link rel="stylesheet" href="css/extras.css">
 <link rel="stylesheet" href="css/wheel.css">
 <link rel="stylesheet" href="css/shop.css">
 <link rel="stylesheet" href="css/craps.css">
@@ -935,6 +936,10 @@
         <div id="shop-cardbacks"></div>
         <h2 class="section-title" style="margin-top:18px">Peaux de jetons</h2>
         <div id="shop-chipskins"></div>
+        <h2 class="section-title" style="margin-top:18px">Effets de victoire</h2>
+        <div id="shop-wineffects"></div>
+        <h2 class="section-title" style="margin-top:18px">Tapis de table</h2>
+        <div id="shop-felts"></div>
       </div></section>
 
       <section class="view" id="view-achievements"><div class="panel">
@@ -1065,6 +1070,30 @@
         <div class="settings-row"><span>🔊 Son</span><button class="toggle on" id="soundToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row"><span>🎃 Décor saisonnier automatique</span><button class="toggle on" id="seasonalToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row" id="installRow" style="display:none"><span>📲 Installer l'application</span><button class="primary-btn" id="installAppBtn" style="padding:8px 16px;flex:none">Installer</button></div>
+        <h2 class="section-title">Accessibilité</h2>
+        <div class="settings-row"><span>🔠 Taille du texte</span>
+          <div class="seg" id="a11yFont" role="group" aria-label="Taille du texte"><button data-v="0">A</button><button data-v="1">A+</button><button data-v="2">A++</button></div></div>
+        <div class="settings-row"><span>◐ Contraste élevé</span><button class="toggle" id="a11yContrast" aria-pressed="false">Désactivé</button></div>
+        <div class="settings-row"><span>🎨 Mode daltonien (bleu / orange)</span><button class="toggle" id="a11yCb" aria-pressed="false">Désactivé</button></div>
+        <div class="settings-row"><span>🎞️ Réduire les animations</span><button class="toggle" id="a11yMotion" aria-pressed="false">Désactivé</button></div>
+
+        <h2 class="section-title">Sécurité</h2>
+        <div class="settings-row"><span>🔒 Verrou PIN</span><button class="toggle" id="pinToggle" aria-pressed="false">Désactivé</button></div>
+        <div id="pinSetupBox" class="pin-setup" style="display:none">
+          <label class="fr-label" for="pinNew">Nouveau PIN (4 à 6 chiffres)</label>
+          <input type="password" id="pinNew" inputmode="numeric" maxlength="6" autocomplete="new-password" class="fr-code-input">
+          <label class="fr-label" for="pinConfirm">Confirme le PIN</label>
+          <input type="password" id="pinConfirm" inputmode="numeric" maxlength="6" autocomplete="new-password" class="fr-code-input">
+          <div class="acc-row" style="margin-top:8px"><button class="primary-btn" id="pinSaveBtn">Enregistrer</button><button class="fr-copy" id="pinCancelBtn">Annuler</button></div>
+          <p class="pin-err" id="pinMsg"></p>
+        </div>
+        <p class="acc-hint" style="margin:4px 4px 10px">Le PIN est demandé à l'ouverture de l'appli, après 5 minutes d'absence, et avant d'exporter, importer, restaurer ou réinitialiser. Il protège l'accès sur cet appareil — ce n'est pas un chiffrement des données.</p>
+
+        <h2 class="section-title">Points de restauration</h2>
+        <p style="color:var(--muted);font-size:.78rem;margin:0 4px 8px">Un point est créé chaque jour, et avant tout import, restauration ou réinitialisation du solde (3 de chaque type conservés).</p>
+        <div id="restoreList"></div>
+        <button class="fr-copy" id="restoreNowBtn" style="width:100%;margin:6px 0 10px">Créer un point de restauration maintenant</button>
+
         <h2 class="section-title">Sauvegarde</h2>
         <p style="color:var(--muted);font-size:.78rem;margin:0 4px 12px">Exporte tes données (solde, stats, historique, favoris, achievements, missions...) dans un fichier, ou restaure-les sur un autre appareil.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
@@ -1094,6 +1123,9 @@
 <script src="js/firebase-shared.js"></script>
 <script src="js/turn-config.js"></script>
 <script src="js/seasonal.js"></script>
+<script src="js/a11y.js"></script>
+<script src="js/pin-lock.js"></script>
+<script src="js/win-effects.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/avatars.js"></script>
 <script src="js/shop.js"></script>

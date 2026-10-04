@@ -24,7 +24,7 @@
 .av-frame.frame-sapphire::after{border-color:#38a2ff;box-shadow:0 0 9px rgba(56,162,255,.8)}
 .av-frame.frame-rainbow::after{
   border-width:3px;border-style:solid;
-  border-image:conic-gradient(from var(--rainbow-angle,0deg),#ff3b3b,#ffb347,#ffe866,#4fce85,#38a2ff,#a35cff,#ff3b3b) 1;
+  border-image:conic-gradient(from var(--rainbow-angle,0deg),#ff3b3b,#ffb347,#ffe866,var(--good),#38a2ff,#a35cff,#ff3b3b) 1;
   animation:frameRainbowSpin 3s linear infinite;
 }
 @keyframes frameRainbowSpin{to{--rainbow-angle:360deg}}

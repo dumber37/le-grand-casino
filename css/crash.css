@@ -7,7 +7,7 @@
 #view-crash .scene-header .sh-name{color:#ffb066}
 
 .crash-display{text-align:center;padding:16px 10px 6px;position:relative}
-.crash-mult{font-size:2.6rem;font-weight:bold;color:#4fce85;transition:color .2s ease}
+.crash-mult{font-size:2.6rem;font-weight:bold;color:var(--good);transition:color .2s ease}
 .crash-mult.busted{color:var(--red);animation:mineShake .4s ease}
 /* Animation signature : tremblement plus marqué (tout l'affichage, pas juste le multiplicateur) au crash */
 .crash-display.crash-shake{animation:crashShake .5s ease}

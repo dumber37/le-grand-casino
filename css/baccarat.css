@@ -11,8 +11,8 @@
 .bc-ai{display:flex;gap:6px;margin:0 0 6px}
 .bc-ai-seat{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,.25);font-size:.72rem;color:var(--muted)}
 .bc-ai-seat .ai-name{color:var(--cream)}
-.bc-ai-seat.ai-win{border-color:#4fce85;box-shadow:0 0 10px rgba(79,206,133,.4)}
-.bc-ai-seat.ai-win .ai-res{color:#4fce85}
+.bc-ai-seat.ai-win{border-color:var(--good);box-shadow:0 0 10px rgba(79,206,133,.4)}
+.bc-ai-seat.ai-win .ai-res{color:var(--good)}
 .bc-ai-seat.ai-loss{opacity:.7}
 
 /* Animation signature : la main gagnante est surlignée d'un liseré doré */

@@ -83,6 +83,43 @@ window.Casino = window.Casino || {};
     return [d[0].c, d[3].c, d[6].c];
   }
 
+  // ---- Effets de victoire (joués par win-effects.js via C.flashWin) et fonds de table (attribut
+  // data-felt sur <html>, voir extras.css) : même schéma acheté/équipé que les dos de cartes. ----
+  const WINFX_KEY='grand-casino-wineffect', OWNED_WINFX_KEY='grand-casino-owned-wineffects';
+  const WINFX=[
+    {id:'classic',  name:'Classique',        cost:0,   icon:'✨'},
+    {id:'confetti', name:'Confettis',        cost:200, icon:'🎉'},
+    {id:'coins',    name:'Pluie de pièces',  cost:350, icon:'🪙'},
+    {id:'fireworks',name:'Feux d’artifice',  cost:600, icon:'🎆'}
+  ];
+  const FELT_KEY='grand-casino-felt', OWNED_FELTS_KEY='grand-casino-owned-felts';
+  const FELTS=[
+    {id:'classic',  name:'Vert casino', cost:0,   swatch:['#147049','#0c3d2e','#062a1f']},
+    {id:'ocean',    name:'Bleu nuit',   cost:150, swatch:['#1d5d9b','#123a63','#081d33']},
+    {id:'bordeaux', name:'Bordeaux',    cost:250, swatch:['#9b2335','#661523','#33090f']},
+    {id:'royal',    name:'Violet royal',cost:300, swatch:['#6a3aa8','#432570','#201037']},
+    {id:'onyx',     name:'Onyx',        cost:400, swatch:['#4a4f57','#2b2f35','#121417']}
+  ];
+  function readList(key){ try{ const p=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(p)?p:[]; }catch(e){ return []; } }
+  function writeList(key,l){ try{ localStorage.setItem(key,JSON.stringify(l)); }catch(e){} }
+  let ownedWinfx=readList(OWNED_WINFX_KEY), ownedFelts=readList(OWNED_FELTS_KEY);
+  const getEq=(key,def)=>{ try{ return localStorage.getItem(key)||def; }catch(e){ return def; } };
+  function applyFelt(id){ if(id&&id!=='classic') document.documentElement.setAttribute('data-felt',id); else document.documentElement.removeAttribute('data-felt'); }
+  applyFelt(getEq(FELT_KEY,'classic'));
+  function buySimple(list,owned,id,ownedKey){
+    const it=list.find(x=>x.id===id);
+    if(!it||it.cost===0||owned.includes(id)||C.state.balance<it.cost) return false;
+    C.state.balance-=it.cost; C.saveBalance(); C.renderBalance(); owned.push(id); writeList(ownedKey,owned); return true;
+  }
+  function simpleItemHtml(attr,it,owned,equipped,visual,preview){
+    let action;
+    if(equipped) action='<button class="shop-equipped" disabled>Équipé</button>';
+    else if(owned) action='<button data-equip-'+attr+'="'+it.id+'">Équiper</button>';
+    else action='<button data-buy-'+attr+'="'+it.id+'"'+(C.state.balance<it.cost?' disabled':'')+'>Acheter — '+it.cost+' 🪙</button>';
+    return '<div class="shop-item">'+visual+'<div class="shop-item-body"><div class="shop-item-name">'+it.name+'</div><div class="shop-item-price">'+(it.cost>0?it.cost+' jetons':'Gratuit')+'</div></div>'
+      +(preview&&it.id!=='classic'?'<button class="fr-copy" data-preview-'+attr+'="'+it.id+'" style="margin:0 6px 0 0">Aperçu</button>':'')+action+'</div>';
+  }
+
   function swatchHtml(colors){ return '<span class="shop-swatch">'+colors.map(c=>'<i style="background:'+c+'"></i>').join('')+'</span>'; }
 
   function themeItemHtml(t){
@@ -139,6 +176,9 @@ window.Casino = window.Casino || {};
     framesEl.innerHTML=C.avatars.FRAMES.map(frameItemHtml).join('');
     if(cardbacksEl) cardbacksEl.innerHTML=CARDBACKS.map(cardbackItemHtml).join('');
     if(chipskinsEl) chipskinsEl.innerHTML=CHIPSKIN_META.map(chipSkinItemHtml).join('');
+    const fxEl=document.getElementById('shop-wineffects'), feltEl=document.getElementById('shop-felts');
+    if(fxEl){ const eq=getEq(WINFX_KEY,'classic'); fxEl.innerHTML=WINFX.map(f=>simpleItemHtml('wineffect',f,f.cost===0||ownedWinfx.includes(f.id),eq===f.id,'<span class="shop-swatch" style="font-size:1.4rem;align-items:center;justify-content:center">'+f.icon+'</span>',true)).join(''); }
+    if(feltEl){ const eq=getEq(FELT_KEY,'classic'); feltEl.innerHTML=FELTS.map(f=>simpleItemHtml('felt',f,f.cost===0||ownedFelts.includes(f.id),eq===f.id,swatchHtml(f.swatch),false)).join(''); }
   }
 
   document.addEventListener('click',(e)=>{
@@ -158,6 +198,16 @@ window.Casino = window.Casino || {};
     if(buyS){ if(C.chips.buyChipSkin(buyS.dataset.buyChipskin, (CHIPSKIN_META.find(m=>m.id===buyS.dataset.buyChipskin)||{}).cost)){ C.showToast&&C.showToast('🪙 Peau de jeton débloquée !'); C.chips.setChipSkin(buyS.dataset.buyChipskin); render(); } return; }
     const eqS=e.target.closest('[data-equip-chipskin]');
     if(eqS){ C.chips.setChipSkin(eqS.dataset.equipChipskin); render(); return; }
+    const buyW=e.target.closest('[data-buy-wineffect]');
+    if(buyW){ const id=buyW.dataset.buyWineffect; if(buySimple(WINFX,ownedWinfx,id,OWNED_WINFX_KEY)){ C.showToast&&C.showToast('🎆 Effet débloqué !'); try{ localStorage.setItem(WINFX_KEY,id); }catch(x){} render(); C.winEffect&&C.winEffect(id); } return; }
+    const eqW=e.target.closest('[data-equip-wineffect]');
+    if(eqW){ try{ localStorage.setItem(WINFX_KEY,eqW.dataset.equipWineffect); }catch(x){} render(); return; }
+    const preW=e.target.closest('[data-preview-wineffect]');
+    if(preW){ C.winEffect&&C.winEffect(preW.dataset.previewWineffect); return; }
+    const buyF2=e.target.closest('[data-buy-felt]');
+    if(buyF2){ const id=buyF2.dataset.buyFelt; if(buySimple(FELTS,ownedFelts,id,OWNED_FELTS_KEY)){ C.showToast&&C.showToast('🟩 Tapis débloqué !'); try{ localStorage.setItem(FELT_KEY,id); }catch(x){} applyFelt(id); render(); } return; }
+    const eqF2=e.target.closest('[data-equip-felt]');
+    if(eqF2){ try{ localStorage.setItem(FELT_KEY,eqF2.dataset.equipFelt); }catch(x){} applyFelt(eqF2.dataset.equipFelt); render(); return; }
   });
   // Seule la Boutique affichée a besoin de se redessiner quand le solde change (boutons « Acheter »
   // grisés) : sans cette garde, chaque mise dans n'importe quel jeu reconstruisait ses 4 listes.

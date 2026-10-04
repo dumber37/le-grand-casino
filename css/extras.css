@@ -1,0 +1,45 @@
+/* ============================================================
+   EXTRAS — accessibilité, verrou PIN, effets de victoire, bandeau
+   d'accueil, réactions du salon. Chaque bloc ne dépend que des
+   variables partagées (base.css).
+   ============================================================ */
+
+/* ---- Accessibilité (voir js/a11y.js) ---- */
+html[data-fs="1"]{font-size:112.5%}
+html[data-fs="2"]{font-size:125%}
+html[data-contrast="high"]{--muted:#e6e6e6;--border:rgba(255,255,255,.62)}
+html[data-contrast="high"][data-theme="light"]{--muted:#242424;--border:rgba(0,0,0,.7)}
+html[data-contrast="high"] .gc-tag,html[data-contrast="high"] .kbd-hint{color:var(--cream)}
+html[data-cb="1"]{--good:#56b4e9;--red:#e69f00}
+html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-motion="reduce"] *::after{
+  animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+@media (prefers-reduced-motion:reduce){
+  html:not([data-motion="allow"]) *,html:not([data-motion="allow"]) *::before,html:not([data-motion="allow"]) *::after{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.seg button{background:var(--bg-deep);color:var(--cream);border:0;padding:6px 14px;cursor:pointer;font-family:inherit}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button.on{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;font-weight:bold}
+
+/* ---- Verrou PIN (voir js/pin-lock.js) ---- */
+.pin-lock{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(ellipse at 50% 30%,#10241c,#05070a 70%)}
+.pin-lock[hidden]{display:none}
+.pin-card{width:100%;max-width:320px;text-align:center;background:var(--glass-2);border:1px solid var(--gold);border-radius:18px;padding:22px 18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.pin-title{font-size:1.15rem;color:var(--gold-bright);margin-bottom:6px}
+.pin-sub{color:var(--muted);font-size:.8rem;margin:0 0 12px}
+.pin-card .primary-btn{width:100%;margin:10px 0 6px}
+.pin-err{min-height:1.2em;color:#ff8f87;font-size:.78rem;margin:4px 0}
+.pin-setup{margin:0 2px 8px}
+.pin-setup .fr-code-input{letter-spacing:.3em}
+
+/* ---- Tapis de table achetables (voir shop.js) : seule la surface du feutre change ---- */
+html[data-felt="ocean"] .bj-table{background:radial-gradient(ellipse at 50% 25%,#1d5d9b 0%,#123a63 55%,#081d33 100%)}
+html[data-felt="bordeaux"] .bj-table{background:radial-gradient(ellipse at 50% 25%,#9b2335 0%,#661523 55%,#33090f 100%)}
+html[data-felt="royal"] .bj-table{background:radial-gradient(ellipse at 50% 25%,#6a3aa8 0%,#432570 55%,#201037 100%)}
+html[data-felt="onyx"] .bj-table{background:radial-gradient(ellipse at 50% 25%,#4a4f57 0%,#2b2f35 55%,#121417 100%)}
+
+/* ---- Effets de victoire (voir js/win-effects.js) ---- */
+#winFx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9000}

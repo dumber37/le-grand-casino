@@ -528,7 +528,7 @@ window.Casino = (function(){
     if(emptyEl) emptyEl.style.display=cards.length?'none':'block';
   }
 
-  C.flashWin = function(el){ el.classList.remove('win-flash'); void el.offsetWidth; el.classList.add('win-flash'); showToast(el.textContent); C.sound&&C.sound('win'); };
+  C.flashWin = function(el){ el.classList.remove('win-flash'); void el.offsetWidth; el.classList.add('win-flash'); showToast(el.textContent); C.sound&&C.sound('win'); if(C.winEffect) C.winEffect(); };
   // Perte : assombrissement bref et discret, jamais agressif.
   C.flashLoss = function(el){ if(!el) return; el.classList.remove('loss-flash'); void el.offsetWidth; el.classList.add('loss-flash'); C.sound&&C.sound('loss'); };
   // Flash plein écran (ex. cash out réussi au Crash).
@@ -557,7 +557,7 @@ window.Casino = (function(){
     document.dispatchEvent(new Event('balance-changed'));
   };
 
-  document.getElementById('resetBtn').addEventListener('click',()=>{ C.state.balance=500; C.saveBalance(); C.renderBalance(); });
+  document.getElementById('resetBtn').addEventListener('click',()=>{ C.createRestorePoint('Avant la réinitialisation du solde'); C.state.balance=500; C.saveBalance(); C.renderBalance(); });
 
   // ====== MODULE: Sauvegarde exportable / importable ======
   // Regroupe toutes les clés localStorage du site (y compris grand-casino-sound, propre à
@@ -565,8 +565,13 @@ window.Casino = (function(){
   // valider ce même format pour tout restaurer. Après import réussi, la page est rechargée pour
   // que chaque module se réinitialise proprement depuis le localStorage restauré, plutôt que de
   // resynchroniser à la main les nombreuses variables en mémoire de chaque module.
-  const SAVE_KEYS=[BAL_KEY,WAG_KEY,STREAK_KEY,BEST_STREAK_KEY,LAST_KEY,THEME_KEY,STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,ACH_LOG_KEY,MISSIONS_KEY,PSEUDO_KEY,AVATAR_KEY,'grand-casino-sound','grand-casino-challenges'];
-  const SAVE_JSON_KEYS=[STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,ACH_LOG_KEY,MISSIONS_KEY,'grand-casino-challenges'];
+  // Cosmétiques achetés, pass saisonnier, tournoi, roue... : sans ces clés, restaurer une sauvegarde
+  // (import, QR, cloud) rendait le solde mais faisait perdre ce qu'il avait servi à acheter.
+  // Jamais incluses : le PIN, les points de restauration (sinon une restauration les écraserait).
+  const EXTRA_KEYS=['grand-casino-cardback','grand-casino-avatar-frame','grand-casino-avatar-custom','grand-casino-owned-frames','grand-casino-owned-themes','grand-casino-owned-cardbacks','grand-casino-owned-chipskins','grand-casino-chip-skin','grand-casino-season-pass','grand-casino-weekly-tournament','grand-casino-wheel-last','grand-casino-daily-challenge','grand-casino-seasonal','grand-casino-wineffect','grand-casino-owned-wineffects','grand-casino-felt','grand-casino-owned-felts','grand-casino-a11y'];
+  const EXTRA_JSON_KEYS=['grand-casino-owned-frames','grand-casino-owned-themes','grand-casino-owned-cardbacks','grand-casino-owned-chipskins','grand-casino-season-pass','grand-casino-weekly-tournament','grand-casino-daily-challenge','grand-casino-avatar-custom','grand-casino-owned-wineffects','grand-casino-owned-felts','grand-casino-a11y'];
+  const SAVE_KEYS=[BAL_KEY,WAG_KEY,STREAK_KEY,BEST_STREAK_KEY,LAST_KEY,THEME_KEY,STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,ACH_LOG_KEY,MISSIONS_KEY,PSEUDO_KEY,AVATAR_KEY,'grand-casino-sound','grand-casino-challenges'].concat(EXTRA_KEYS);
+  const SAVE_JSON_KEYS=[STATS_KEY,HIST_KEY,FAV_KEY,ACH_KEY,ACH_LOG_KEY,MISSIONS_KEY,'grand-casino-challenges'].concat(EXTRA_JSON_KEYS);
   // buildSaveObject/applySaveObject : le coeur commun de l'export/import fichier ci-dessous,
   // exposé sur C au cas où un autre module voudrait le réutiliser plus tard (même format,
   // même validation, plutôt que d'en recréer une variante).
@@ -580,8 +585,24 @@ window.Casino = (function(){
     keys.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
     return {app:'grand-casino', version:1, exportedAt:new Date().toISOString(), data};
   }
-  function applySaveObject(payload){
+  // ---- Points de restauration : 3 instantanés « événement » (avant import / restauration /
+  // réinitialisation) + 3 sauvegardes automatiques quotidiennes, gardés séparément pour qu'un
+  // import raté ne soit jamais écrasé par les sauvegardes du jour. ----
+  const RP_KEY='grand-casino-restore-points', RP_AUTO_KEY='grand-casino-last-autobackup', RP_MAX=3;
+  C.getRestorePoints=function(){ try{ const a=JSON.parse(localStorage.getItem(RP_KEY)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } };
+  C.createRestorePoint=function(reason,kind){
+    kind=kind||'event';
+    try{
+      const all=C.getRestorePoints();
+      const same=all.filter(p=>p.kind===kind), other=all.filter(p=>p.kind!==kind);
+      same.unshift({time:Date.now(), reason, kind, payload:buildSaveObject()});
+      same.length=Math.min(same.length,RP_MAX);
+      localStorage.setItem(RP_KEY, JSON.stringify(same.concat(other).sort((a,b)=>b.time-a.time)));
+    }catch(e){ /* stockage plein : pas de point de restauration, mais jamais bloquant */ }
+  };
+  function applySaveObject(payload,opts){
     if(!validateSaveData(payload)) return false;
+    C.createRestorePoint((opts&&opts.reason)||'Avant un import');
     SAVE_KEYS.forEach(k=>{
       try{ if(payload.data[k]!==undefined) localStorage.setItem(k, payload.data[k]); else localStorage.removeItem(k); }catch(e){}
     });
@@ -591,6 +612,24 @@ window.Casino = (function(){
   C.applySaveObject = applySaveObject;
   C.validateSaveData = payload=>validateSaveData(payload); // exposé après coup, voir plus bas (fonction hoisted)
   C.reloadAfterImport = function(msg){ showToast(msg||'✅ Sauvegarde importée — rechargement...'); setTimeout(()=>location.reload(), 900); };
+  function renderRestorePoints(){
+    const el=document.getElementById('restoreList'); if(!el) return;
+    const pts=C.getRestorePoints();
+    el.innerHTML=pts.length
+      ? pts.map((p,i)=>'<div class="profile-row"><span>'+(p.kind==='auto'?'🕒 ':'💾 ')+C.escapeHtml(p.reason)+'<br><small style="color:var(--muted)">'+formatTime(p.time)+'</small></span><button class="fr-copy" data-restore="'+i+'" style="margin:0">Restaurer</button></div>').join('')
+      : '<p class="empty-state">Aucun point de restauration pour l’instant — un est créé automatiquement chaque jour et avant tout import.</p>';
+  }
+  document.addEventListener('click',(e)=>{
+    const b=e.target.closest('[data-restore]'); if(!b) return;
+    const p=C.getRestorePoints()[parseInt(b.dataset.restore,10)]; if(!p) return;
+    if(!confirm('Restaurer « '+p.reason+' » ('+formatTime(p.time)+') va remplacer tes données actuelles. Un point de restauration de l’état actuel est créé juste avant, tu pourras donc annuler. Continuer ?')) return;
+    if(applySaveObject(p.payload,{reason:'Avant une restauration'})) C.reloadAfterImport('✅ Restauration effectuée — rechargement...');
+    else showToast('❌ Ce point de restauration est invalide');
+  });
+  const restoreNowBtn=document.getElementById('restoreNowBtn');
+  if(restoreNowBtn) restoreNowBtn.addEventListener('click',()=>{ C.createRestorePoint('Point créé manuellement'); renderRestorePoints(); showToast('💾 Point de restauration créé'); });
+  // Sauvegarde automatique : au plus une par jour, seulement une fois qu'il y a quelque chose à sauver.
+  try{ const today=todayStr(); if(stats.gamesPlayed>0&&localStorage.getItem(RP_AUTO_KEY)!==today){ C.createRestorePoint('Sauvegarde automatique','auto'); localStorage.setItem(RP_AUTO_KEY,today); } }catch(e){}
   function exportSave(){
     const payload=buildSaveObject();
     const blob=new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
@@ -657,6 +696,7 @@ window.Casino = (function(){
     else if(name==='challenges'&&C.renderChallenges) C.renderChallenges();
     else if(name==='account'&&C.renderAccount) C.renderAccount();
     else if(name==='leaderboard'&&C.renderLeaderboard) C.renderLeaderboard();
+    else if(name==='parametres') renderRestorePoints();
   }
   document.addEventListener('click',(e)=>{
     const viewEl=e.target.closest('[data-view]'); if(viewEl){ switchView(viewEl.dataset.view); return; }

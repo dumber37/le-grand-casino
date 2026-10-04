@@ -13,7 +13,7 @@
   border-radius:9px;color:var(--cream);cursor:pointer;transition:transform .12s ease,border-color .12s ease}
 .tw-tile:not(:disabled):hover{transform:translateY(-2px)}
 .tw-tile:disabled{cursor:default}
-.tw-tile.safe{background:rgba(79,206,133,.18);border-color:#4fce85}
+.tw-tile.safe{background:rgba(79,206,133,.18);border-color:var(--good)}
 .tw-tile.trap{background:rgba(224,69,58,.25);border-color:#e0453a}
 .tw-tile.ghost{opacity:.45}
 .tw-tower.tw-shake{animation:twShake .45s ease}

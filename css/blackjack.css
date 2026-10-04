@@ -8,7 +8,7 @@
 #bjm-mySeat{margin-top:8px}
 .bj-ai-seat{flex:1;min-width:0;background:rgba(0,0,0,.26);border:1px solid rgba(212,175,55,.25);border-radius:10px;padding:6px 8px;transition:box-shadow .2s ease,border-color .2s ease}
 .bj-ai-seat .cards{min-height:56px;gap:3px}
-.bj-ai-seat.ai-win{border-color:#4fce85;box-shadow:0 0 12px rgba(79,206,133,.45)}
+.bj-ai-seat.ai-win{border-color:var(--good);box-shadow:0 0 12px rgba(79,206,133,.45)}
 .bj-ai-seat.ai-loss{opacity:.7}
 
 .hand-block{margin-bottom:6px;padding:6px 8px;border-radius:8px}

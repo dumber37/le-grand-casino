@@ -7,7 +7,7 @@
 
 :root{
   --felt:#0c3d2e; --felt-dark:#062a1f; --felt-deep:#031712;
-  --gold:#d4af37; --gold-bright:#f2d675; --cream:#f4ecd8; --red:#a3352f;
+  --gold:#d4af37; --gold-bright:#f2d675; --cream:#f4ecd8; --red:#a3352f; --good:#4fce85;
   --border:rgba(212,175,55,.35);
   --bg-deep:#05070a; --glass:rgba(14,22,19,.68); --glass-2:rgba(9,14,12,.85);
   --muted:#93a89a;
@@ -247,7 +247,7 @@ html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,
 .hist-main span{color:var(--muted);font-size:.72rem}
 .hist-side{text-align:right;display:flex;flex-direction:column;align-items:flex-end}
 .hist-net{font-weight:bold}
-.hist-net.pos{color:#4fce85}
+.hist-net.pos{color:var(--good)}
 .hist-net.neg{color:var(--red)}
 .hist-side small{color:var(--muted);font-size:.68rem}
 .empty-state{text-align:center;color:var(--muted);font-size:.85rem;padding:24px 10px;line-height:1.5}
@@ -269,7 +269,7 @@ html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,
 .ach-icon{font-size:1.5rem}
 .ach-label{font-size:.85rem}
 .ach-status{margin-left:auto;font-size:.7rem;color:var(--muted)}
-.ach-item.unlocked .ach-status{color:#4fce85}
+.ach-item.unlocked .ach-status{color:var(--good)}
 .ach-item.ach-secret .ach-label{font-style:italic;color:var(--muted)}
 .ach-item.ach-secret .ach-icon{opacity:.6}
 .profile-row{display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px dashed var(--border);font-size:.85rem}

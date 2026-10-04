@@ -24,6 +24,6 @@
 .bus-rival .rival-name{color:var(--cream);white-space:nowrap}
 .bus-rival .rival-res{text-align:right}
 .bus-rival.rival-best{background:rgba(79,206,133,.1);border-radius:6px}
-.bus-rival.rival-best .rival-res{color:#4fce85}
+.bus-rival.rival-best .rival-res{color:var(--good)}
 .bus-rival.rival-out{opacity:.7}
 .rival-summary{text-align:center;color:var(--gold-bright);padding-top:6px}
