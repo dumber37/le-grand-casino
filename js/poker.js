@@ -79,6 +79,7 @@
   const dealBtn=el('pk-dealBtn'), dealRow=el('pk-dealRow'), tablesEl=el('pk-tables');
   const mpEl=el('pk-mp'), mpInfo=el('pk-mpInfo'), fillEl=el('pk-fill');
   const demoBtn=el('pk-demoBtn'), demoBanner=el('pk-demoBanner'), demoBalEl=el('pk-demoBal');
+  const tourBtn=el('pk-tourBtn'), tourBanner=el('pk-tourBanner'), tourInfoEl=el('pk-tourInfo');
   const F=()=>C.friends;
 
   // ---------- État de la partie ----------
@@ -100,6 +101,14 @@
   // intacts). Restreinte au mode classique (pas de démo en multijoueur, où le solde d'un ami
   // pourrait être impliqué) : le sélecteur de mode et le bouton démo se désactivent l'un l'autre.
   let demoMode=false, demoBalance=500;
+  // ---- Sit & Go : tournoi contre les IA. Réutilise la mécanique de la partie d'essai (jetons de
+  // tournoi séparés du solde réel, aucun recordGame pendant les mains) ; l'inscription est payée sur
+  // le solde réel, le prix crédité et la partie enregistrée UNE seule fois, à la fin du tournoi. ----
+  const TOUR_BUYIN=100, TOUR_STACK=1000, TOUR_HANDS_PER_LEVEL=4;
+  const TOUR_LEVELS=[[10,20],[15,30],[25,50],[50,100],[100,200],[200,400]];
+  let tour=null; // {level, handsInLevel, startedHands}
+  // En tournoi, un joueur dont la pile est plus petite que la grosse blind doit pouvoir jouer (tapis).
+  const need=()=>tour?1:bb;
   // Deux modes séparés : 'ai' = classique, contre les IA (les amis connectés sont ignorés) ;
   // 'multi' = contre de vrais joueurs (salon entre amis), complété ou non par des IA.
   const MODE_KEY='grand-casino-mode-poker';
@@ -183,8 +192,8 @@
     meEl.innerHTML=''; if(s.seats[s.me]) meEl.appendChild(seatEl(s.seats[s.me],s.me,true,s));
     msg.textContent=s.msg;
     dealRow.style.display=(s.handActive||guestMode)?'none':'flex';
-    dealBtn.disabled=s.handActive||guestMode||bal()<bb;
-    tablesEl.style.display=guestMode?'none':'';
+    dealBtn.disabled=s.handActive||guestMode||bal()<need();
+    tablesEl.style.display=(guestMode||tour)?'none':'';
     tablesEl.querySelectorAll('button').forEach(b=>b.disabled=s.handActive);
     updateActions(s);
     updateMp();
@@ -205,7 +214,9 @@
   function updateMp(){
     switchBtns.forEach(b=>b.classList.toggle('sel',b.dataset.mode===gameMode));
     if(switchBox) switchBox.style.display=(guestMode||demoMode)?'none':'';
-    demoBtn.disabled=handActive||guestMode;
+    demoBtn.disabled=handActive||guestMode||!!tour;
+    tourBtn.disabled=(handActive&&!tour)||guestMode||demoMode&&!tour;
+    updateTourBanner();
     if(!mpEl) return;
     const role=F()&&F().role(), n=(F()&&role==='host')?F().peers().length:0;
     if(guestMode||role==='guest'){ mpEl.style.display='flex'; mpInfo.textContent=guestMode?'🤝 Tu joues à la table de l’hôte — c’est lui qui lance les mains.':'🤝 Connecté à un salon : l’hôte peut lancer une partie de poker.'; fillEl.parentNode.style.display='none'; }
@@ -232,7 +243,7 @@
   const schedule=(fn,ms)=>{ clearTimeout(timer); timer=setTimeout(fn,ms); };
   function startHand(){
     if(handActive||guestMode) return;
-    if(bal()<bb){ say('Solde insuffisant pour ces blinds ('+bb+' minimum).'); return; }
+    if(bal()<need()){ say('Solde insuffisant pour ces blinds ('+bb+' minimum).'); return; }
     const peers=(gameMode==='multi'&&isHostRole())?F().peers():[];
     if(gameMode==='multi'&&!peers.length){ say('Mode multijoueur : ouvre un salon (« Salon entre amis ») et invite au moins un ami — ou passe en mode classique.'); return; }
     if(!peers.length) return begin([]);
@@ -255,8 +266,9 @@
     const local={kind:'local',name:multi?F().name():'Toi',icon:'🙂'};
     const rem=remotes.map(r=>({kind:'remote',peerId:r.id,name:r.name,icon:'🧑',stack:r.bal,av:r.av}));
     const humans=1+rem.length;
-    aiPool.forEach(p=>{ if(p.stack<bb) p.stack=50*bb; });
-    const ais=(humans<2||fillEl.checked)?aiPool.slice(0,Math.max(0,TABLE_SEATS-humans)):[];
+    if(!tour) aiPool.forEach(p=>{ if(p.stack<bb) p.stack=50*bb; });
+    const seatedAi=tour?aiPool.filter(p=>!p.out):aiPool;
+    const ais=(humans<2||fillEl.checked)?seatedAi.slice(0,Math.max(0,TABLE_SEATS-humans)):[];
     players=[local].concat(rem,ais);
     if(players.length<2){ say('Il faut au moins deux joueurs à la table.'); players=[]; return; }
     players.forEach(resetP);
@@ -398,8 +410,65 @@
     if(!demoMode) C.recordGame('poker',me.total,me.won);
     if(me.won>me.total) C.flashWin(msg); else if(me.won===0) C.flashLoss(feltEl);
     render();
+    if(tour){ afterTournamentHand(); return; }
     if(bal()<bb) say(lastMsg+' Solde insuffisant pour la prochaine main.');
   }
+
+  // ---------- Sit & Go ----------
+  function updateTourBanner(){
+    if(!tourBanner) return;
+    tourBanner.classList.toggle('show',!!tour);
+    tourBtn.textContent=tour?'🏳️ Abandonner le tournoi':'🏆 Sit & Go — '+TOUR_BUYIN+' 🪙';
+    if(tour){
+      const left=1+aiPool.filter(p=>!p.out).length;
+      tourInfoEl.textContent='niveau '+(tour.level+1)+' (blinds '+sb+'/'+bb+') · '+left+' joueur'+(left>1?'s':'')+' · ta pile : '+demoBalance+' · prochain niveau dans '+Math.max(0,TOUR_HANDS_PER_LEVEL-tour.handsInLevel)+' main(s)';
+    }
+  }
+  function startTournament(){
+    if(handActive||guestMode||demoMode||tour) return;
+    if(C.state.balance<TOUR_BUYIN){ say('Il faut '+TOUR_BUYIN+' jetons pour t’inscrire au Sit & Go.'); return; }
+    C.state.balance-=TOUR_BUYIN; C.trackWager(TOUR_BUYIN); C.saveBalance(); C.renderBalance();
+    if(gameMode!=='ai') setMode('ai');
+    tour={level:0,handsInLevel:0};
+    demoMode=true; demoBalance=TOUR_STACK; demoBalEl.textContent=demoBalance;
+    aiPool.forEach(p=>{ p.stack=TOUR_STACK; p.out=false; });
+    sb=TOUR_LEVELS[0][0]; bb=TOUR_LEVELS[0][1];
+    if(switchBox) switchBox.style.display='none';
+    say('Sit & Go lancé — 1000 jetons de tournoi, blinds '+sb+'/'+bb+'. Bonne chance !');
+    previewTable();
+  }
+  function finishTournament(place){
+    const prize=place===1?Math.round(TOUR_BUYIN*2.8):(place===2?TOUR_BUYIN:0); // place 0 = abandon
+    C.state.balance+=prize; C.saveBalance(); C.renderBalance();
+    C.recordGame('poker',TOUR_BUYIN,prize);
+    tour=null; demoMode=false; demoBalance=500; demoBalEl.textContent=demoBalance;
+    aiPool.forEach(p=>{ p.out=false; p.stack=50*bb; });
+    sb=10; bb=20; tablesEl.querySelectorAll('button').forEach(b=>b.classList.toggle('sel',b.dataset.sb==='10'));
+    if(switchBox) switchBox.style.display=(guestMode||demoMode)?'none':'';
+    const txt=place===0?'Tournoi abandonné — inscription perdue.':place===1?'🏆 Tu remportes le tournoi ! +'+prize+' jetons':place===2?'🥈 2e place — inscription remboursée ('+prize+' jetons).':'Éliminé à la '+place+'e place — pas de prix cette fois.';
+    previewTable(); say(txt);
+    if(prize>TOUR_BUYIN) C.flashWin(msg);
+  }
+  function afterTournamentHand(){
+    aiPool.forEach(p=>{ if(!p.out&&p.stack<=0) p.out=true; });
+    const aliveAi=aiPool.filter(p=>!p.out).length;
+    if(demoBalance<=0){ finishTournament(aliveAi+1); return; }
+    if(aliveAi===0){ finishTournament(1); return; }
+    tour.handsInLevel++;
+    if(tour.handsInLevel>=TOUR_HANDS_PER_LEVEL&&tour.level<TOUR_LEVELS.length-1){
+      tour.level++; tour.handsInLevel=0; sb=TOUR_LEVELS[tour.level][0]; bb=TOUR_LEVELS[tour.level][1];
+      say(lastMsg+' ⏫ Les blinds montent : '+sb+'/'+bb+'.');
+    }
+    updateTourBanner();
+  }
+  tourBtn.addEventListener('click',()=>{
+    if(tour){
+      if(handActive){ say('Termine la main en cours avant d’abandonner.'); return; }
+      if(confirm('Abandonner le tournoi ? Tu perds ton inscription ('+TOUR_BUYIN+' jetons).')){ finishTournament(0); }
+      return;
+    }
+    startTournament();
+  });
 
   // ---------- Commandes du joueur (local : hôte/solo ou invité) ----------
   function submit(type,to){
@@ -433,11 +502,11 @@
     if(players.length) render(); else updateMp();
   }));
   dealBtn.addEventListener('click',startHand);
-  document.addEventListener('balance-changed',()=>{ if(!handActive&&!guestMode) dealBtn.disabled=bal()<bb; });
+  document.addEventListener('balance-changed',()=>{ if(!handActive&&!guestMode) dealBtn.disabled=bal()<need(); });
 
   // ---------- Partie d'essai ----------
   function toggleDemo(){
-    if(handActive||guestMode) return;
+    if(handActive||guestMode||tour) return;
     demoMode=!demoMode; demoBalance=500; demoBalEl.textContent=demoBalance;
     demoBtn.textContent=demoMode?'🎓 Quitter la partie d’essai':'🎓 Partie d’essai';
     demoBanner.classList.toggle('show',demoMode);
@@ -506,7 +575,7 @@
   el('pk-friendsBtn')&&el('pk-friendsBtn').addEventListener('click',()=>{ const nav=document.querySelector('[data-view="friends"]'); if(nav) nav.click(); });
   // Table de départ : toi + les IA assises, en attendant la première main.
   function previewTable(){
-    players=[{kind:'local',name:'Toi',icon:'🙂'}].concat(aiPool.slice(0,TABLE_SEATS-1)); players.forEach(resetP);
+    players=[{kind:'local',name:'Toi',icon:'🙂'}].concat((tour?aiPool.filter(p=>!p.out):aiPool).slice(0,TABLE_SEATS-1)); players.forEach(resetP);
     dealer=-1; render();
   }
   previewTable();

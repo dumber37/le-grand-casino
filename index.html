@@ -681,6 +681,10 @@
           <div class="demo-banner" id="pk-demoBanner">🎓 Partie d'essai — jetons fictifs, solde : <b id="pk-demoBal">500</b> (ton solde réel n'est pas touché)</div>
           <button class="fr-copy" id="pk-demoBtn">🎓 Partie d'essai</button>
         </div>
+        <div class="demo-row">
+          <div class="demo-banner" id="pk-tourBanner">🏆 Sit &amp; Go — <span id="pk-tourInfo"></span></div>
+          <button class="fr-copy" id="pk-tourBtn">🏆 Sit &amp; Go — 100 🪙</button>
+        </div>
         <div class="mode-switch" data-mode-for="poker">
           <button data-mode="ai" class="sel">🤖 Classique (contre l'IA)</button><button data-mode="multi">👥 Multijoueur</button>
         </div>
@@ -711,6 +715,10 @@
         </div>
         <div class="bet-row" id="pk-dealRow"><button class="primary-btn" id="pk-dealBtn" style="flex:1">NOUVELLE MAIN</button></div>
         <div class="kbd-hint"><kbd>Espace</kbd> pour lancer une main</div>
+        <details class="info-disclosure">
+          <summary>ⓘ Comment fonctionne le Sit &amp; Go ?</summary>
+          <p>Tu paies 100 jetons pour t'inscrire et reçois 1000 jetons de tournoi (séparés de ton solde). Les blinds montent toutes les 4 mains ; un joueur à zéro est éliminé. Prix : 1er = 280 jetons, 2e = 100 jetons (inscription remboursée), 3e et 4e = rien. Le tournoi compte pour tes stats une seule fois, à la fin. Disponible contre les IA uniquement.</p>
+        </details>
         <details class="info-disclosure">
           <summary>ⓘ Comment jouent les IA ?</summary>
           <p>Marco (agressif), Léa (prudente) et Victor (équilibré) ne voient jamais tes cartes : chacun estime sa probabilité de gagner par simulation (quelques centaines de tirages) à partir de ses seules cartes et du tableau, la compare à la cote du pot, puis suit, relance ou se couche selon son style. Les piles des IA sont virtuelles et se recavent seules ; seul ton solde est réel (fictif). Pots annexes gérés en cas de tapis.</p>
