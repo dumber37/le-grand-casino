@@ -23,6 +23,10 @@
 <link rel="stylesheet" href="css/coinflip.css">
 <link rel="stylesheet" href="css/war.css">
 <link rel="stylesheet" href="css/keno.css">
+<link rel="stylesheet" href="css/plinko.css">
+<link rel="stylesheet" href="css/hilo.css">
+<link rel="stylesheet" href="css/scratch.css">
+<link rel="stylesheet" href="css/tower.css">
 <link rel="stylesheet" href="css/wheel.css">
 <link rel="stylesheet" href="css/shop.css">
 <link rel="stylesheet" href="css/craps.css">
@@ -71,6 +75,10 @@
       <button data-view="crash">🚀 Crash</button>
       <button data-view="war">⚔️ Bataille</button>
       <button data-view="keno">🔢 Keno</button>
+      <button data-view="plinko">🔻 Plinko</button>
+      <button data-view="hilo">↕️ Hi-Lo</button>
+      <button data-view="scratch">🎟️ Cartes à gratter</button>
+      <button data-view="tower">🐲 Dragon Tower</button>
       <button data-view="craps">🎲 Craps</button>
       <button data-view="videopoker">♠️ Vidéo Poker</button>
       <button data-view="poker">♣️ Poker (vs IA)</button>
@@ -493,6 +501,75 @@
         </div>
       </div></section>
 
+      <section class="view" id="view-plinko"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🔻</span><div><div class="sh-name">Plinko</div><div class="sh-desc">Lâche la bille : elle rebondit sur les picots et tombe dans une case multiplicatrice</div></div></div>
+        <div class="pl-stage"><canvas id="pl-canvas" width="560" height="410" aria-label="Plateau de Plinko"></canvas></div>
+        <div class="message" id="pl-message">Choisis ton risque, ta mise, puis lâche la bille.</div>
+        <div class="roulette-grid" id="pl-risk" style="grid-template-columns:repeat(3,1fr)">
+          <button data-risk="faible">Risque faible</button><button data-risk="moyen" class="sel">Risque moyen</button><button data-risk="eleve">Risque élevé</button>
+        </div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="pl-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="pl-betAmount">20</span><button id="pl-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="pl-dropBtn">LÂCHER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour lâcher — plus le risque est élevé, plus les bords paient (jusqu'à x100) et moins le centre rend</div>
+      </div></section>
+
+      <section class="view" id="view-hilo"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">↕️</span><div><div class="sh-name">Hi-Lo</div><div class="sh-desc">Plus haut ou plus bas ? Enchaîne les bonnes réponses et encaisse quand tu veux</div></div></div>
+        <div class="bj-table">
+          <div class="dealer" data-dealer="cards"></div>
+          <div class="hl-stage">
+            <div class="cards" id="hl-card"></div>
+            <div class="hl-trail" id="hl-trail"></div>
+          </div>
+        </div>
+        <div class="hl-stats"><span>Multiplicateur <b id="hl-mult">1.00</b></span><span>Gain possible <b id="hl-potential">0</b></span></div>
+        <div class="message" id="hl-message">Place ta mise et tire la première carte.</div>
+        <div class="hl-actions" id="hl-actions">
+          <button class="primary-btn" id="hl-hiBtn">▲ Plus haut</button>
+          <button class="primary-btn" id="hl-loBtn">▼ Plus bas</button>
+          <button class="fr-copy" id="hl-cashBtn" style="flex:1 1 100%">Encaisser</button>
+        </div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="hl-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="hl-betAmount">20</span><button id="hl-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="hl-startBtn">TIRER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour tirer — probabilités calculées sur les cartes restantes, égalité = perdu, as = carte la plus haute</div>
+      </div></section>
+
+      <section class="view" id="view-scratch"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🎟️</span><div><div class="sh-name">Cartes à gratter</div><div class="sh-desc">Gratte les 9 cases : trois symboles identiques et c'est gagné</div></div></div>
+        <div class="sc-grid" id="sc-grid"></div>
+        <div class="message" id="sc-message">Achète un ticket, puis gratte-le.</div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="sc-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="sc-betAmount">20</span><button id="sc-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="sc-buyBtn">ACHETER UN TICKET</button>
+        </div>
+        <button class="fr-copy" id="sc-allBtn" style="width:100%;display:none">Tout gratter d'un coup</button>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour acheter</div>
+        <div class="paytable">
+          <div><span>🍒 x3</span><span>x2</span></div><div><span>🍋 x3</span><span>x3</span></div><div><span>🔔 x3</span><span>x5</span></div>
+          <div><span>⭐ x3</span><span>x10</span></div><div><span>7️⃣ x3</span><span>x25</span></div><div><span>💎 x3</span><span>x100</span></div>
+        </div>
+      </div></section>
+
+      <section class="view" id="view-tower"><div class="panel">
+        <div class="scene-header"><span class="sh-icon">🐲</span><div><div class="sh-name">Dragon Tower</div><div class="sh-desc">Grimpe étage par étage : choisis la bonne case et évite les flammes</div></div></div>
+        <div class="roulette-grid" id="tw-diff" style="grid-template-columns:repeat(3,1fr)">
+          <button data-diff="facile">Facile</button><button data-diff="moyen" class="sel">Moyen</button><button data-diff="difficile">Difficile</button>
+        </div>
+        <div class="tw-live"><span>Multiplicateur <b id="tw-mult">1.00</b></span><span>Gain possible <b id="tw-potential">0</b></span></div>
+        <div class="tw-tower" id="tw-tower"></div>
+        <div class="message" id="tw-message">Choisis la difficulté, ta mise, puis lance l'ascension.</div>
+        <div class="hl-actions" id="tw-actions"><button class="primary-btn" id="tw-cashBtn" style="flex:1 1 100%">Encaisser</button></div>
+        <div class="bet-row">
+          <div class="bet-group"><button id="tw-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="tw-betAmount">20</span><button id="tw-betPlus" aria-label="Augmenter la mise">+</button></div>
+          <button class="primary-btn" id="tw-startBtn">COMMENCER</button>
+        </div>
+        <div class="kbd-hint"><kbd>Espace</kbd> pour commencer — facile 4 cases/1 piège (9 étages), moyen 3 cases/1 piège (8), difficile 2 cases/1 piège (6)</div>
+      </div></section>
+
       <section class="view" id="view-mines"><div class="panel">
         <div class="scene-header"><span class="sh-icon">💣</span><div><div class="sh-name">Mines</div><div class="sh-desc">Révèle des cases, évite les mines, encaisse à temps</div></div></div>
         <div class="message" id="mn-message">Choisis le nombre de mines puis lance la partie.</div>
@@ -795,6 +872,10 @@
             <option value="coinflip">Pile ou Face</option>
             <option value="war">Bataille</option>
             <option value="keno">Keno</option>
+            <option value="plinko">Plinko</option>
+            <option value="hilo">Hi-Lo</option>
+            <option value="scratch">Cartes à gratter</option>
+            <option value="tower">Dragon Tower</option>
             <option value="craps">Craps</option>
             <option value="mines">Mines</option>
             <option value="crash">Crash</option>
@@ -1019,6 +1100,10 @@
 <script src="js/coinflip.js"></script>
 <script src="js/war.js"></script>
 <script src="js/keno.js"></script>
+<script src="js/plinko.js"></script>
+<script src="js/hilo.js"></script>
+<script src="js/scratch.js"></script>
+<script src="js/tower.js"></script>
 <script src="js/craps.js"></script>
 <script src="js/weekly.js"></script>
 <script src="js/season.js"></script>

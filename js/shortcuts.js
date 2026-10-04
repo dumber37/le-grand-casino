@@ -16,7 +16,7 @@
     slots:['s-lever'], dragon:['sd-lever'], blackjack:['bj-dealBtn','bjm-dealBtn'], roulette:['r-spinBtn'],
     bus:['bus-startBtn','bsm-dealBtn'], baccarat:['bc-dealBtn'], coinflip:['cf-flipBtn'], mines:['mn-startBtn'],
     crash:['cr-startBtn','crm-startBtn'], videopoker:['vp-dealBtn'], poker:['pk-dealBtn'], friends:['fr-dealBtn'], cases:['cs-openBtn'],
-    war:['wr-playBtn'], keno:['kn-drawBtn'], craps:['cp-rollBtn'], wheel:['wh-spinBtn'], daily:['dc-validateBtn']
+    war:['wr-playBtn'], keno:['kn-drawBtn'], craps:['cp-rollBtn'], plinko:['pl-dropBtn'], hilo:['hl-startBtn'], scratch:['sc-buyBtn'], tower:['tw-startBtn'], wheel:['wh-spinBtn'], daily:['dc-validateBtn']
   };
   document.addEventListener('keydown',(e)=>{
     // e.code==='Space' en secours : certains navigateurs/claviers ne remontent pas e.key===' '.

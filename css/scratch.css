@@ -1,0 +1,16 @@
+/* ============================================================
+   CARTES À GRATTER — grille 3×3, chaque case est couverte d'une couche
+   argentée qui disparaît au grattage (le geste est géré en JS).
+   ============================================================ */
+#view-scratch .panel{border-color:rgba(192,192,210,.45)}
+#view-scratch .scene-header .sh-name{color:#d6d6e4}
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:330px;margin:10px auto;padding:12px;
+  background:linear-gradient(160deg,#2b2540,#14101f);border:2px solid var(--gold);border-radius:16px;touch-action:none;user-select:none}
+.sc-cell{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--cream);display:flex;align-items:center;justify-content:center}
+.sc-sym{font-size:clamp(1.6rem,8vw,2.4rem);line-height:1}
+.sc-cover{position:absolute;inset:0;background:repeating-linear-gradient(135deg,#9aa0ad 0 6px,#b7bcc7 6px 12px);
+  transition:opacity .35s ease,transform .35s ease;cursor:crosshair}
+.sc-cell.open .sc-cover{opacity:0;transform:scale(1.25);pointer-events:none}
+.sc-cell.sc-hit{box-shadow:0 0 0 3px var(--gold),0 0 18px rgba(212,175,55,.8);animation:scHit .8s ease-in-out infinite alternate}
+.sc-cell.sc-idle .sc-sym{opacity:.25}
+@keyframes scHit{from{transform:scale(1)}to{transform:scale(1.07)}}

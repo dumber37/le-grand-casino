@@ -1,0 +1,14 @@
+/* ============================================================
+   HI-LO — réutilise .bj-table/.cards/.zone/.bet-row (base.css).
+   ============================================================ */
+#view-hilo .panel{border-color:rgba(99,179,237,.4)}
+#view-hilo .scene-header .sh-name{color:#90cdf4}
+.hl-stage{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0}
+.hl-stats{display:flex;gap:22px;justify-content:center;font-size:.8rem;color:var(--muted)}
+.hl-stats b{color:var(--gold-bright);font-variant-numeric:tabular-nums}
+.hl-trail{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;min-height:26px}
+.hl-mini{background:var(--card-bg);color:#1a1a1a;border-radius:5px;padding:2px 6px;font-size:.74rem;font-weight:bold}
+.hl-mini.red{color:#c0392b}
+.hl-actions{display:none;gap:8px;flex-wrap:wrap;margin:10px 0}
+.hl-actions button{flex:1;min-width:120px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px}
+.hl-actions button small{font-size:.68rem;opacity:.8;font-weight:normal}

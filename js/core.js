@@ -47,7 +47,7 @@ window.Casino = (function(){
   const STATS_KEY='grand-casino-stats';
   let stats={gamesPlayed:0,totalWon:0,biggestWin:0,perGame:{}};
   try{ const raw=localStorage.getItem(STATS_KEY); if(raw){ const p=JSON.parse(raw); if(p&&typeof p==='object'&&!Array.isArray(p)){ stats=Object.assign(stats,p); if(!stats.perGame||typeof stats.perGame!=='object') stats.perGame={}; } } }catch(e){}
-  const GAME_NAMES={slots:'Machine à sous',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',dragon:'Fortune Dragon',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',wheel:'Roue de la chance',daily:'Défi du jour'};
+  const GAME_NAMES={slots:'Machine à sous',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',dragon:'Fortune Dragon',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',plinko:'Plinko',hilo:'Hi-Lo',scratch:'Cartes à gratter',tower:'Dragon Tower',wheel:'Roue de la chance',daily:'Défi du jour'};
   C.gameName = k=>GAME_NAMES[k]||k;
   function saveStats(){ try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){} }
   // Résumé anonyme pour le comparateur de stats du Salon entre amis (friends-compare.js) : jamais
@@ -161,7 +161,11 @@ window.Casino = (function(){
     {key:'cases',icon:'📦',name:'Ouverture de Caisses',tag:'Nouveau'},
     {key:'war',icon:'⚔️',name:'Bataille',tag:'Rapide'},
     {key:'keno',icon:'🔢',name:'Keno',tag:'Nouveau'},
-    {key:'craps',icon:'🎲',name:'Craps',tag:'Dés'}
+    {key:'craps',icon:'🎲',name:'Craps',tag:'Dés'},
+    {key:'plinko',icon:'🔻',name:'Plinko',tag:'Nouveau'},
+    {key:'hilo',icon:'↕️',name:'Hi-Lo',tag:'Nouveau'},
+    {key:'scratch',icon:'🎟️',name:'Cartes à gratter',tag:'Nouveau'},
+    {key:'tower',icon:'🐲',name:'Dragon Tower',tag:'Nouveau'}
   ];
   function gameCardHTML(g){
     const isFav=favorites.includes(g.key);
@@ -636,7 +640,7 @@ window.Casino = (function(){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     const target=document.getElementById('view-'+name); if(target) target.classList.add('active');
     document.querySelectorAll('.side-nav button[data-view], .bottom-nav button[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
-    const titles={home:'Accueil',floor:'Plan du casino',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',wheel:'Roue de la chance',daily:'Défi du jour',season:'Pass saisonnier',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',challenges:'Défis',weekly:'Tournoi hebdomadaire',leaderboard:'Classement',account:'Connexion',profil:'Profil',shop:'Boutique',parametres:'Paramètres'};
+    const titles={home:'Accueil',floor:'Plan du casino',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',plinko:'Plinko',hilo:'Hi-Lo',scratch:'Cartes à gratter',tower:'Dragon Tower',wheel:'Roue de la chance',daily:'Défi du jour',season:'Pass saisonnier',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',challenges:'Défis',weekly:'Tournoi hebdomadaire',leaderboard:'Classement',account:'Connexion',profil:'Profil',shop:'Boutique',parametres:'Paramètres'};
     document.getElementById('viewTitle').textContent=titles[name]||name;
     document.getElementById('sidebar').classList.remove('open');
     // Rendu différé : chaque vue de progression ne reconstruit son contenu qu'à son ouverture,

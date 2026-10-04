@@ -1,0 +1,8 @@
+/* ============================================================
+   PLINKO — canvas fixe 560×410 mis à l'échelle de la largeur disponible.
+   ============================================================ */
+#view-plinko .panel{border-color:rgba(232,137,43,.45)}
+#view-plinko .scene-header .sh-name{color:#f0a860}
+.pl-stage{display:flex;justify-content:center;margin:6px 0 10px}
+#pl-canvas{width:100%;max-width:560px;height:auto;border-radius:14px;border:1px solid var(--border);
+  background:radial-gradient(ellipse at 50% 0%,rgba(212,175,55,.12),transparent 70%),var(--bg-deep)}
