@@ -33,8 +33,14 @@
       servers.push({urls:'stun:stun.l.google.com:19302'});
       if(window.CASINO_TURN_SERVERS) servers.push.apply(servers,window.CASINO_TURN_SERVERS);
     }
-    return new RTCPeerConnection({iceServers:servers});
+    const pc=new RTCPeerConnection({iceServers:servers});
+    // Diagnostic affiché à la suite d'un message d'échec (voir diagText) : quels types d'adresses
+    // (host/srflx/relay) ce côté a trouvés et si un relais TURN était configuré.
+    pc._diag={cands:{}, turn:!!(window.CASINO_TURN_SERVERS&&$('fr-stun').checked)};
+    pc.addEventListener('icecandidate',e=>{ if(e.candidate){ const t=e.candidate.type||'?'; pc._diag.cands[t]=(pc._diag.cands[t]||0)+1; } });
+    return pc;
   };
+  const diagText=pc=>{ const d=pc&&pc._diag; if(!d) return ''; const c=Object.keys(d.cands).map(k=>k+'×'+d.cands[k]).join(' ')||'aucune'; return ' [diag : adresses locales '+c+' · relais '+(d.turn?'actif':'inactif')+' · ice '+pc.iceConnectionState+']'; };
   const gathered=pc=>new Promise(res=>{
     if(pc.iceGatheringState==='complete') return res();
     const t=setTimeout(res,6000);
@@ -182,7 +188,7 @@
         // finit par passer à 'failed', géré juste en dessous comme avant.
         setTimeout(()=>{ if(pc.connectionState==='disconnected'&&pc.restartIce) pc.restartIce(); },5000);
       } else if(pending===entry&&pc.connectionState==='failed'){
-        pending=null; onFailed();
+        pending=null; onFailed(); msgEl.textContent+=diagText(pc);
       }
     });
     return entry;
@@ -298,7 +304,7 @@
         // réseau en pleine partie doit aussi déclencher une tentative de reconnexion).
         setTimeout(()=>{ if(pc.connectionState==='disconnected'&&pc.restartIce) pc.restartIce(); },5000);
       } else if(role!=='guest'&&pc.connectionState==='failed'){
-        onFailed();
+        onFailed(); msgEl.textContent+=diagText(pc);
       }
     });
     pc.ondatachannel=ev=>{
