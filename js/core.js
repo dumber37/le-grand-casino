@@ -48,7 +48,7 @@ window.Casino = (function(){
   let stats={gamesPlayed:0,totalWon:0,biggestWin:0,perGame:{}};
   try{ const raw=localStorage.getItem(STATS_KEY); if(raw){ const p=JSON.parse(raw); if(p&&typeof p==='object'&&!Array.isArray(p)){ stats=Object.assign(stats,p); if(!stats.perGame||typeof stats.perGame!=='object') stats.perGame={}; } } }catch(e){}
   const GAME_NAMES={slots:'Machine à sous',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',dragon:'Fortune Dragon',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',plinko:'Plinko',hilo:'Hi-Lo',scratch:'Cartes à gratter',tower:'Dragon Tower',wheel:'Roue de la chance',daily:'Défi du jour'};
-  C.gameName = k=>GAME_NAMES[k]||k;
+  C.gameName = k=>Object.prototype.hasOwnProperty.call(GAME_NAMES,k)?GAME_NAMES[k]:k;
   function saveStats(){ try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){} }
   // Résumé anonyme pour le comparateur de stats du Salon entre amis (friends-compare.js) : jamais
   // les objets internes (stats, history) directement, juste un instantané en lecture seule.
@@ -92,6 +92,7 @@ window.Casino = (function(){
     updateMissionsProgress(gameKey, betAmount, winAmount);
     checkVipTierUp();
     checkShareableWin(gameKey, betAmount, winAmount);
+    document.dispatchEvent(new CustomEvent('game-recorded',{detail:{game:gameKey, bet:betAmount, win:winAmount}}));
   };
   function formatTime(ts){
     const d=new Date(ts), now=new Date();

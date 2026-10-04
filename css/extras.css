@@ -41,5 +41,31 @@ html[data-felt="bordeaux"] .bj-table{background:radial-gradient(ellipse at 50% 2
 html[data-felt="royal"] .bj-table{background:radial-gradient(ellipse at 50% 25%,#6a3aa8 0%,#432570 55%,#201037 100%)}
 html[data-felt="onyx"] .bj-table{background:radial-gradient(ellipse at 50% 25%,#4a4f57 0%,#2b2f35 55%,#121417 100%)}
 
+/* ---- Bandeau d'accueil (voir js/home-ticker.js) ---- */
+.home-ticker{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;margin:10px 0;padding:10px 14px;
+  background:linear-gradient(90deg,rgba(212,175,55,.14),rgba(212,175,55,.04));border:1px solid var(--border);border-radius:14px}
+.ht-label{display:block;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.ht-label small{text-transform:none;letter-spacing:0;opacity:.8}
+.ht-jackpot b{font-size:1.35rem;color:var(--gold-bright);font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(212,175,55,.45)}
+.ht-wins{flex:1;min-width:200px}
+.ht-feed{display:block;font-size:.86rem;color:var(--cream);min-height:1.3em}
+.ht-feed.in{animation:htIn .45s ease}
+@keyframes htIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---- Salon : réactions, fil et classement (voir js/friends-extras.js) ---- */
+#fr-table{position:relative}
+.fr-react{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:2px 0 8px}
+.fr-react button{background:var(--bg-deep);border:1px solid var(--border);border-radius:999px;font-size:1.15rem;padding:4px 10px;cursor:pointer;transition:transform .12s ease}
+.fr-react button:hover{transform:scale(1.15);border-color:var(--gold)}
+.fr-feed{min-height:0;margin:0 0 6px}
+.fr-feed-line{font-size:.78rem;color:var(--cream);text-align:center;animation:htIn .3s ease}
+.fr-float{position:absolute;bottom:40%;font-size:2rem;pointer-events:none;animation:frFloat 1.8s ease-out forwards;z-index:5}
+@keyframes frFloat{from{opacity:1;transform:translateY(0) scale(.8)}to{opacity:0;transform:translateY(-130px) scale(1.5)}}
+.fr-rank{margin:4px 0 10px}
+.fr-rank-title{font-size:.78rem;color:var(--gold-bright);margin-bottom:4px}
+.fr-rank-title small{color:var(--muted)}
+.fr-rank-row{display:flex;justify-content:space-between;font-size:.8rem;padding:4px 8px;border-bottom:1px dashed var(--border);color:var(--cream)}
+.fr-rank-row b.pos{color:var(--good)}.fr-rank-row b.neg{color:var(--red)}
+
 /* ---- Effets de victoire (voir js/win-effects.js) ---- */
 #winFx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9000}

@@ -139,6 +139,10 @@
           <div class="chip-stat">💎<span id="home-vip">Bronze</span><small>VIP</small></div>
         </div>
         <div class="xp-bar-wrap"><div class="xp-bar" id="xpBar"></div></div>
+        <div class="home-ticker" id="homeTicker" aria-label="Jackpot et derniers gros gains">
+          <div class="ht-jackpot"><span class="ht-label">🎰 Jackpot du casino <small>(décoratif)</small></span><b id="jackpotVal">—</b></div>
+          <div class="ht-wins"><span class="ht-label">🔔 Derniers gros gains</span><span id="bigWinsTicker" class="ht-feed"></span></div>
+        </div>
         <div class="event-banner" id="event-banner" style="display:none"></div>
         <div class="missions-home-card" data-view="missions">
           <div class="mh-icon">🎯</div>
@@ -798,6 +802,9 @@
             <div class="zone"><div class="zone-label"><span>Player</span><span id="fr-playerScore"></span></div><div class="cards" id="fr-playerCards"></div></div>
           </div>
           <div id="fr-players" class="fr-players"></div>
+          <div class="fr-react" id="fr-react"></div>
+          <div class="fr-feed" id="fr-feed" aria-live="polite"></div>
+          <div class="fr-rank" id="fr-rank"></div>
           <div class="roulette-grid" id="fr-sides"><button data-side="player">Player</button><button data-side="banker">Banker</button><button data-side="tie">Tie</button></div>
           <div class="bet-row">
             <div class="bet-group"><button id="fr-betMinus" aria-label="Diminuer la mise">−</button><span class="bet-amount" id="fr-betAmount">25</span><button id="fr-betPlus" aria-label="Augmenter la mise">+</button></div>
@@ -1157,6 +1164,8 @@
 <script src="js/qrcode.js"></script>
 <script src="js/friends.js"></script>
 <script src="js/friends-compare.js"></script>
+<script src="js/friends-extras.js"></script>
+<script src="js/home-ticker.js"></script>
 <script src="js/poker.js"></script>
 <script src="js/multi-blackjack.js"></script>
 <script src="js/multi-bus.js"></script>
