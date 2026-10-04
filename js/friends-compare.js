@@ -13,7 +13,7 @@ window.Casino = window.Casino || {};
   const btn=$('fr-compareBtn'), box=$('fr-compareBox');
   if(!btn || !box || !C.friends) return;
 
-  const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const escapeHtml=C.escapeHtml;
   function mySummary(){
     const s=C.getStatsSummary?C.getStatsSummary():{gamesPlayed:0,totalWon:0,biggestWin:0,favGame:null};
     return {name:C.friends.name(), balance:C.state.balance, wagered:C.state.totalWagered,

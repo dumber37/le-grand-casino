@@ -6,7 +6,7 @@
    versionné : à chaque changement de fichiers, incrémenter le
    suffixe fait automatiquement place nette de l'ancien cache.
    ============================================================ */
-const CACHE_NAME = 'grand-casino-v38';
+const CACHE_NAME = 'grand-casino-v39';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './css/base.css', './css/slots.css', './css/dragon-slots.css', './css/blackjack.css',
@@ -18,7 +18,7 @@ const ASSETS = [
   './js/baccarat.js', './js/coinflip.js', './js/war.js', './js/keno.js', './js/craps.js', './js/weekly.js', './js/season.js', './js/stats-chart.js', './js/wheel.js', './js/daily-challenge.js', './js/shop.js', './js/mines.js', './js/crash.js',
   './js/video-poker.js', './js/cases.js', './js/poker.js', './js/friends.js', './js/friends-compare.js', './js/avatars.js', './js/chips.js', './js/multi-blackjack.js', './js/multi-bus.js', './js/multi-crash.js', './js/floor.js', './js/challenges.js', './js/cloud-sync.js', './js/leaderboard.js', './js/shortcuts.js', './js/ambiance.js',
   './js/qrcode-lib.js', './js/qrcode.js', './js/install-prompt.js', './js/save-transfer.js',
-  './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-192.png', './assets/icon-maskable-512.png'
+  './js/sw-register.js', './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-192.png', './assets/icon-maskable-512.png'
 ];
 
 self.addEventListener('install', (e)=>{
@@ -35,10 +35,15 @@ self.addEventListener('activate', (e)=>{
 
 self.addEventListener('fetch', (e)=>{
   if(e.request.method!=='GET') return;
+  // Uniquement les fichiers du site : les requêtes vers Firebase/Firestore, Google ou Metered
+  // (poignée de main des salons, SDK) ne doivent jamais être mises en cache ni resservies périmées.
+  if(new URL(e.request.url).origin!==self.location.origin) return;
   e.respondWith(
     fetch(e.request).then(res=>{
-      const copy=res.clone();
-      caches.open(CACHE_NAME).then(cache=>cache.put(e.request, copy)).catch(()=>{});
+      if(res.ok){
+        const copy=res.clone();
+        caches.open(CACHE_NAME).then(cache=>cache.put(e.request, copy)).catch(()=>{});
+      }
       return res;
     }).catch(()=>caches.match(e.request))
   );

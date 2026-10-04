@@ -176,7 +176,7 @@
     if(!guestMode){ startBtn.disabled=s.flying; startBtn.style.display=F()&&F().role()==='host'?'':'none'; }
     msg.textContent=s.msg;
   }
-  const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const escapeHtml=C.escapeHtml;
 
   // ---------- Réseau ----------
   function guestReset(text){

@@ -98,7 +98,7 @@
       box.appendChild(row);
     });
   }
-  const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const escapeHtml=C.escapeHtml;
 
   // ---------- Manche (hôte) ----------
   function deal(){
@@ -275,6 +275,7 @@
         }
       });
     }catch(e){
+      try{ pc.close(); }catch(x){}
       pending=null;
       say('Impossible de créer un salon en ligne (vérifie ta connexion, ou que la règle Firestore "rooms" est bien publiée — voir js/firebase-config.js). Utilise le mode avancé ci-dessous en attendant.');
     }
@@ -293,6 +294,9 @@
     }catch(e){ say('Impossible de contacter le service de salons — utilise le mode avancé ci-dessous.'); return; }
     if(!snap.exists()){ say('Code invalide ou salon expiré — redemande un code à ton hôte.'); return; }
     const data=snap.data();
+    // Un salon dont l'hôte a fermé l'onglet sans « Quitter » reste dans Firestore : au-delà de
+    // 15 min son offre n'est plus joignable, autant le dire clairement plutôt que d'échouer 30 s.
+    if(!data.createdAt||Date.now()-data.createdAt>15*60*1000){ say('Ce code a expiré — demande à ton hôte d’en générer un nouveau.'); return; }
     if(data.answer){ say('Ce salon a déjà un invité — demande un nouveau code à ton hôte.'); return; }
     const pc=newGuestPc(()=>say('La connexion a échoué. Redemande un nouveau code à ton hôte et réessaie.'));
     try{

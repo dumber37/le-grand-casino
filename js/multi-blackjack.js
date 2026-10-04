@@ -76,7 +76,7 @@
       if(s.me===i) return; // affiché en bas, dans betBox/actions area
       const d=document.createElement('div'); d.className='hand-block'+(seat.turn?' active':'')+(seat.result&&seat.result.cls?' '+seat.result.cls:'');
       const av=C.avatars?C.avatars.html(seat.kind==='ai'?seat.name:seat.name,22):'';
-      d.innerHTML='<div class="zone-label"><span>'+av+seat.name+'</span><span>'+(seat.cards.length?R().handScore(seat.cards):'')+'</span></div>'
+      d.innerHTML='<div class="zone-label"><span>'+av+C.escapeHtml(seat.name)+'</span><span>'+(seat.cards.length?R().handScore(seat.cards):'')+'</span></div>'
         +'<div class="cards"></div><div class="hand-bet">'+(seat.result?seat.result.label:(seat.bet>0?('Mise : '+seat.bet+' '+(C.chips?C.chips.html(seat.bet,{scale:.6,label:false}):'')):'En attente'))+'</div>';
       const row=d.querySelector('.cards'); seat.cards.forEach(c=>row.appendChild(C.renderCard(c,false)));
       seatsEl.appendChild(d);

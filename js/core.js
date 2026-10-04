@@ -16,8 +16,10 @@ window.Casino = (function(){
   // les modules Notifications/Son chargés — voir DAILY_BONUS_TABLE et son octroi en fin de script.
   let dailyBonusPending=null;
   try{
-    const s=localStorage.getItem(BAL_KEY); if(s!==null) C.state.balance=parseInt(s,10);
-    C.state.totalWagered=parseInt(localStorage.getItem(WAG_KEY)||'0',10);
+    // Valeur illisible (stockage corrompu, import fautif) : garder le solde par défaut plutôt que NaN,
+    // qui se propagerait à tous les jeux (mises, gains, affichage).
+    const s=localStorage.getItem(BAL_KEY); const bal=parseInt(s,10); if(s!==null&&!isNaN(bal)) C.state.balance=Math.max(0,bal);
+    C.state.totalWagered=parseInt(localStorage.getItem(WAG_KEY)||'0',10)||0;
     const today=new Date().toISOString().slice(0,10);
     const last=localStorage.getItem(LAST_KEY);
     C.state.streak=parseInt(localStorage.getItem(STREAK_KEY)||'0',10)||1;
@@ -44,7 +46,7 @@ window.Casino = (function(){
   // ====== MODULE: Statistics ======
   const STATS_KEY='grand-casino-stats';
   let stats={gamesPlayed:0,totalWon:0,biggestWin:0,perGame:{}};
-  try{ const raw=localStorage.getItem(STATS_KEY); if(raw) stats=JSON.parse(raw); }catch(e){}
+  try{ const raw=localStorage.getItem(STATS_KEY); if(raw){ const p=JSON.parse(raw); if(p&&typeof p==='object'&&!Array.isArray(p)){ stats=Object.assign(stats,p); if(!stats.perGame||typeof stats.perGame!=='object') stats.perGame={}; } } }catch(e){}
   const GAME_NAMES={slots:'Machine à sous',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',dragon:'Fortune Dragon',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',wheel:'Roue de la chance',daily:'Défi du jour'};
   C.gameName = k=>GAME_NAMES[k]||k;
   function saveStats(){ try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){} }
@@ -59,7 +61,7 @@ window.Casino = (function(){
   // ====== MODULE: History (100 dernières parties) ======
   const HIST_KEY='grand-casino-history';
   let history=[];
-  try{ const raw=localStorage.getItem(HIST_KEY); if(raw) history=JSON.parse(raw); }catch(e){}
+  try{ const raw=localStorage.getItem(HIST_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) history=p; } }catch(e){}
   function saveHistory(){ try{ localStorage.setItem(HIST_KEY, JSON.stringify(history)); }catch(e){} }
   // Source unique pour tout module qui relit l'historique (stats-chart.js, weekly.js,
   // season.js...) : évite que chacun reparse sa propre copie de grand-casino-history
@@ -135,11 +137,14 @@ window.Casino = (function(){
     setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),300); }, life);
   }
   C.showToast = showToast;
+  // À utiliser pour toute donnée venue d'un autre joueur (nom d'ami, classement importé...) avant de
+  // l'insérer via innerHTML — une seule version partagée au lieu d'une copie par fichier.
+  C.escapeHtml = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   // ====== MODULE: Favorites ======
   const FAV_KEY='grand-casino-favorites';
   let favorites=[];
-  try{ const raw=localStorage.getItem(FAV_KEY); if(raw) favorites=JSON.parse(raw); }catch(e){}
+  try{ const raw=localStorage.getItem(FAV_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) favorites=p; } }catch(e){}
   function saveFavorites(){ try{ localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); }catch(e){} }
   const GAMES_META=[
     {key:'slots',icon:'🎰',name:'Machine à sous',tag:'Classique'},
@@ -181,7 +186,7 @@ window.Casino = (function(){
   // ====== MODULE: Achievements ======
   const ACH_KEY='grand-casino-achievements';
   let unlockedAch=[];
-  try{ const raw=localStorage.getItem(ACH_KEY); if(raw) unlockedAch=JSON.parse(raw); }catch(e){}
+  try{ const raw=localStorage.getItem(ACH_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) unlockedAch=p; } }catch(e){}
   function saveUnlockedAch(){ try{ localStorage.setItem(ACH_KEY, JSON.stringify(unlockedAch)); }catch(e){} }
   C.isAchUnlocked = id=>unlockedAch.includes(id);
   // Journal des succès récents (profil) : petit horodatage séparé, posé en plus de unlockedAch
@@ -189,7 +194,7 @@ window.Casino = (function(){
   // 20 derniers déblocages suffisent pour un fil "récents", pas besoin d'historique complet.
   const ACH_LOG_KEY='grand-casino-ach-log';
   let achLog=[];
-  try{ const raw=localStorage.getItem(ACH_LOG_KEY); if(raw) achLog=JSON.parse(raw); }catch(e){}
+  try{ const raw=localStorage.getItem(ACH_LOG_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) achLog=p; } }catch(e){}
   function saveAchLog(){ try{ localStorage.setItem(ACH_LOG_KEY, JSON.stringify(achLog)); }catch(e){} }
   // pgCount : petit raccourci réutilisé par plusieurs succès/missions ci-dessous pour lire le
   // nombre de parties d'un jeu dans stats.perGame, sans répéter la même garde à chaque fois.

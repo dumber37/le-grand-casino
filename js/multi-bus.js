@@ -142,7 +142,7 @@
       if(i===s.me) return;
       const row=document.createElement('div'); row.className='bus-rival'+(seat.done&&seat.mult>0?' rival-best':(seat.done?' rival-out':''));
       const av=C.avatars?C.avatars.html(seat.name,22):'';
-      row.innerHTML='<span class="rival-name">'+av+seat.name+'</span><span class="rival-res">'+(seat.bet<=0?'en attente':(seat.done?(seat.mult>0?'encaissé x'+seat.mult:'éliminé'):'étape '+(seat.stage+1)+' — mise '+seat.bet))+'</span>';
+      row.innerHTML='<span class="rival-name">'+av+C.escapeHtml(seat.name)+'</span><span class="rival-res">'+(seat.bet<=0?'en attente':(seat.done?(seat.mult>0?'encaissé x'+seat.mult:'éliminé'):'étape '+(seat.stage+1)+' — mise '+seat.bet))+'</span>';
       seatsEl.appendChild(row);
     });
     msg.textContent=s.msg;

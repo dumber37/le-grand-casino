@@ -40,14 +40,16 @@ window.Casino=window.Casino||{};
     for(const k of ['bg','skin','hair','shirt']) if(typeof t[k]!=='string'||!HEX.test(t[k])) return null;
     return {bg:t.bg,skin:t.skin,hair:t.hair,shirt:t.shirt,style:t.style,glasses:!!t.glasses,mustache:!!t.mustache,beard:!!t.beard,hat:!!t.hat,foxEars:!!t.foxEars};
   }
-  const remote={};   // nom d'un ami -> traits reçus
+  // Sans prototype : un ami nommé « constructor » ou « __proto__ » ne doit pas tomber sur les
+  // propriétés héritées d'Object (visage cassé, ou pire héritage de traits pour tous les noms).
+  const remote=Object.create(null);   // nom d'un ami -> traits reçus
   let custom=null;
   try{ custom=clean(JSON.parse(localStorage.getItem(CUSTOM_KEY)||'null')); }catch(e){}
   function pseudo(){ try{ return localStorage.getItem('grand-casino-pseudo')||'Joueur'; }catch(e){ return 'Joueur'; } }
   const myTraits=()=>custom||traitsFor(pseudo());
 
   function traitsFor(name){
-    if(BOTS[name]) return BOTS[name];
+    if(Object.prototype.hasOwnProperty.call(BOTS,name)) return BOTS[name];
     if(remote[name]) return remote[name];
     const h=hash(name||'?');
     return {
@@ -126,7 +128,7 @@ window.Casino=window.Casino||{};
   }
 
   // ---------- API visage ----------
-  const cache={};
+  const cache=Object.create(null);
   const wrap=(svg,size)=>'<span class="av" style="width:'+(size||24)+'px;height:'+(size||24)+'px">'+svg+'</span>';
   function face(name){ return cache[name]||(cache[name]=faceSvg(traitsFor(name))); }
   // 'Toi' = ton avatar personnalisé ; bot connu = son visage ; ami = ses traits reçus ; sinon visage

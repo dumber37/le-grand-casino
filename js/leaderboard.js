@@ -54,7 +54,7 @@ window.Casino=window.Casino||{};
     if(metric==='crashBestMult') return s.crashBestMult>0 ? 'x'+s.crashBestMult.toFixed(2) : '—';
     return fmt(metricValue(s,metric));
   }
-  const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const escapeHtml=C.escapeHtml;
 
   function render(){
     const metric=sortEl.value;

@@ -26,6 +26,20 @@
      }
    }
 
+   VERSION RENFORCÉE recommandée pour le bloc /rooms (même fonctionnement
+   pour les joueurs, mais personne ne peut lister tous les salons, écraser
+   l'offre d'un autre, ni remplacer une réponse déjà donnée) :
+
+       match /rooms/{code} {
+         allow get: if true;
+         allow list: if false;
+         allow create: if request.resource.data.keys().hasOnly(['offer','answer','createdAt'])
+                       && request.resource.data.answer == null;
+         allow update: if resource.data.answer == null
+                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer']);
+         allow delete: if true;
+       }
+
    Sans le second bloc, le bouton « Générer un code rapide » du Salon
    entre amis échoue avec une erreur "permission-denied" — le Salon
    entre amis reste utilisable via son mode avancé (code/lien/QR

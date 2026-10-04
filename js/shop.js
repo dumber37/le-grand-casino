@@ -159,7 +159,9 @@ window.Casino = window.Casino || {};
     const eqS=e.target.closest('[data-equip-chipskin]');
     if(eqS){ C.chips.setChipSkin(eqS.dataset.equipChipskin); render(); return; }
   });
-  document.addEventListener('balance-changed', render);
+  // Seule la Boutique affichée a besoin de se redessiner quand le solde change (boutons « Acheter »
+  // grisés) : sans cette garde, chaque mise dans n'importe quel jeu reconstruisait ses 4 listes.
+  document.addEventListener('balance-changed', ()=>{ const v=document.getElementById('view-shop'); if(v&&v.classList.contains('active')) render(); });
 
   C.renderShop = render;
 })();
