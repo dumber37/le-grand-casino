@@ -19,6 +19,19 @@
 .reel.reel-grid .symbol{flex:1;width:100%;min-width:0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:clamp(.8rem,4.2vw,1.7rem)}
 
 /* ---- Animations du moteur de machine à sous (partagées par toutes les machines) ---- */
+/* Rouleau qui DÉFILE (voir beginSpinFx/endSpinFx dans slot-engine.js) : pendant le tour une bande de
+   symboles (data-strip) défile verticalement et floue ; à l'arrêt le symbole final (data-land) glisse
+   dans la fenêtre avec un petit dépassement. Le vrai contenu est masqué (font-size/visibility) pendant
+   ces deux phases — !important car certaines machines fixent la taille de police par #id. */
+.reel{position:relative}
+.reel.strip-on,.reel.landing{font-size:0 !important}
+.reel.strip-on .symbol,.reel.landing .symbol{visibility:hidden}
+.reel.strip-on::before,.reel.landing::after{position:absolute;left:0;right:0;top:var(--pad,0px);white-space:pre;text-align:center;
+  line-height:var(--cell);font-size:var(--reel-fs);pointer-events:none}
+.reel.strip-on::before{content:attr(data-strip);animation:reelStrip var(--spin-dur,.3s) linear infinite;filter:blur(1.3px)}
+@keyframes reelStrip{from{transform:translateY(0)}to{transform:translateY(calc(-1 * var(--strip-shift)))}}
+.reel.landing::after{content:attr(data-land);animation:reelLand .34s cubic-bezier(.3,1.35,.5,1) forwards}
+@keyframes reelLand{from{transform:translateY(calc(-1 * var(--land-shift)))}to{transform:translateY(0)}}
 /* Rouleau qui s'arrête avec un léger rebond */
 .reel.reel-bounce{animation:reelBounce .42s cubic-bezier(.34,1.56,.64,1)}
 @keyframes reelBounce{0%{transform:translateY(-14px) scale(1.05)}55%{transform:translateY(4px) scale(.97)}100%{transform:translateY(0) scale(1)}}

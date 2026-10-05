@@ -63,16 +63,41 @@
       C.state.balance-=roundBet; C.trackWager(roundBet); C.saveBalance(); C.renderBalance();
     }
     rolling=true; render();
-    diceEl.classList.add('rolling');
     C.sound&&C.sound('spin');
     msg.textContent='Les dés roulent...';
+    const T=1150, animate=document.documentElement.getAttribute('data-motion')!=='reduce'&&die1El.animate;
+    if(animate) tumble(T); else diceEl.classList.add('rolling');
     setTimeout(()=>{
       const d1=1+Math.floor(Math.random()*6), d2=1+Math.floor(Math.random()*6);
+      clearInterval(faceTimer);
       setDie(die1El,d1); setDie(die2El,d2);
       diceEl.classList.remove('rolling');
       C.sound&&C.sound('card');
       resolveRoll(d1+d2);
-    }, 650);
+    }, T);
+  }
+  // Les dés sont LANCÉS depuis le bord de la table : ils roulent en tournant, rebondissent deux fois
+  // en perdant de la hauteur et s'immobilisent, pendant que leur face change à chaque tour (animation
+  // seule : les valeurs finales sont tirées juste après, comme avant). Rotation finale = multiple de
+  // 360° et motifs symétriques à 180° : la face affichée à l'arrêt est toujours lisible à l'endroit.
+  let faceTimer=null;
+  function tumble(T){
+    [die1El,die2El].forEach((die,i)=>{
+      const s=i?1:-1;
+      die.animate([
+        {transform:'translate('+(s*-110)+'px,-70px) rotate('+(s*-240)+'deg) scale(.7)',opacity:0,offset:0},
+        {opacity:1,offset:.12},
+        {transform:'translate('+(s*-55)+'px,6px) rotate('+(s*120)+'deg) scale(1.05)',offset:.34},
+        {transform:'translate('+(s*-22)+'px,-30px) rotate('+(s*300)+'deg) scale(1.02)',offset:.5},
+        {transform:'translate('+(s*-6)+'px,3px) rotate('+(s*470)+'deg) scale(1)',offset:.7},
+        {transform:'translate('+(s*-1)+'px,-9px) rotate('+(s*600)+'deg) scale(1)',offset:.84},
+        {transform:'translate(0,0) rotate('+(s*720)+'deg) scale(1)',opacity:1,offset:1}
+      ],{duration:T,delay:i*90,easing:'cubic-bezier(.3,.6,.4,1)',fill:'backwards'});
+    });
+    setTimeout(()=>{ C.sound&&C.sound('clack'); },T*.34);
+    setTimeout(()=>{ C.sound&&C.sound('clack'); },T*.7);
+    clearInterval(faceTimer);
+    faceTimer=setInterval(()=>{ setDie(die1El,1+Math.floor(Math.random()*6)); setDie(die2El,1+Math.floor(Math.random()*6)); },95);
   }
   rollBtn.addEventListener('click', roll);
   setDie(die1El,1); setDie(die2El,1);

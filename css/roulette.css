@@ -29,13 +29,13 @@
   transform:rotateX(56deg);
   transform-style:preserve-3d;
 }
-.wheel{position:absolute;inset:10px;border-radius:50%;border:5px solid var(--gold);box-shadow:0 8px 24px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.5);transition:transform 3.4s cubic-bezier(.14,.7,.15,1);transform-style:preserve-3d}
+.wheel{position:absolute;inset:10px;border-radius:50%;border:5px solid var(--gold);box-shadow:0 8px 24px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.5);transition:transform 5s cubic-bezier(.16,.52,.18,1);transform-style:preserve-3d}
 .wheel span.num{position:absolute;left:50%;top:50%;font-size:.5rem;font-weight:bold;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);transform-origin:0 0}
 /* Animation signature : la case gagnante pulse/brille après l'arrêt de la bille (ne touche jamais transform, la position reste intacte) */
 .wheel span.num.wheel-num-win{animation:wheelNumWin 1s ease-in-out 2;z-index:4}
 @keyframes wheelNumWin{0%,100%{filter:none}50%{filter:drop-shadow(0 0 6px var(--gold-bright)) brightness(1.7)}}
 .wheel-pointer{position:absolute;left:50%;top:2px;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:14px solid var(--gold-bright);z-index:5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-.ball-orbit{position:absolute;inset:10px;transition:transform 3.4s cubic-bezier(.1,.7,.2,1);pointer-events:none}
+.ball-orbit{position:absolute;inset:10px;transition:transform 5s cubic-bezier(.06,.62,.22,1);pointer-events:none}
 .ball{position:absolute;top:4px;left:50%;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ccc);box-shadow:0 0 5px rgba(0,0,0,.6)}
 /* Petit rebond au moment où la bille se pose dans la case — purement 2D (translateY),
    jamais de rotation 3D : aucun rapport avec le bug backface-visibility déjà rencontré

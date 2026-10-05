@@ -35,6 +35,12 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .pin-setup{margin:0 2px 8px}
 .pin-setup .fr-code-input{letter-spacing:.3em}
 
+/* ---- Distribution animée (voir js/deal-anim.js) : quand le module est actif, c'est lui qui anime
+   l'arrivée des cartes depuis la main du croupier ; on coupe l'ancien pop-in CSS (et le balayage
+   unique du bras) pour ne pas animer deux fois. Sans JS ces règles ne s'appliquent pas. ---- */
+html.deal-js .card-3d{animation:none !important}
+html.deal-js .dealer[data-dealer="cards"].dealing .d-arm{animation:none}
+
 /* ---- Tapis de table achetables (voir shop.js) : seule la surface du feutre change ---- */
 html[data-felt="ocean"] .bj-table{background:radial-gradient(ellipse at 50% 25%,#1d5d9b 0%,#123a63 55%,#081d33 100%)}
 html[data-felt="bordeaux"] .bj-table{background:radial-gradient(ellipse at 50% 25%,#9b2335 0%,#661523 55%,#33090f 100%)}

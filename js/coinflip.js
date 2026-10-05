@@ -16,6 +16,7 @@
   betMinus.addEventListener('click',()=>{ if(!spinning){ bet=Math.max(5,bet-5); render(); } });
   betPlus.addEventListener('click',()=>{ if(!spinning){ bet=Math.min(100,bet+5); render(); } });
   document.addEventListener('balance-changed',render);
+  const FLIP_MS=1500; // doit rester égal à la transition de .coin-inner (coinflip.css)
   flipBtn.addEventListener('click',()=>{
     if(spinning) return;
     if(!selectedSide){ msg.textContent='Choisis Pile ou Face.'; return; }
@@ -33,9 +34,21 @@
     // Le résultat est tiré immédiatement (même instant qu'avant) ; seule la mise à jour
     // visuelle/du solde est différée de 800ms pour laisser la pièce tourner en 3D.
     const result=Math.random()<0.5?'pile':'face';
-    spins+=4+Math.floor(Math.random()*3);
+    spins+=7+Math.floor(Math.random()*4);
     const targetDeg=spins*360+(result==='face'?180:0);
     coinInner.style.transform='rotateY('+targetDeg+'deg)';
+    // La pièce est LANCÉE en l'air : elle monte vers la caméra (elle grossit), retombe et rebondit
+    // une fois. Animation sur le conteneur extérieur seulement (jamais sur .coin-inner/.coin-face, dont
+    // la rotation 3D reste une transition CSS) ; la durée suit la transition de .coin-inner.
+    if(document.documentElement.getAttribute('data-motion')!=='reduce'&&coinEl.animate){
+      coinEl.animate([
+        {transform:'translateY(0) scale(1)',offset:0},
+        {transform:'translateY(-130px) scale(1.45)',offset:.42},
+        {transform:'translateY(0) scale(1)',offset:.82},
+        {transform:'translateY(-16px) scale(1.06)',offset:.9},
+        {transform:'translateY(0) scale(1)',offset:1}
+      ],{duration:FLIP_MS,easing:'cubic-bezier(.3,.1,.3,1)'});
+    }
 
     setTimeout(()=>{
       let win = result===selectedSide ? roundBet*2 : 0;
@@ -46,7 +59,7 @@
       C.state.balance+=win; C.saveBalance(); C.renderBalance();
       C.recordGame('coinflip', roundBet, win); if(win>0) C.flashWin(msg);
       spinning=false; render();
-    },800);
+    },FLIP_MS);
   });
   render();
 })();

@@ -48,6 +48,40 @@ window.Casino = window.Casino || {};
     document.addEventListener('balance-changed',render);
 
     function bounceReel(r){ r.classList.remove('reel-bounce'); void r.offsetWidth; r.classList.add('reel-bounce'); setTimeout(()=>r.classList.remove('reel-bounce'),450); }
+
+    // ---- Rouleau qui DÉFILE vraiment (purement visuel, le tirage est fait avant) : pendant le tour,
+    // une bande de symboles aléatoires défile verticalement et floue (pseudo-élément ::before, voir
+    // slots.css) ; à l'arrêt, le symbole final glisse dans la fenêtre avec un petit dépassement
+    // (::after) avant de laisser place au vrai contenu. Le défilement ralentit sur les derniers
+    // tics. Sans effet si « Réduire les animations » est actif : on garde l'ancien clignotement. ----
+    const motionOk=()=>document.documentElement.getAttribute('data-motion')!=='reduce';
+    function beginSpinFx(host,nRows){
+      if(!motionOk()) return;
+      const sym=host.querySelector('.symbol'), cs=getComputedStyle(host);
+      const fs=getComputedStyle(sym||host).fontSize, L=8;
+      // Pas d'une ligne : en grille, hauteur d'une cellule + espace entre cellules ; sinon tout le rouleau.
+      const cell=sym?sym.offsetHeight+(parseFloat(cs.rowGap)||0):host.clientHeight;
+      const lines=[]; for(let i=0;i<L;i++) lines.push(weighted().icon);
+      host.style.setProperty('--reel-fs',fs); host.style.setProperty('--cell',cell+'px'); host.style.setProperty('--pad',(sym?parseFloat(cs.paddingTop)||0:0)+'px');
+      host.style.setProperty('--strip-shift',(L*cell)+'px'); host.style.setProperty('--spin-dur','.3s');
+      host.dataset.strip=lines.concat(lines).join('\n');
+      host.classList.add('strip-on');
+    }
+    function slowSpinFx(host,remaining){
+      if(!host.classList.contains('strip-on')) return;
+      if(remaining===3) host.style.setProperty('--spin-dur','.42s');
+      else if(remaining===1) host.style.setProperty('--spin-dur','.75s');
+    }
+    function endSpinFx(host,finals){
+      if(!host.classList.contains('strip-on')) return;
+      const n=finals.length, cell=parseFloat(host.style.getPropertyValue('--cell'))||0;
+      const before=[]; for(let i=0;i<n;i++) before.push(weighted().icon);
+      host.dataset.land=finals.concat(before).join('\n');
+      host.style.setProperty('--land-shift',(n*cell)+'px');
+      host.classList.remove('strip-on'); host.classList.add('landing');
+      C.sound&&C.sound('clack');
+      setTimeout(()=>host.classList.remove('landing'),360);
+    }
     // Le minuteur de retrait est annulé/reprogrammé à chaque appel : sans ça, un tour gagnant
     // relancé juste avant la fin du flourish précédent se faisait couper son animation par le
     // retrait différé (setTimeout) du tour d'avant.
@@ -112,7 +146,7 @@ window.Casino = window.Casino || {};
         C.state.balance-=bet; C.trackWager(bet); C.saveBalance(); C.renderBalance();
         C.sound&&C.sound('lever');
         lever.classList.add('pulled','disabled'); msg.textContent='Ça tourne...';
-        reels.forEach(r=>{ r.classList.add('spin-active'); r.classList.remove('symbol-blink','jackpot-flourish'); });
+        reels.forEach(r=>{ beginSpinFx(r,1); r.classList.add('spin-active'); r.classList.remove('symbol-blink','jackpot-flourish'); });
 
         const results=[weighted(),weighted(),weighted()];
         const stopAt=[9,11,13]; let count=0;
@@ -122,9 +156,9 @@ window.Casino = window.Casino || {};
         // et les indices d'arrêt (stopAt/results, déjà déterminés ci-dessus) restent identiques.
         function tick(){
           count++;
-          reels.forEach((r,i)=>{ if(count<stopAt[i]) r.textContent=weighted().icon; });
+          reels.forEach((r,i)=>{ if(count<stopAt[i]){ r.textContent=weighted().icon; slowSpinFx(r,stopAt[i]-count); } });
           stopAt.forEach((s,i)=>{
-            if(count===s){ reels[i].textContent=results[i].icon; reels[i].classList.remove('spin-active'); bounceReel(reels[i]); }
+            if(count===s){ reels[i].textContent=results[i].icon; endSpinFx(reels[i],[results[i].icon]); reels[i].classList.remove('spin-active'); bounceReel(reels[i]); }
           });
           if(count>=stopAt[2]){
             const icons=results.map(r=>r.icon);
@@ -176,6 +210,7 @@ window.Casino = window.Casino || {};
         C.sound&&C.sound('lever');
         lever.classList.add('pulled','disabled'); msg.textContent='Ça tourne...';
         reelCols.forEach(col=>{
+          beginSpinFx(col,rows);
           col.classList.add('spin-active');
           Array.from(col.children).forEach(cell=>cell.classList.remove('symbol-blink','jackpot-flourish'));
         });
@@ -188,11 +223,12 @@ window.Casino = window.Casino || {};
         function tick(){
           count++;
           reelCols.forEach((col,c)=>{
-            if(count<stopAt[c]) Array.from(col.children).forEach(cell=>{ cell.textContent=weighted().icon; });
+            if(count<stopAt[c]){ Array.from(col.children).forEach(cell=>{ cell.textContent=weighted().icon; }); slowSpinFx(col,stopAt[c]-count); }
           });
           stopAt.forEach((s,c)=>{
             if(count===s){
               Array.from(reelCols[c].children).forEach((cell,r)=>{ cell.textContent=grid[r][c].icon; });
+              endSpinFx(reelCols[c],grid.map(row=>row[c].icon));
               reelCols[c].classList.remove('spin-active');
               bounceReel(reelCols[c]);
             }

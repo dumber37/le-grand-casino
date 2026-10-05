@@ -54,6 +54,11 @@ window.Casino = window.Casino || {};
     click:       (c,t)=> tone(c, 1250, t, 0.045, 'square', 0.045),
     lever:       (c,t)=>{ tone(c, 220, t, 0.09, 'square', 0.06); tone(c, 90, t+0.06, 0.14, 'square', 0.05); },
     card:        (c,t)=>{ sweep(c, 900, 500, t, 0.05, 'triangle', 0.055); },
+    // Carte lancée par le croupier : petit « fiouu » qui retombe, puis le tap sur le feutre.
+    deal:        (c,t)=>{ sweep(c, 1900, 650, t, 0.09, 'triangle', 0.03); tone(c, 190, t+0.1, 0.045, 'sine', 0.045); },
+    // Rouleau de machine à sous qui s'arrête (clac sec) et rebond de la bille de roulette.
+    clack:       (c,t)=>{ tone(c, 130, t, 0.05, 'square', 0.05); tone(c, 880, t, 0.025, 'square', 0.025); },
+    hop:         (c,t)=> tone(c, 1700, t, 0.035, 'sine', 0.035),
     reveal:      (c,t)=> tone(c, 1400, t, 0.06, 'sine', 0.05),
     spin:        (c,t)=> sweep(c, 260, 620, t, 0.35, 'sine', 0.035),
     win:         (c,t)=>{ [523.25,659.25,783.99].forEach((f,i)=>tone(c, f, t+i*0.075, 0.2, 'sine', 0.08)); },

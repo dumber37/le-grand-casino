@@ -102,9 +102,10 @@
     const currentMod=((wheelRotation%360)+360)%360;
     const delta=((target-currentMod)+360)%360;
     wheelRotation+=5*360+delta;
-    ballRotation-=6*360;
+    ballRotation-=9*360;
     wheelEl.style.transform='rotate('+wheelRotation+'deg)';
     ballOrbitEl.style.transform='rotate('+ballRotation+'deg)';
+    animateBall();
 
     setTimeout(()=>{
       let win=0;
@@ -148,7 +149,31 @@
       C.state.balance+=win; C.saveBalance(); C.renderBalance();
       C.recordGame('roulette', bet, win); if(win>0) C.flashWin(msg);
       spinning=false; render();
-    },3450);
+    },SPIN_MS+50);
+  }
+  // Trajectoire de la bille (purement visuelle : le numéro est déjà tiré et la roue s'arrête dessus).
+  // Elle court d'abord sur la piste extérieure (translateY négatif = plus près du bord), ralentit,
+  // puis tombe vers les alvéoles en rebondissant sur les séparateurs avant de se poser. Une seule
+  // animation sur .ball (jamais sur l'orbite, déjà animée par transition) : le rebond final
+  // .ball-settle (CSS) prend le relais une fois celle-ci terminée.
+  const SPIN_MS=5000, HOPS=[0.70,0.80,0.88,0.95];
+  function animateBall(){
+    const ballEl=ballOrbitEl.querySelector('.ball');
+    if(!ballEl||!ballEl.animate||document.documentElement.getAttribute('data-motion')==='reduce') return;
+    ballEl.classList.remove('ball-settle');
+    const a=ballEl.animate([
+      {transform:'translateY(-9px)',offset:0},
+      {transform:'translateY(-9px)',offset:.5},
+      {transform:'translateY(-5px)',offset:.62},
+      {transform:'translateY(3px)',offset:.70},
+      {transform:'translateY(-4px)',offset:.76},
+      {transform:'translateY(2px)',offset:.82},
+      {transform:'translateY(-2px)',offset:.88},
+      {transform:'translateY(1px)',offset:.93},
+      {transform:'translateY(0px)',offset:1}
+    ],{duration:SPIN_MS,easing:'linear',fill:'forwards'});
+    a.onfinish=a.oncancel=()=>{ try{ a.cancel(); }catch(e){} };
+    HOPS.forEach(p=>setTimeout(()=>{ C.sound&&C.sound('hop'); },SPIN_MS*p));
   }
   spinBtn.addEventListener('click',doSpin);
   render();
