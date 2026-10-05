@@ -21,12 +21,39 @@
    ============================================================ */
 (function(){
   const C=window.Casino, root=document.documentElement;
+
+  /* Cadence « de casino » (blackjack) : au lieu de jeter toutes les cartes d'un coup, le croupier en
+     pose UNE à la fois, C.DEAL_STEP_MS (~1,5 s) entre deux cartes. Le jeu tire sa donne comme avant
+     et donne seulement l'ordre de pose : onCard(k) affiche la k-ième carte, onDone() rend la main au
+     joueur. `lead` laisse la table se vider avant la 1re carte, `tail` laisse la dernière carte
+     atterrir avant la suite. Mouvement réduit / animations indisponibles : tout d'un coup (onDone
+     seul), exactement comme avant. Renvoie {skip, cancel} : skip() termine tout de suite. */
+  C.DEAL_STEP_MS=1500;
+  C.paceDeal=function(n,onCard,onDone,o){
+    o=o||{};
+    const gap=o.gap||C.DEAL_STEP_MS, lead=o.lead!=null?o.lead:350, tail=o.tail!=null?o.tail:650;
+    const animated=root.classList.contains('deal-js')&&root.getAttribute('data-motion')!=='reduce';
+    let i=0, timer=null, over=false;
+    const finish=()=>{ if(over) return; over=true; clearTimeout(timer); onDone&&onDone(); };
+    if(!animated){ finish(); return {skip(){}, cancel(){}}; }
+    const next=()=>{
+      if(over) return;
+      onCard(i++);
+      timer=setTimeout(i<n?next:finish, i<n?gap:tail);
+    };
+    timer=setTimeout(next,lead);
+    return {skip:finish, cancel(){ over=true; clearTimeout(timer); }};
+  };
+
   if(!window.MutationObserver||!Element.prototype.animate) return;
   root.classList.add('deal-js');
 
   const GAP=170, FLIGHT=480, FLIP_AT=.55, MEM_TTL=90000;
   const memory=new Map();        // empreinte d'emplacement -> {labels, fly:{idx:{start,tilt,faceUp}}, t}
   const busyUntil=new WeakMap(); // table -> instant où le croupier est de nouveau libre
+  // Nouvelle donne sur une table : on oublie ses cartes, sinon une carte identique à celle qui occupait
+  // le même emplacement à la donne précédente serait prise pour « déjà posée » et arriverait sans vol.
+  C.forgetCards=function(table){ memory.forEach((v,k)=>{ if(table&&(v.table===table||(v.table&&table.contains(v.table)))) memory.delete(k); }); };
 
   const labelOf=c=>{ const f=c.querySelector('.card-face'); return f?(f.dataset.label||f.textContent):''; };
   function keyOf(el){
@@ -106,7 +133,7 @@
       const mem=memory.get(key), ok=mem&&now-mem.t<MEM_TTL;
       const prev=ok?mem.labels:[], prevFly=ok?mem.fly:{};
       const kids=Array.from(g.cont.children).filter(k=>k.classList.contains('card-3d'));
-      const entry={labels:kids.map(labelOf),fly:Object.assign({},prevFly),t:now};
+      const entry={labels:kids.map(labelOf),fly:Object.assign({},prevFly),t:now,table:g.cont.closest('.bj-table')||g.cont.closest('.panel')||document.body};
       const list=[];
       g.cards.forEach(card=>{
         const i=kids.indexOf(card);

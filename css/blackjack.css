@@ -38,6 +38,9 @@
    (var(--glass-2), clair en thème clair) — un texte blanc fixe y deviendrait invisible. */
 .chip.clear{background:var(--glass-2);border-style:solid;border-color:var(--border);font-size:.68rem;color:var(--cream)}
 
+/* Distribution lente en cours : un clic sur la table l'accélère (voir blackjack.js / multi-blackjack.js) */
+.bj-table.dealing{cursor:pointer}
+
 /* Palier "compact" (hauteur de fenêtre limitée) : voir base.css pour l'explication complète.
    Vit ici (et pas dans base.css) car .hand-block/.chip-rail/.chip sont définis ici en premier
    lieu — même règle, même sélecteur, la dernière dans la cascade doit être celle qui gagne. */

@@ -4,9 +4,13 @@
 (function(){
   const C=window.Casino;
   let bet=0, deck=[], hands=[], dealerHand=[], currentIdx=0, inRound=false, hasSplit=false;
+  // Distribution lente (C.paceDeal, deal-anim.js) : `shown` = cartes déjà posées pour chaque place pendant
+  // la donne ({me, ai:[…], dealer}), null le reste du temps (tout est alors visible) ; `dealCtl` permet
+  // d'accélérer. La donne est tirée d'un coup comme avant : seul l'affichage est étalé dans le temps.
+  let shown=null, dealCtl=null;
   const betEl=document.getElementById('bj-betAmount'), msg=document.getElementById('bj-message');
   const dealerCardsEl=document.getElementById('bj-dealerCards'), dealerScoreEl=document.getElementById('bj-dealerScore');
-  const playerZonesEl=document.getElementById('bj-playerZones');
+  const playerZonesEl=document.getElementById('bj-playerZones'), tableEl=document.querySelector('#bj-solo .bj-table');
   const dealBtn=document.getElementById('bj-dealBtn'), hitBtn=document.getElementById('bj-hitBtn'), standBtn=document.getElementById('bj-standBtn');
   const doubleBtn=document.getElementById('bj-doubleBtn'), splitBtn=document.getElementById('bj-splitBtn');
   function cardValue(c){ if(c.r==='A') return 11; if(['J','Q','K'].includes(c.r)) return 10; return parseInt(c.r,10); }
@@ -64,12 +68,13 @@
     aiHands.forEach((h,i)=>{
       const seat=document.createElement('div');
       const res=h.result;
+      const cards=shown?h.cards.slice(0,shown.ai[i]):h.cards;
       seat.className='bj-ai-seat'+(res==='Gagné'||res==='Blackjack !'?' ai-win':(res==='Perdu'?' ai-loss':''));
       const label=document.createElement('div'); label.className='zone-label';
-      label.innerHTML='<span>'+C.avatars.html(AI_SEATS[i].name,22)+AI_SEATS[i].name+'</span><span>'+(h.cards.length?handScore(h.cards):'')+'</span>';
+      label.innerHTML='<span>'+C.avatars.html(AI_SEATS[i].name,22)+AI_SEATS[i].name+'</span><span>'+(cards.length?handScore(cards):'')+'</span>';
       const row=document.createElement('div'); row.className='cards';
-      h.cards.forEach(c=>row.appendChild(C.renderCard(c,false)));
-      const st=document.createElement('div'); st.className='hand-bet'; st.textContent=res||(h.cards.length?'En jeu':'En attente');
+      cards.forEach(c=>row.appendChild(C.renderCard(c,false)));
+      const st=document.createElement('div'); st.className='hand-bet'; st.textContent=res||(cards.length?'En jeu':'En attente');
       seat.appendChild(label); seat.appendChild(row); seat.appendChild(st);
       aiSeatsEl.appendChild(seat);
     });
@@ -85,19 +90,21 @@
       holeCardEl.classList.remove('is-back');
       C.sound&&C.sound('card');
     } else {
+      const dCards=shown?dealerHand.slice(0,shown.dealer):dealerHand;
       dealerCardsEl.innerHTML='';
-      dealerHand.forEach((c,i)=>dealerCardsEl.appendChild(C.renderCard(c,i===1&&!revealDealer,true)));
+      dCards.forEach((c,i)=>dealerCardsEl.appendChild(C.renderCard(c,i===1&&!revealDealer,true)));
     }
-    dealerScoreEl.textContent=revealDealer?handScore(dealerHand):(dealerHand[0]?cardValue(dealerHand[0]):'');
+    dealerScoreEl.textContent=revealDealer?handScore(dealerHand):((shown?shown.dealer:dealerHand.length)?cardValue(dealerHand[0]):'');
     renderAi();
     playerZonesEl.innerHTML='';
     hands.forEach((h,idx)=>{
-      const block=document.createElement('div'); block.className='hand-block'+(idx===currentIdx&&inRound?' active':'');
+      const cards=shown?h.cards.slice(0,shown.me):h.cards;
+      const block=document.createElement('div'); block.className='hand-block'+(idx===currentIdx&&inRound&&!shown?' active':'');
       const label=document.createElement('div'); label.className='zone-label';
-      label.innerHTML='<span class="zl-me">'+C.avatars.html('Toi',22)+(hasSplit?'Main '+(idx+1):'Toi')+'</span><span>'+handScore(h.cards)+'</span>';
+      label.innerHTML='<span class="zl-me">'+C.avatars.html('Toi',22)+(hasSplit?'Main '+(idx+1):'Toi')+'</span><span>'+(cards.length?handScore(cards):'')+'</span>';
       block.appendChild(label);
       const row=document.createElement('div'); row.className='cards';
-      h.cards.forEach(c=>row.appendChild(C.renderCard(c,false,true)));
+      cards.forEach(c=>row.appendChild(C.renderCard(c,false,true)));
       block.appendChild(row);
       const betRow=document.createElement('div'); betRow.className='hand-bet';
       betRow.innerHTML='Mise : '+h.bet+(h.doubled?' (doublée)':'')+' '+(C.chips?C.chips.html(h.bet,{scale:.7,label:false}):'');
@@ -106,7 +113,7 @@
     });
   }
   function updateButtons(){
-    if(!inRound){ hitBtn.disabled=standBtn.disabled=doubleBtn.disabled=splitBtn.disabled=true; return; }
+    if(!inRound||shown){ hitBtn.disabled=standBtn.disabled=doubleBtn.disabled=splitBtn.disabled=true; return; }
     const hand=hands[currentIdx]; const first=hand.cards.length===2;
     hitBtn.disabled=false; standBtn.disabled=false;
     doubleBtn.disabled=!(first&&C.state.balance>=hand.bet);
@@ -127,10 +134,23 @@
     C.state.balance-=bet; C.trackWager(bet); C.saveBalance(); C.renderBalance();
     deck=C.newDeck(); hands=[{cards:[deck.pop(),deck.pop()],bet:bet,done:false,doubled:false}]; dealerHand=[deck.pop(),deck.pop()];
     aiHands=AI_SEATS.map(()=>({cards:[deck.pop(),deck.pop()],result:''}));
-    C.sound&&C.sound('card');
     currentIdx=0; hasSplit=false; inRound=true;
-    renderTable(false); render(); msg.textContent='À toi de jouer.';
-    if(handScore(hands[0].cards)===21){ hands[0].done=true; finishFlow(); }
+    // Le croupier distribue une carte à la fois : 1re carte à chacun (Toi, Léa, Marco, croupier), puis la
+    // 2e carte à chacun — ~1,5 s entre deux cartes. Les boutons d'action restent éteints jusqu'à la fin.
+    const order=[]; for(let r=0;r<2;r++){ order.push('me'); AI_SEATS.forEach((_,i)=>order.push(i)); order.push('dealer'); }
+    shown={me:0,ai:AI_SEATS.map(()=>0),dealer:0};
+    if(C.forgetCards) C.forgetCards(tableEl);
+    tableEl.classList.add('dealing');
+    renderTable(false); render(); msg.textContent='Distribution des cartes… (clique sur la table pour accélérer)';
+    const ctl=C.paceDeal(order.length,k=>{
+      const who=order[k]; if(who==='me') shown.me++; else if(who==='dealer') shown.dealer++; else shown.ai[who]++;
+      renderTable(false);
+    },()=>{
+      shown=null; dealCtl=null; tableEl.classList.remove('dealing');
+      renderTable(false); render(); msg.textContent='À toi de jouer.';
+      if(handScore(hands[0].cards)===21){ hands[0].done=true; finishFlow(); }
+    });
+    dealCtl=shown?ctl:null; // `shown` est déjà revenu à null si la donne s'est faite d'un coup (mouvement réduit)
   }
   function hit(){
     const hand=hands[currentIdx]; hand.cards.push(deck.pop()); C.sound&&C.sound('card');
@@ -191,6 +211,13 @@
     Array.from(playerZonesEl.children).forEach((block,idx)=>{ if(handClasses[idx]) block.classList.add(handClasses[idx]); });
   }
   renderAi();
+  // Pendant la distribution lente, un clic sur la table (ou Espace / Entrée) la termine tout de suite.
+  tableEl.addEventListener('click',()=>{ if(dealCtl) dealCtl.skip(); });
+  document.addEventListener('keydown',e=>{
+    if(!dealCtl||(e.code!=='Space'&&e.key!=='Enter')||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey) return;
+    if(!document.getElementById('view-blackjack').classList.contains('active')) return;
+    e.preventDefault(); dealCtl.skip();
+  });
   dealBtn.addEventListener('click',deal); hitBtn.addEventListener('click',hit); standBtn.addEventListener('click',stand);
   doubleBtn.addEventListener('click',doubleDown); splitBtn.addEventListener('click',split);
   render();

@@ -21,6 +21,10 @@
 
   const AI_SEATS=[{name:'Léa',icon:'🦊',risky:false},{name:'Marco',icon:'🎩',risky:true}];
   let mode='ai', myBet=25, deck=[], dealer=[], seats=[], turn=-1, active=false, guestMode=false, guestInvested=0, view=null, turnTimer=null, handNo=0;
+  // Distribution lente (C.paceDeal) côté hôte : `dealShown` = cartes déjà posées par place ({seats:[…], dealer}),
+  // null le reste du temps. snapshotFor() n'envoie (à l'hôte comme aux amis) que les cartes déjà posées : la
+  // donne est tirée d'un coup comme avant, seul l'affichage est étalé dans le temps.
+  let dealShown=null, dealCtl=null;
 
   function switchMode(m){
     if(m!=='ai'&&m!=='multi') return;
@@ -45,10 +49,11 @@
 
   // ---------- Hôte : table ----------
   function snapshotFor(viewerSeatIdx){
+    const dl=dealShown?dealer.slice(0,dealShown.dealer):dealer.slice();
     return {
-      handNo, active, dealer:dealer.slice(), dealerScore:active?(dealer[0]?R().cardValue(dealer[0]):''):R().handScore(dealer),
+      handNo, active, dealer:dl, dealerScore:active?(dl[0]?R().cardValue(dl[0]):''):R().handScore(dealer),
       revealDealer:!active,
-      seats:seats.map((s,i)=>({name:s.name,kind:s.kind,cards:s.cards,bet:s.bet,done:s.done,result:s.result,turn:active&&turn===i})),
+      seats:seats.map((s,i)=>({name:s.name,kind:s.kind,cards:dealShown?s.cards.slice(0,dealShown.seats[i]):s.cards,bet:s.bet,done:s.done,result:s.result,turn:active&&turn===i})),
       me:viewerSeatIdx, msg:msg.textContent
     };
   }
@@ -136,13 +141,29 @@
     deck=C.newDeck();
     seats.forEach(s=>{ s.cards=[deck.pop(),deck.pop()]; s.done=false; s.result=null; });
     dealer=[deck.pop(),deck.pop()];
-    C.sound&&C.sound('card');
     active=true; turn=-1;
-    msg.textContent='La main commence.';
+    // Le croupier distribue une carte à la fois : 1re carte à chaque joueur puis au croupier, puis la 2e carte
+    // à chacun — ~1,5 s entre deux cartes ; le premier tour de jeu ne commence qu'à la fin.
+    const order=[]; for(let r=0;r<2;r++){ seats.forEach((_,i)=>order.push(i)); order.push('dealer'); }
+    dealShown={seats:seats.map(()=>0),dealer:0};
+    if(C.forgetCards) C.forgetCards(tableEl);
+    tableEl.classList.add('dealing');
+    msg.textContent='Distribution des cartes…';
     render();
-    setTimeout(advanceTurn,500);
+    const ctl=C.paceDeal(order.length,k=>{
+      const who=order[k]; if(who==='dealer') dealShown.dealer++; else dealShown.seats[who]++;
+      render();
+    },()=>{
+      dealShown=null; dealCtl=null; tableEl.classList.remove('dealing');
+      msg.textContent='La main commence.';
+      render();
+      setTimeout(advanceTurn,500);
+    });
+    dealCtl=dealShown?ctl:null; // déjà revenu à null si la donne s'est faite d'un coup (mouvement réduit)
   }
   dealBtn.addEventListener('click',startDeal);
+  // Pendant la distribution lente, l'hôte peut l'accélérer d'un clic sur la table.
+  tableEl.addEventListener('click',()=>{ if(dealCtl) dealCtl.skip(); });
 
   function advanceTurn(){
     clearTimeout(turnTimer);
