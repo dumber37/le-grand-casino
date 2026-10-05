@@ -1,25 +1,87 @@
 /* ============================================================
-   PILE OU FACE — vraie pièce 3D à deux faces (la face affichée à
-   l'arrêt correspond réellement au résultat tiré).
+   PILE OU FACE — vraie pièce 3D : deux faces ciselées (SVG, construites par coinflip.js) et une
+   tranche cannelée faite de plaquettes verticales tangentes au bord, d'où une vraie épaisseur
+   visible quand la pièce tourne. La face affichée à l'arrêt correspond réellement au résultat.
+
+   Sûreté 3D (bug déjà rencontré dans ce moteur) : TOUTE rotation 3D est une TRANSITION CSS
+   (.coin-inner pour le tour sur lui-même, .coin-tilt pour l'inclinaison) — jamais @keyframes ni
+   WAAPI sur un élément 3D. Seuls le conteneur plat .coin-3d (montée/chute/rebond) et l'ombre au
+   sol, qui n'ont aucun enfant à rotation propre, sont animés en WAAPI.
    ============================================================ */
 
-.coin-3d{position:relative;width:92px;height:92px;margin:0 auto;perspective:600px}
-.coin-inner{
-  position:relative;width:100%;height:100%;
-  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;
-  transition:transform 1.5s cubic-bezier(.15,.6,.2,1);
+.coin-stage{
+  --cs:112px;  /* diamètre de la pièce */
+  --ct:12px;   /* épaisseur */
+  --n:60;      /* plaquettes de la tranche (doit rester égal à N dans coinflip.js) */
+  position:relative;width:100%;height:calc(var(--cs) + 104px);margin:0 auto 2px;
+  perspective:950px;perspective-origin:50% 38%;
 }
+.coin-defs{position:absolute;width:0;height:0;overflow:hidden}
+
+/* Ombre au sol et halo de victoire (2D, derrière la pièce) */
+.coin-shadow{
+  position:absolute;left:50%;bottom:22px;width:calc(var(--cs)*1.05);height:calc(var(--cs)*.2);margin-left:calc(var(--cs)*-.525);
+  background:radial-gradient(ellipse at center,rgba(0,0,0,.62) 0,rgba(0,0,0,.3) 45%,rgba(0,0,0,0) 72%);
+}
+.coin-glow{
+  position:absolute;left:50%;bottom:calc(40px + var(--cs)/2 - var(--cs)*.95);width:calc(var(--cs)*1.9);height:calc(var(--cs)*1.9);margin-left:calc(var(--cs)*-.95);
+  border-radius:50%;background:radial-gradient(circle,rgba(255,214,102,.66),rgba(255,214,102,0) 62%);
+  opacity:0;transition:opacity .4s ease;pointer-events:none;
+}
+.coin-stage.win .coin-glow{opacity:1}
+
+/* Conteneur du lancer (animé en WAAPI : translateY + scale uniquement) */
+.coin-3d{
+  position:absolute;left:50%;bottom:40px;width:var(--cs);height:var(--cs);margin-left:calc(var(--cs)/-2);
+  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;z-index:2;
+}
+/* Inclinaison de la pièce vue en perspective (au repos : on devine l'épaisseur côté bas/droite ;
+   pendant le vol : petit balancement, voir coinflip.js) — transition CSS */
+.coin-tilt{
+  position:absolute;inset:0;-webkit-transform-style:preserve-3d;transform-style:preserve-3d;
+  transform:rotateX(26deg) rotateY(-16deg) rotateZ(0deg);
+}
+/* Tour sur lui-même autour de l'axe horizontal (la pièce « bascule » en l'air) — transition CSS,
+   durée égale à FLIP_MS dans coinflip.js */
+.coin-inner{
+  position:absolute;inset:0;-webkit-transform-style:preserve-3d;transform-style:preserve-3d;
+  transform:rotateX(0deg);
+  transition:transform 1.7s cubic-bezier(.2,.55,.25,1);
+}
+
+/* Faces : PILE devant, FACE derrière (retournée autour de l'axe horizontal pour rester droite après un demi-tour) */
 .coin-face{
   position:absolute;inset:0;border-radius:50%;-webkit-backface-visibility:hidden;backface-visibility:hidden;
-  transform:translateZ(0);
+  transform:translateZ(calc(var(--ct)/2));
   display:flex;align-items:center;justify-content:center;
   font-weight:bold;font-size:.82rem;letter-spacing:.05em;color:#3a2a08;
+  /* repli si le script n'a pas construit les faces */
   background:radial-gradient(circle at 35% 30%,var(--gold-bright),var(--gold) 60%,#a3812a 100%);
   border:3px solid #8a6a1f;
-  box-shadow:0 5px 10px rgba(0,0,0,.45), inset 0 2px 4px rgba(255,255,255,.45), inset 0 -4px 6px rgba(0,0,0,.25);
 }
-.coin-face.coin-tails{transform:rotateY(180deg) translateZ(0)}
+.coin-face.coin-tails{transform:rotateX(180deg) translateZ(calc(var(--ct)/2))}
+.coin-stage.built .coin-face{background:none;border:0}
+.coin-face svg{width:100%;height:100%;display:block;overflow:visible}
 
-/* Animation signature : la pièce rebondit légèrement en retombant sur le bon côté */
-.coin-3d.coin-bounce-win{animation:coinBounceWin .5s cubic-bezier(.34,1.56,.64,1)}
-@keyframes coinBounceWin{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-14px) scale(1.08)}60%{transform:translateY(2px) scale(.97)}100%{transform:translateY(0) scale(1)}}
+/* Tranche : plaquettes verticales tangentes au bord (rotateZ autour de l'axe de la pièce, poussées
+   au rayon, redressées de 90° pour s'étendre dans l'épaisseur). --a = angle, --sh = ombre selon l'angle. */
+.coin-rim{position:absolute;inset:0;-webkit-transform-style:preserve-3d;transform-style:preserve-3d}
+.coin-rim i{
+  --w:calc(var(--cs)*3.1416/var(--n) + .7px);
+  position:absolute;left:50%;top:50%;display:block;
+  width:var(--w);height:var(--ct);margin-left:calc(var(--w)/-2);margin-top:calc(var(--ct)/-2);
+  transform:rotateZ(var(--a)) translateY(calc(var(--cs)/-2)) rotateX(90deg);
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 26%,rgba(255,255,255,0) 68%,rgba(0,0,0,.42)),
+    linear-gradient(rgba(0,0,0,var(--sh)),rgba(0,0,0,var(--sh))),
+    repeating-linear-gradient(90deg,#8a6317 0 .9px,#dcae3c .9px 2.7px);
+}
+
+/* Écrans de faible hauteur (voir base.css) : pièce un peu plus petite */
+@media (max-height:820px){
+  .coin-stage{--cs:96px;--ct:10px;height:calc(var(--cs) + 92px)}
+  .coin-3d{bottom:32px}
+  .coin-shadow{bottom:16px}
+  .coin-glow{bottom:calc(32px + var(--cs)/2 - var(--cs)*.95)}
+}

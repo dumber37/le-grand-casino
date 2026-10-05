@@ -430,11 +430,15 @@
 
       <section class="view" id="view-coinflip"><div class="panel">
         <div class="scene-header"><span class="sh-icon">🪙</span><div><div class="sh-name">Pile ou Face</div><div class="sh-desc">50/50, simple et rapide, double ta mise</div></div></div>
-        <div style="text-align:center;margin-bottom:12px">
-          <div class="coin-3d" id="cf-coin">
-            <div class="coin-inner">
-              <div class="coin-face coin-pile">PILE</div>
-              <div class="coin-face coin-tails">FACE</div>
+        <div class="coin-stage" id="cf-stage">
+          <div class="coin-glow"></div>
+          <div class="coin-shadow" id="cf-shadow"></div>
+          <div class="coin-3d" id="cf-coin" role="img" aria-label="Pièce de monnaie">
+            <div class="coin-tilt" id="cf-tilt">
+              <div class="coin-inner">
+                <div class="coin-face coin-pile">PILE</div>
+                <div class="coin-face coin-tails">FACE</div>
+              </div>
             </div>
           </div>
         </div>

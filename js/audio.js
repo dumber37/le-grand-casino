@@ -59,6 +59,9 @@ window.Casino = window.Casino || {};
     // Rouleau de machine à sous qui s'arrête (clac sec) et rebond de la bille de roulette.
     clack:       (c,t)=>{ tone(c, 130, t, 0.05, 'square', 0.05); tone(c, 880, t, 0.025, 'square', 0.025); },
     hop:         (c,t)=> tone(c, 1700, t, 0.035, 'sine', 0.035),
+    // Pièce de métal : impact (tintement aigu qui s'éteint) puis petit rebond plus bref.
+    coin:        (c,t)=>{ tone(c, 2093, t, 0.42, 'sine', 0.05); tone(c, 3136, t+0.004, 0.3, 'sine', 0.03); tone(c, 4186, t+0.008, 0.16, 'triangle', 0.016); },
+    coinTink:    (c,t)=>{ tone(c, 2637, t, 0.13, 'sine', 0.035); tone(c, 3951, t, 0.08, 'sine', 0.02); },
     reveal:      (c,t)=> tone(c, 1400, t, 0.06, 'sine', 0.05),
     spin:        (c,t)=> sweep(c, 260, 620, t, 0.35, 'sine', 0.035),
     win:         (c,t)=>{ [523.25,659.25,783.99].forEach((f,i)=>tone(c, f, t+i*0.075, 0.2, 'sine', 0.08)); },
