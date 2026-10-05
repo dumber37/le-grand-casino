@@ -362,7 +362,7 @@ html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,
 .card{background:var(--card-bg);color:#1a1a1a;border-radius:6px;width:38px;height:56px;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,.3);animation:cardIn .25s ease}
 @keyframes cardIn{from{transform:scale(.5) rotateY(90deg);opacity:0}to{transform:scale(1) rotateY(0deg);opacity:1}}
 .card.red{color:var(--red)}
-.card.hidden{background:var(--felt-dark);color:var(--gold);border:1px dashed var(--gold)}
+.card.hidden{background:radial-gradient(ellipse at 50% 28%,rgba(255,255,255,.08),transparent 72%),var(--felt-dark);color:var(--gold);border:1px dashed rgba(212,175,55,.7);border-radius:7px;box-shadow:inset 0 3px 7px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.08);text-shadow:0 1px 1px rgba(0,0,0,.7);animation:none;flex-shrink:0}
 .cards{display:flex;gap:6px;flex-wrap:wrap;min-height:60px}
 .zone{margin-bottom:8px}
 .zone-label{display:flex;justify-content:space-between;color:var(--muted);font-size:.8rem;margin-bottom:6px}
@@ -542,6 +542,7 @@ html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,
   .bj-table{padding:3px 6px 2px;margin-bottom:6px;border-width:7px}
   .card-3d{width:32px;height:47px}
   .card-3d.lg{width:50px;height:73px}
+  .card.hidden{width:32px;height:47px}
   .card-face{font-size:8.4px}
   .card-3d.lg .card-face{font-size:13px}
   .cards{min-height:50px;gap:4px}
