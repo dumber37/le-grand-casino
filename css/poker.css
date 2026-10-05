@@ -33,7 +33,7 @@
 .pk-bet{display:flex;justify-content:center;align-items:flex-end;margin-top:4px;min-height:22px}
 .pk-board{display:flex;justify-content:center;gap:5px;min-height:74px}
 .pk-board .card-3d.lg{width:50px;height:74px}
-.pk-board .card-3d.lg .card-face{font-size:1.05rem}
+.pk-board .card-3d.lg .card-face{font-size:13.2px}
 .pk-slot{width:50px;height:74px;border:2px dashed rgba(212,175,55,.25);border-radius:8px}
 
 .pk-me-seat{max-width:220px;margin:0 auto}

@@ -28,7 +28,7 @@
   const memory=new Map();        // empreinte d'emplacement -> {labels, fly:{idx:{start,tilt,faceUp}}, t}
   const busyUntil=new WeakMap(); // table -> instant où le croupier est de nouveau libre
 
-  const labelOf=c=>{ const f=c.querySelector('.card-face'); return f?f.textContent:''; };
+  const labelOf=c=>{ const f=c.querySelector('.card-face'); return f?(f.dataset.label||f.textContent):''; };
   function keyOf(el){
     const parts=[]; let n=el;
     for(let i=0;i<7&&n&&n!==document.body;i++){

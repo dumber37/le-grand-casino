@@ -30,3 +30,38 @@
 .vp-paytable{margin:14px 0;font-size:.76rem;color:var(--muted);border-top:1px dashed var(--border);border-bottom:1px dashed var(--border);padding:8px 2px}
 .vp-paytable div{display:flex;justify-content:space-between;padding:4px 6px;border-radius:6px;transition:background .2s ease,color .2s ease}
 .vp-paytable div.vp-hit{background:rgba(212,175,55,.18);color:var(--gold-bright);font-weight:bold}
+
+/* ============================================================
+   RELIEF 3D — Vidéo Poker façon borne d'arcade : cadre chromé, écran
+   bleu à lignes de balayage et reflet de vitre, tableau des gains
+   lumineux encadré d'or. Purement visuel (mêmes ids, mêmes règles).
+   ============================================================ */
+#view-videopoker{--tf-a:#2a66d6;--tf-b:#123585;--tf-c:#061540}
+#view-videopoker .panel{
+  border:6px solid transparent;border-radius:22px 22px 14px 14px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0) 18%) padding-box,
+    linear-gradient(180deg,#141a30,#0a0e1d) padding-box,
+    linear-gradient(135deg,#fdfdff 0%,#9a9cab 22%,#fff 40%,#6b6d7b 62%,#d8dae4 82%,#8d8f9e 100%) border-box;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.7),0 0 0 2px #05060c,8px 0 0 -3px #0d1226,-8px 0 0 -3px #0d1226,0 20px 34px rgba(0,0,0,.6);
+}
+/* Écran : lignes de balayage fines + reflet diagonal par-dessus les cartes */
+#view-videopoker .bj-table{border-radius:18px}
+#view-videopoker .bj-table::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    linear-gradient(116deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,.05) 28%,rgba(255,255,255,0) 40%),
+    repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,rgba(0,0,0,0) 1px 3px);
+}
+#view-videopoker .vp-paytable{
+  position:relative;margin:14px 0;padding:8px 8px 6px;border:3px solid transparent;border-radius:12px;color:#ffe27a;
+  background:linear-gradient(180deg,#0b1d5c,#050d2e) padding-box,linear-gradient(135deg,#fff3b8,#d9a42a 30%,#7a5410 55%,#f8d56a 80%,#b9861f) border-box;
+  box-shadow:inset 0 0 18px rgba(0,0,0,.75),0 4px 10px rgba(0,0,0,.45);
+}
+#view-videopoker .vp-paytable::before{content:'TABLE DES GAINS';display:block;text-align:center;font-size:.62rem;letter-spacing:.32em;color:#7dd3ff;margin:0 0 5px;text-shadow:0 0 8px rgba(125,211,255,.6)}
+#view-videopoker .vp-paytable div{padding:3px 8px}
+#view-videopoker .vp-paytable div span:last-child{color:#fff;font-variant-numeric:tabular-nums}
+#view-videopoker .vp-paytable div.vp-hit{
+  color:#fff;text-shadow:0 0 8px #ffd54a;
+  background:linear-gradient(90deg,rgba(255,226,122,0),rgba(255,226,122,.38),rgba(255,226,122,0));
+}

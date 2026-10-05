@@ -23,6 +23,8 @@
      gêner la lecture du texte au-dessus. ---- */
   --felt-weave: repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0px, rgba(255,255,255,.018) 1px, transparent 1px, transparent 5px);
   --chip-dots: repeating-radial-gradient(circle at 4px 2px, rgba(212,175,55,.45) 0 1.3px, transparent 1.8px 11px);
+  /* Fin grain de fibres pour les feutres (bruit fractal SVG, tuile de 160px, très peu opaque) */
+  --felt-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .3 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
   --suit-watermark-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Ctext x='130' y='195' font-size='230' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.05'%3E%E2%99%A0%3C/text%3E%3C/svg%3E");
   --suit-watermark-sm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ctext x='100' y='150' font-size='175' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.04'%3E%E2%99%A6%3C/text%3E%3C/svg%3E");
   --suit-watermark-hero: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Ctext x='160' y='235' font-size='280' text-anchor='middle' font-family='Georgia,serif' fill='%23d4af37' fill-opacity='0.045'%3E%E2%99%A3%3C/text%3E%3C/svg%3E");
@@ -409,45 +411,87 @@ html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,
 .card-face,.card-back{
   position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;border-radius:6px;
   display:flex;align-items:center;justify-content:center;font-weight:bold;
-  box-shadow:0 3px 6px rgba(0,0,0,.35);
+  /* Tranche du carton (deux fines lignes sous la carte) puis ombre portée sur le feutre */
+  box-shadow:0 1px 0 #d9d0b6,0 2px 0 #c4baa0,0 4px 7px rgba(0,0,0,.45);
   transform:translateZ(0); /* force chaque face dans son propre plan 3D pour un backface-visibility fiable */
 }
-.card-face{background:var(--card-bg);color:#1a1a1a;font-size:.9rem}
-.card-face.red{color:var(--red)}
+/* ---- Face d'une carte : vrais indices aux coins, pips disposés comme sur un jeu réel, figures
+   encadrées (structure produite par C.renderCard). Tout est en em, donc proportionnel à la taille de
+   la carte : font-size de .card-face = 10px pour 38px de large (voir les variantes .lg / compact). ---- */
+.card-face{
+  background:linear-gradient(150deg,#fffef8 0%,var(--card-bg) 52%,#e7dec6 100%);
+  color:#17171a;font-size:10px;
+}
+.card-face.red{color:var(--red-card,#c3161f)}
+.card-face::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(118deg,rgba(255,255,255,.62) 0%,rgba(255,255,255,0) 36%,rgba(0,0,0,0) 70%,rgba(0,0,0,.08) 100%);
+}
+.cf-tl,.cf-br{position:absolute;left:.3em;top:.26em;display:flex;line-height:.92;z-index:2}
+.cf-br{left:auto;right:.3em;top:auto;bottom:.26em;transform:rotate(180deg)}
+.cf-i{display:flex;flex-direction:column;align-items:center}
+.cf-i b{font-size:1.16em;letter-spacing:-.07em;font-weight:800;font-family:Georgia,'Times New Roman',serif}
+.cf-i i{font-style:normal;font-size:.98em;margin-top:.04em}
+.cf-pips{position:absolute;inset:0}
+.cf-p{position:absolute;transform:translate(-50%,-50%);font-style:normal;font-size:.82em;line-height:1}
+.cf-p.f{transform:translate(-50%,-50%) rotate(180deg)}
+.cf-ace{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.6em;line-height:1}
+.cf-court{
+  position:absolute;inset:.95em 1.05em;border:.09em solid rgba(150,108,28,.75);border-radius:.22em;
+  background:linear-gradient(155deg,rgba(212,175,55,.26),rgba(255,255,255,0) 48%,rgba(212,175,55,.2));
+}
+.cf-court em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:italic 800 2.15em Georgia,'Times New Roman',serif;line-height:1}
+.cf-cs{position:absolute;font-style:normal;font-size:.8em;line-height:1}
+.cf-cs.t{top:.12em;left:.16em}
+.cf-cs.b{bottom:.12em;right:.16em;transform:rotate(180deg)}
+
+/* ---- Dos de carte : cadre blanc, trame en losanges, filet intérieur et médaillon central. Les dos
+   achetables à la Boutique (voir shop.js) ne changent que ces variables, via data-cardback sur <html> —
+   un seul choke point (.card-back), déjà utilisé par TOUTE carte cachée : Blackjack, Baccarat, Ride the
+   Bus, Poker, Vidéo Poker. ---- */
 .card-back{
-  transform:rotateY(180deg) translateZ(0);border:2px solid var(--gold);
+  --cb-pat:rgba(212,175,55,.30);--cb-a:#0f5a41;--cb-b:#06291e;--cb-accent:#d4af37;
+  transform:rotateY(180deg) translateZ(0);
   background:
-    repeating-linear-gradient(45deg, rgba(212,175,55,.28) 0 6px, transparent 6px 12px),
-    linear-gradient(160deg,#0c3d2e,#062a1f);
+    linear-gradient(118deg,rgba(255,255,255,.22),rgba(255,255,255,0) 40%),
+    repeating-linear-gradient(45deg,var(--cb-pat) 0 1.2px,transparent 1.2px 5px),
+    repeating-linear-gradient(-45deg,var(--cb-pat) 0 1.2px,transparent 1.2px 5px),
+    linear-gradient(160deg,var(--cb-a),var(--cb-b));
+  box-shadow:inset 0 0 0 3px #f3ecd4,inset 0 0 0 4px rgba(0,0,0,.35),0 1px 0 #cfc6aa,0 2px 0 #b9af92,0 4px 7px rgba(0,0,0,.45);
 }
-/* ---- Dos de carte achetables à la Boutique (voir shop.js) — un seul choke point (.card-back,
-   déjà utilisé par TOUTE carte cachée : Blackjack, Baccarat, Ride the Bus, Poker, Vidéo Poker)
-   piloté par un attribut data-cardback sur <html>, même principe que les thèmes. ---- */
-:root[data-cardback="royal"] .card-back{
-  border-color:#a855f7;
-  background:
-    repeating-linear-gradient(45deg, rgba(168,85,247,.32) 0 6px, transparent 6px 12px),
-    linear-gradient(160deg,#2d0a4e,#150425);
+.card-back::before{content:'';position:absolute;inset:4px;border-radius:inherit;border:1px solid var(--cb-accent);opacity:.85;pointer-events:none}
+.card-back::after{
+  content:'';position:absolute;left:50%;top:50%;width:38%;aspect-ratio:1/1;transform:translate(-50%,-50%);border-radius:50%;
+  border:1px solid var(--cb-accent);background:radial-gradient(circle,var(--cb-accent) 0 18%,rgba(0,0,0,.4) 20% 100%);
+  box-shadow:0 0 0 2px rgba(0,0,0,.3);
 }
-:root[data-cardback="dragon"] .card-back{
-  border-color:#d4af37;
-  background:
-    repeating-linear-gradient(45deg, rgba(212,175,55,.38) 0 6px, transparent 6px 12px),
-    linear-gradient(160deg,#7a0f1a,#2a0407);
-}
-.card-3d.lg .card-face{font-size:1.3rem;border-radius:9px}
+:root[data-cardback="royal"] .card-back{--cb-pat:rgba(192,132,252,.42);--cb-a:#3b1066;--cb-b:#14031f;--cb-accent:#c084fc}
+:root[data-cardback="dragon"] .card-back{--cb-pat:rgba(232,193,74,.45);--cb-a:#8f1522;--cb-b:#2a050a;--cb-accent:#e8c14a}
+.card-3d.lg .card-face{font-size:16px;border-radius:9px}
 .card-3d.lg .card-back{border-radius:9px}
 
 /* ---- Table feutrée inclinée en 3D (partagée par blackjack, baccarat, ride the bus) ---- */
+/* Table de jeu : rail en bois verni autour du feutre (le dégradé « border-box » se voit sous la
+   bordure transparente), feutre éclairé par le haut avec un fin grain de fibres (--felt-noise), liseré
+   doré autour du rail et ombre portée. Seule la couleur du feutre change avec le tapis acheté à la
+   Boutique (voir extras.css, html[data-felt]). */
 .bj-table{
   position:relative;
-  background:radial-gradient(ellipse at 50% 25%, #147049 0%, #0c3d2e 55%, #062a1f 100%);
-  border:3px solid var(--gold);border-radius:24px;padding:12px 14px 10px;margin-bottom:10px;
-  box-shadow:inset 0 0 40px rgba(0,0,0,.45), 0 22px 36px rgba(0,0,0,.55);
+  border:9px solid transparent;border-radius:28px;padding:5px 9px 3px;margin-bottom:10px;
+  background:
+    var(--felt-noise) padding-box,
+    radial-gradient(ellipse at 50% 16%, rgba(255,255,255,.13), rgba(255,255,255,0) 58%) padding-box,
+    radial-gradient(ellipse at 50% 28%, var(--tf-a,#168052) 0%, var(--tf-b,#0e5139) 50%, var(--tf-c,#07301f) 100%) padding-box,
+    linear-gradient(135deg,#8a5a2c 0%,#4a2b12 30%,#2b1709 52%,#6b4220 74%,#3a2210 100%) border-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.6),
+    inset 0 0 46px rgba(0,0,0,.5),
+    0 0 0 2px #1a0e05, 0 0 0 3px var(--gold),
+    0 24px 38px rgba(0,0,0,.55);
   transform:perspective(1100px) rotateX(6deg);
   transform-style:preserve-3d;
 }
-.bj-table::before{content:'';position:absolute;inset:9px;border:1px dashed rgba(212,175,55,.3);border-radius:18px;pointer-events:none}
+.bj-table::before{content:'';position:absolute;inset:7px;border:1px dashed rgba(212,175,55,.3);border-radius:20px;pointer-events:none}
 .bj-divider{height:4px;background:var(--chip-dots) center / 100% 4px repeat-x;margin:12px 0;opacity:.85}
 /* secousse — réutilisée par les mines (case piégée) et le crash (explosion) */
 @keyframes mineShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
@@ -495,9 +539,11 @@ html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,
   .content{padding-top:12px}
   .scene-header{margin-bottom:6px;padding-bottom:6px}
   .scene-header .sh-desc{display:none} /* la description est déjà redondante avec le nom du jeu */
-  .bj-table{padding:8px 12px 8px;margin-bottom:6px}
+  .bj-table{padding:3px 6px 2px;margin-bottom:6px;border-width:7px}
   .card-3d{width:32px;height:47px}
   .card-3d.lg{width:50px;height:73px}
+  .card-face{font-size:8.4px}
+  .card-3d.lg .card-face{font-size:13px}
   .cards{min-height:50px;gap:4px}
   .zone{margin-bottom:4px}
   .message{margin:5px 0;min-height:20px}

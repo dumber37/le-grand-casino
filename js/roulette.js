@@ -10,21 +10,19 @@
   const WHEEL_ORDER=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
   const N=WHEEL_ORDER.length, segAngle=360/N;
   function colorOf(n){ if(n===0) return 'vert'; return RED.includes(n)?'rouge':'noir'; }
-  function colorHex(c){ return c==='vert'?'#1f7a44':(c==='rouge'?'#a3352f':'#161616'); }
-
-  const wheelEl=document.getElementById('r-wheel'), ballOrbitEl=document.getElementById('r-ballOrbit');
-  const stops=[]; WHEEL_ORDER.forEach((n,i)=>{ const c=colorHex(colorOf(n)); stops.push(c+' '+(i*segAngle)+'deg '+((i+1)*segAngle)+'deg'); });
-  wheelEl.style.background='conic-gradient('+stops.join(',')+')';
-  const radius=98;
-  const wheelNumberSpans={};
-  WHEEL_ORDER.forEach((n,i)=>{
-    const angle=i*segAngle+segAngle/2;
-    const span=document.createElement('span'); span.className='num'; span.textContent=n;
-    span.style.transform='translate(-50%,-50%) rotate('+angle+'deg) translateY(-'+radius+'px)';
-    wheelEl.appendChild(span);
-    wheelNumberSpans[n]=span;
-  });
+  // Toute la roue est dessinée en SVG par roulette-scene.js (bol, piste, alvéoles, cône, reflets) à
+  // partir de CET ordre et de CES couleurs. #r-wheel (la roue) et #r-ballOrbit (l'orbite de la bille)
+  // sont deux <g> SVG que ce fichier fait tourner ; le tirage et les gains ne changent pas.
   const wheelWrapEl=document.querySelector('#view-roulette .wheel-wrap');
+  wheelWrapEl.innerHTML=C.buildRouletteScene({red:RED,order:WHEEL_ORDER});
+  const wheelEl=document.getElementById('r-wheel'), ballOrbitEl=document.getElementById('r-ballOrbit');
+  const ballPivotEl=ballOrbitEl.querySelector('.ball-pivot'), ballHopEl=ballOrbitEl.querySelector('.ball-hop');
+  const wheelNumberSpans={};
+  wheelEl.querySelectorAll('.pk').forEach(g=>{ wheelNumberSpans[g.dataset.n]=g; });
+  // Le plan de la roue est incliné de TILT° en CSS : la bille y serait vue aplatie. On l'étire donc de
+  // 1/cos(TILT) dans le plan pour qu'elle reste ronde à l'écran (voir ballGroup dans roulette-scene.js).
+  const TILT=52, BALL_K=1/Math.cos(TILT*Math.PI/180);
+  ballPivotEl.style.transform='rotate(0deg) scale(1,'+BALL_K+')';
 
   // ---- Table de mise : grille 1-36 générée à partir de RED (source unique de vérité,
   // partagée avec la couleur de la roue — aucune duplication de la répartition rouge/noir). ----
@@ -105,6 +103,7 @@
     ballRotation-=9*360;
     wheelEl.style.transform='rotate('+wheelRotation+'deg)';
     ballOrbitEl.style.transform='rotate('+ballRotation+'deg)';
+    ballPivotEl.style.transform='rotate('+(-ballRotation)+'deg) scale(1,'+BALL_K+')'; // annule l'orbite : la bille reste ronde
     animateBall();
 
     setTimeout(()=>{
@@ -128,14 +127,14 @@
       // Petit rebond de la bille au moment où elle se pose, comme une vraie bille qui
       // finit de rouler dans la case plutôt que de s'arrêter net.
       const ballEl=ballOrbitEl.querySelector('.ball');
-      if(ballEl){ ballEl.classList.remove('ball-settle'); void ballEl.offsetWidth; ballEl.classList.add('ball-settle'); }
+      if(ballEl){ ballEl.classList.remove('ball-settle'); void ballEl.getBoundingClientRect(); ballEl.classList.add('ball-settle'); }
 
       spinHistory.push({n:result, color:col}); renderSpinHistory();
 
       // Animation signature : la case gagnante pulse/brille — sur la roue et sur la table.
       Object.values(wheelNumberSpans).forEach(s=>s.classList.remove('wheel-num-win'));
       const winSpan=wheelNumberSpans[result];
-      if(winSpan){ void winSpan.offsetWidth; winSpan.classList.add('wheel-num-win'); }
+      if(winSpan){ void winSpan.getBoundingClientRect(); winSpan.classList.add('wheel-num-win'); }
       const winCell=tableCells[result];
       if(winCell){ void winCell.offsetWidth; winCell.classList.add('win-pulse'); }
       // La mise extérieure gagnante (rouge/noir/douzaine/colonne...) pulse aussi elle-même :
@@ -156,20 +155,25 @@
   // puis tombe vers les alvéoles en rebondissant sur les séparateurs avant de se poser. Une seule
   // animation sur .ball (jamais sur l'orbite, déjà animée par transition) : le rebond final
   // .ball-settle (CSS) prend le relais une fois celle-ci terminée.
-  const SPIN_MS=5000, HOPS=[0.70,0.80,0.88,0.95];
+  const SPIN_MS=5000, HOPS=[0.71,0.81,0.91,0.95];
   function animateBall(){
     const ballEl=ballOrbitEl.querySelector('.ball');
-    if(!ballEl||!ballEl.animate||document.documentElement.getAttribute('data-motion')==='reduce') return;
-    ballEl.classList.remove('ball-settle');
-    const a=ballEl.animate([
-      {transform:'translateY(-9px)',offset:0},
-      {transform:'translateY(-9px)',offset:.5},
-      {transform:'translateY(-5px)',offset:.62},
-      {transform:'translateY(3px)',offset:.70},
-      {transform:'translateY(-4px)',offset:.76},
-      {transform:'translateY(2px)',offset:.82},
-      {transform:'translateY(-2px)',offset:.88},
-      {transform:'translateY(1px)',offset:.93},
+    if(!ballHopEl||!ballHopEl.animate||document.documentElement.getAttribute('data-motion')==='reduce') return;
+    if(ballEl) ballEl.classList.remove('ball-settle');
+    // Unités SVG (px sur un SVG) : la bille repose à 116 du centre, au fond des alvéoles ; -57 la place
+    // sur la piste extérieure (rayon 173). Elle y court, ralentit, puis redescend en rebondissant
+    // d'une alvéole à l'autre (oscillations autour de 0) avant de s'immobiliser.
+    const a=ballHopEl.animate([
+      {transform:'translateY(-57px)',offset:0},
+      {transform:'translateY(-57px)',offset:.5},
+      {transform:'translateY(-50px)',offset:.58},
+      {transform:'translateY(-30px)',offset:.65},
+      {transform:'translateY(-1px)',offset:.71},
+      {transform:'translateY(-15px)',offset:.76},
+      {transform:'translateY(3px)',offset:.81},
+      {transform:'translateY(-8px)',offset:.86},
+      {transform:'translateY(2px)',offset:.91},
+      {transform:'translateY(-2.5px)',offset:.95},
       {transform:'translateY(0px)',offset:1}
     ],{duration:SPIN_MS,easing:'linear',fill:'forwards'});
     a.onfinish=a.oncancel=()=>{ try{ a.cancel(); }catch(e){} };

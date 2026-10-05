@@ -6,49 +6,51 @@
 
 #view-roulette .panel{border-color:#a3352f}
 
-/* ---- Roue en 3D : perspective CSS + inclinaison, le spin (rotate JS) continue
-   de s'appliquer normalement sur .wheel/.ball-orbit à l'intérieur du plan incliné —
-   aucune modification du calcul de tirage n'est nécessaire. ---- */
+/* ---- Roue en 3D : toute la roue est un SVG dessiné par roulette-scene.js (bol en bois, piste,
+   alvéoles, cône, reflets) posé dans .wheel-wrap, plan incliné par CSS sous la perspective de
+   .wheel-3d. Seuls #r-wheel, #r-ballOrbit et .ball-pivot tournent (roulette.js, transitions
+   ci-dessous) ; le tirage et les gains n'en dépendent pas. ---- */
 .wheel-3d{
-  position:relative;height:160px;margin:6px auto 8px;
+  --rw:min(330px,88vw);
+  position:relative;width:100%;height:calc(var(--rw) * .74);margin:2px auto 12px;
   display:flex;align-items:flex-start;justify-content:center;
-  perspective:900px;perspective-origin:50% 10%;
+  perspective:1100px;perspective-origin:50% 14%;
 }
 .wheel-3d::before{
   /* Ombre portée au sol, pour ancrer visuellement la roue sur le feutre */
-  content:'';position:absolute;left:50%;top:130px;width:180px;height:30px;
+  content:'';position:absolute;left:50%;top:calc(var(--rw) * .5);width:calc(var(--rw) * .96);height:calc(var(--rw) * .27);
   transform:translateX(-50%);border-radius:50%;
-  background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent 72%);
-  filter:blur(1px);z-index:0;
+  background:radial-gradient(ellipse,rgba(0,0,0,.7),transparent 70%);
+  filter:blur(3px);z-index:0;
 }
 .wheel-wrap{
-  position:relative;width:220px;height:220px;flex-shrink:0;z-index:1;
-  padding:10px;border-radius:50%;
-  background:radial-gradient(circle at 35% 30%, #6b4a2a, #3a2712 70%, #1e1409);
-  box-shadow:0 26px 40px rgba(0,0,0,.65), inset 0 0 0 2px rgba(212,175,55,.4), inset 0 2px 6px rgba(255,255,255,.08);
-  transform:rotateX(56deg);
-  transform-style:preserve-3d;
+  position:relative;width:var(--rw);height:var(--rw);flex-shrink:0;z-index:1;margin-top:calc(var(--rw) * -.13);
+  transform:rotateX(52deg);transform-origin:50% 50%;
 }
-.wheel{position:absolute;inset:10px;border-radius:50%;border:5px solid var(--gold);box-shadow:0 8px 24px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.5);transition:transform 5s cubic-bezier(.16,.52,.18,1);transform-style:preserve-3d}
-.wheel span.num{position:absolute;left:50%;top:50%;font-size:.5rem;font-weight:bold;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);transform-origin:0 0}
-/* Animation signature : la case gagnante pulse/brille après l'arrêt de la bille (ne touche jamais transform, la position reste intacte) */
-.wheel span.num.wheel-num-win{animation:wheelNumWin 1s ease-in-out 2;z-index:4}
+/* Calques SVG superposés (voir roulette-scene.js) : décor fixe, roue, orbite de la bille, reflets. La roue
+   et l'orbite sont des éléments à part entière : leur rotation est un changement de transform sur un
+   calque déjà rasterisé (will-change), donc fluide même sur un téléphone modeste. */
+.rw-layer{position:absolute;left:0;top:0;width:100%;height:100%;display:block;overflow:visible;pointer-events:none}
+.rw-layer.wheel{will-change:transform;transition:transform 5s cubic-bezier(.16,.52,.18,1)}
+.rw-layer.ball-orbit{will-change:transform;transition:transform 5s cubic-bezier(.06,.62,.22,1)}
+.rw-layer .ball-pivot{transition:transform 5s cubic-bezier(.06,.62,.22,1)}
+.pk-num{font:bold 12.5px Georgia,'Times New Roman',serif;fill:#f6edd6;paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:.9px;stroke-linejoin:round}
+/* Animation signature : l'alvéole gagnante brille après l'arrêt de la bille (n'agit jamais sur la
+   position, seulement sur le contour et la couleur du numéro). */
+.pk.wheel-num-win .pk-bg{animation:pkWin 1s ease-in-out 2}
+.pk.wheel-num-win .pk-num{animation:pkNumWin 1s ease-in-out 2}
+@keyframes pkWin{0%,100%{stroke:transparent;stroke-width:0;filter:none}50%{stroke:#ffe9a0;stroke-width:3.2;filter:brightness(1.7)}}
+@keyframes pkNumWin{0%,100%{fill:#f6edd6}50%{fill:#fff;stroke:#ffd45a;stroke-width:1.4}}
 @keyframes wheelNumWin{0%,100%{filter:none}50%{filter:drop-shadow(0 0 6px var(--gold-bright)) brightness(1.7)}}
-.wheel-pointer{position:absolute;left:50%;top:2px;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:14px solid var(--gold-bright);z-index:5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-.ball-orbit{position:absolute;inset:10px;transition:transform 5s cubic-bezier(.06,.62,.22,1);pointer-events:none}
-.ball{position:absolute;top:4px;left:50%;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ccc);box-shadow:0 0 5px rgba(0,0,0,.6)}
-/* Petit rebond au moment où la bille se pose dans la case — purement 2D (translateY),
-   jamais de rotation 3D : aucun rapport avec le bug backface-visibility déjà rencontré
-   ailleurs (cartes), qui ne concerne que le retournement animé d'une face 3D. */
+/* Petit rebond au moment où la bille se pose dans l'alvéole — purement 2D (translateY) */
 .ball.ball-settle{animation:ballSettle .5s cubic-bezier(.36,1.4,.4,1)}
 @keyframes ballSettle{
   0%{transform:translateY(0)}
-  30%{transform:translateY(3px)}
-  55%{transform:translateY(-2px)}
-  80%{transform:translateY(1px)}
+  30%{transform:translateY(2.4px)}
+  55%{transform:translateY(-1.6px)}
+  80%{transform:translateY(.8px)}
   100%{transform:translateY(0)}
 }
-.wheel-center{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold-bright),var(--gold));box-shadow:0 3px 8px rgba(0,0,0,.5);z-index:3}
 .wheel-result-text{text-align:center;color:var(--gold-bright);font-size:1rem;margin-bottom:8px}
 
 /* ---- Historique des derniers numéros ---- */
@@ -66,15 +68,15 @@
 .rl-table-scroll{overflow-x:auto;margin-bottom:12px;-webkit-overflow-scrolling:touch}
 .rl-table{
   display:grid;grid-template-columns:38px 1fr 42px;grid-template-rows:repeat(3,34px);
-  min-width:470px;gap:3px;padding:8px;border-radius:10px 10px 0 0;
-  background:radial-gradient(ellipse at 50% 0%, #147049 0%, #0c3d2e 60%, #062a1f 100%);
-  border:2px solid var(--gold);border-bottom:none;
-  box-shadow:inset 0 0 24px rgba(0,0,0,.4);
+  min-width:470px;gap:3px;padding:9px 8px;border-radius:12px 12px 0 0;
+  background:var(--felt-noise),radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.12), rgba(255,255,255,0) 60%),radial-gradient(ellipse at 50% 0%, var(--tf-a,#168052) 0%, var(--tf-b,#0e5139) 60%, var(--tf-c,#07301f) 100%);
+  border:4px solid #4a2b12;border-bottom:none;
+  box-shadow:inset 0 0 26px rgba(0,0,0,.5),0 0 0 1px var(--gold);
 }
 .rl-zero{
   grid-row:1 / 4;grid-column:1;
-  background:linear-gradient(180deg,#2a9560,#1f7a44);color:#fff;border:1px solid rgba(255,255,255,.25);
-  border-radius:6px;font-weight:bold;font-size:.85rem;cursor:pointer;font-family:inherit;
+  background:linear-gradient(180deg,#35ad70,#1f8a4c 55%,#146835);color:#fff;border:1px solid rgba(255,255,255,.25);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -2px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.45);border-radius:6px;font-weight:bold;font-size:.85rem;cursor:pointer;font-family:inherit;
   display:flex;align-items:center;justify-content:center;transition:transform .12s ease,box-shadow .12s ease;
 }
 .rl-zero:hover{transform:translateY(-1px)}
@@ -84,8 +86,9 @@
   cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;
   transition:transform .12s ease,box-shadow .12s ease;
 }
-.rl-cell.rl-red{background:linear-gradient(180deg,#c1443c,var(--red))}
-.rl-cell.rl-black{background:linear-gradient(180deg,#262626,#121212)}
+.rl-cell{box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -2px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.45);text-shadow:0 1px 1px rgba(0,0,0,.6)}
+.rl-cell.rl-red{background:linear-gradient(180deg,#d4504a,#b3141d 55%,#8a0f16)}
+.rl-cell.rl-black{background:linear-gradient(180deg,#3a3a40,#17171a 55%,#0b0b0d)}
 .rl-cell:hover{transform:translateY(-1px)}
 .rl-cols{grid-row:1 / 4;grid-column:3;display:grid;grid-template-rows:repeat(3,1fr);gap:3px}
 .rl-col{
@@ -102,7 +105,7 @@
 .rl-zero.win-pulse,.rl-cell.win-pulse,.rl-col.win-pulse,.rl-out.win-pulse{animation:wheelNumWin 1s ease-in-out 2}
 
 .rl-outside-row{
-  display:flex;gap:3px;padding:0 8px 8px;background:#062a1f;border:2px solid var(--gold);border-top:none;
+  display:flex;gap:3px;padding:0 8px 8px;background:var(--felt-noise),linear-gradient(180deg,var(--tf-b,#0e5139),var(--tf-c,#07301f));border:4px solid #4a2b12;border-top:none;box-shadow:0 0 0 1px var(--gold);
 }
 .rl-outside-row-6{border-radius:0 0 10px 10px;padding-bottom:10px}
 .rl-out{

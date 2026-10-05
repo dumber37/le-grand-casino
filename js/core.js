@@ -746,11 +746,35 @@ window.Casino = (function(){
   C.newDeck = function(){ const d=[]; for(const s of SUITS) for(const r of RANKS) d.push({r,s}); for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]];} return d; };
   // Carte 3D à deux faces (recto visible / verso pour la carte cachée du croupier) :
   // un seul point d'entrée, réutilisé tel quel par blackjack, baccarat et ride the bus.
+  // Disposition des « pips » d'une carte à chiffre (positions en % de la face, y > 50 = retournés à
+  // 180°, comme sur un vrai jeu) ; l'as a un grand symbole central, les figures un cadre avec leur lettre.
+  const CARD_PIPS={
+    '2':[[50,21],[50,79]],
+    '3':[[50,21],[50,50],[50,79]],
+    '4':[[37,21],[63,21],[37,79],[63,79]],
+    '5':[[37,21],[63,21],[50,50],[37,79],[63,79]],
+    '6':[[37,21],[63,21],[37,50],[63,50],[37,79],[63,79]],
+    '7':[[37,21],[63,21],[50,35],[37,50],[63,50],[37,79],[63,79]],
+    '8':[[37,21],[63,21],[50,35],[37,50],[63,50],[50,65],[37,79],[63,79]],
+    '9':[[37,20],[63,20],[37,40],[63,40],[50,50],[37,60],[63,60],[37,80],[63,80]],
+    '10':[[37,20],[63,20],[50,30],[37,40],[63,40],[37,60],[63,60],[50,70],[37,80],[63,80]]
+  };
+  function cardFaceHtml(card){
+    const r=card.r, s=card.s;
+    if(r==='?') return '<span class="cf-ace">?</span>';
+    const idx='<span class="cf-i"><b>'+r+'</b><i>'+s+'</i></span>';
+    let body;
+    if(r==='A') body='<span class="cf-ace">'+s+'</span>';
+    else if(CARD_PIPS[r]) body='<span class="cf-pips">'+CARD_PIPS[r].map(p=>'<i class="cf-p'+(p[1]>50?' f':'')+'" style="left:'+p[0]+'%;top:'+p[1]+'%">'+s+'</i>').join('')+'</span>';
+    else body='<span class="cf-court"><em>'+r+'</em><i class="cf-cs t">'+s+'</i><i class="cf-cs b">'+s+'</i></span>';
+    return '<span class="cf-tl">'+idx+'</span><span class="cf-br">'+idx+'</span>'+body;
+  }
   C.renderCard = function(card,hidden,big){
     const wrap=document.createElement('div'); wrap.className='card-3d'+(big?' lg':'');
     const inner=document.createElement('div'); inner.className='card-flip'+(hidden?' is-back':'');
     const face=document.createElement('div'); face.className='card-face'+(['♥','♦'].includes(card.s)?' red':'');
-    face.textContent=card.r+card.s;
+    face.dataset.label=card.r+card.s;   // identifiant stable de la carte (le contenu est désormais structuré)
+    face.innerHTML=cardFaceHtml(card);
     const back=document.createElement('div'); back.className='card-back';
     inner.appendChild(face); inner.appendChild(back);
     wrap.appendChild(inner);
