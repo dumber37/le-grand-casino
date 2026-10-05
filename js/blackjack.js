@@ -8,6 +8,7 @@
   // la donne ({me, ai:[…], dealer}), null le reste du temps (tout est alors visible) ; `dealCtl` permet
   // d'accélérer. La donne est tirée d'un coup comme avant : seul l'affichage est étalé dans le temps.
   let shown=null, dealCtl=null;
+  const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
   const betEl=document.getElementById('bj-betAmount'), msg=document.getElementById('bj-message');
   const dealerCardsEl=document.getElementById('bj-dealerCards'), dealerScoreEl=document.getElementById('bj-dealerScore');
   const playerZonesEl=document.getElementById('bj-playerZones'), tableEl=document.querySelector('#bj-solo .bj-table');
@@ -142,7 +143,7 @@
     if(C.forgetCards) C.forgetCards(tableEl);
     tableEl.classList.add('dealing');
     renderTable(false); render(); msg.textContent='Distribution des cartes… (clique sur la table pour accélérer)';
-    const ctl=C.paceDeal(order.length,k=>{
+    const ctl=(C.paceDeal||instantDeal)(order.length,k=>{
       const who=order[k]; if(who==='me') shown.me++; else if(who==='dealer') shown.dealer++; else shown.ai[who]++;
       renderTable(false);
     },()=>{

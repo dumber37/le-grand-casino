@@ -25,6 +25,7 @@
   // null le reste du temps. snapshotFor() n'envoie (à l'hôte comme aux amis) que les cartes déjà posées : la
   // donne est tirée d'un coup comme avant, seul l'affichage est étalé dans le temps.
   let dealShown=null, dealCtl=null;
+  const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
 
   function switchMode(m){
     if(m!=='ai'&&m!=='multi') return;
@@ -150,7 +151,7 @@
     tableEl.classList.add('dealing');
     msg.textContent='Distribution des cartes…';
     render();
-    const ctl=C.paceDeal(order.length,k=>{
+    const ctl=(C.paceDeal||instantDeal)(order.length,k=>{
       const who=order[k]; if(who==='dealer') dealShown.dealer++; else dealShown.seats[who]++;
       render();
     },()=>{
