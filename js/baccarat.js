@@ -17,7 +17,15 @@
   const bankerCardsEl=document.getElementById('bc-bankerCards'), playerCardsEl=document.getElementById('bc-playerCards');
   const bankerScoreEl=document.getElementById('bc-bankerScore'), playerScoreEl=document.getElementById('bc-playerScore');
   const bankerZoneEl=bankerCardsEl.closest('.zone'), playerZoneEl=playerCardsEl.closest('.zone');
-  const panelEl=document.querySelector('#view-baccarat .panel');
+  const panelEl=document.querySelector('#view-baccarat .panel'), tableEl=document.querySelector('#view-baccarat .bj-table');
+  // Distribution lente (C.paceDeal, deal-anim.js) : comme à une vraie table, le croupier pose UNE carte à la
+  // fois — Player, Banker, Player, Banker, puis les éventuelles 3es cartes — ~1,5 s entre deux cartes. La manche
+  // est tirée d'un coup (dealRound, inchangé) ; seul l'affichage est étalé, et le résultat (gain, message, solde)
+  // n'apparaît qu'après la dernière carte. dealing bloque une nouvelle donne ; pendingSettle règle la manche
+  // tout de suite si l'onglet se ferme en pleine distribution (le gain n'est jamais perdu).
+  let dealing=false, dealCtl=null, pendingSettle=null;
+  const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
+  window.addEventListener('pagehide',()=>{ if(pendingSettle) pendingSettle(); });
   document.querySelectorAll('#bc-mainBets button').forEach(b=>{
     b.addEventListener('click',()=>{ document.querySelectorAll('#bc-mainBets button').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); selected=b.dataset.bet; });
   });
@@ -33,7 +41,7 @@
     return false;
   }
   function sideCost(){ return (sidePlayer?SIDE_COST:0)+(sideBanker?SIDE_COST:0); }
-  function render(){ betEl.textContent=bet; dealBtn.disabled=C.state.balance<(bet+sideCost()); }
+  function render(){ betEl.textContent=bet; dealBtn.disabled=dealing||C.state.balance<(bet+sideCost()); }
   document.getElementById('bc-betMinus').addEventListener('click',()=>{bet=Math.max(5,bet-5);render();});
   document.getElementById('bc-betPlus').addEventListener('click',()=>{bet=Math.min(200,bet+5);render();});
   document.addEventListener('balance-changed',render);
@@ -58,7 +66,7 @@
     else if(outcome==='tie'){ win=stake; }
     return win;
   }
-  C.baccarat={deal:dealRound, payout};
+  C.baccarat={deal:dealRound, payout, total:bacTotal};
 
   // ---- Joueurs IA à la table : parient chacun sur un camp avec la même mise que toi, sur le papier
   // uniquement (aucun jeton réel, aucun effet sur tes gains). Léa mise sur le Banker (meilleure
@@ -88,29 +96,65 @@
   renderAi(null,0);
 
   dealBtn.addEventListener('click',()=>{
+    if(dealing) return;
     if(!selected){ msg.textContent='Choisis Player, Banker ou Tie.'; return; }
     const totalBet=bet+sideCost();
     if(C.state.balance<totalBet){ msg.textContent='Solde insuffisant.'; return; }
     C.state.balance-=totalBet; C.trackWager(totalBet); C.saveBalance(); C.renderBalance();
+    // Tout ce dont le règlement a besoin est figé ici : pendant la distribution, mise, camp et paires restent
+    // modifiables à l'écran sans jamais toucher à la manche en cours.
+    const stake=bet, pick=selected, sideP=sidePlayer, sideB=sideBanker;
     const {player,banker,pTotal,bTotal,outcome}=dealRound();
-    bankerCardsEl.innerHTML=''; banker.forEach(c=>bankerCardsEl.appendChild(C.renderCard(c,false)));
-    playerCardsEl.innerHTML=''; player.forEach(c=>playerCardsEl.appendChild(C.renderCard(c,false)));
-    bankerScoreEl.textContent=bTotal; playerScoreEl.textContent=pTotal;
-    const win=payout(selected,bet,outcome);
-    let sideWin=0, sideMsg='';
-    if(sidePlayer){ if(isPair(player)){ sideWin+=SIDE_COST*SIDE_MULT; sideMsg+=' · Paire Joueur +'+(SIDE_COST*SIDE_MULT); } }
-    if(sideBanker){ if(isPair(banker)){ sideWin+=SIDE_COST*SIDE_MULT; sideMsg+=' · Paire Banquier +'+(SIDE_COST*SIDE_MULT); } }
-    const totalWin=win+sideWin;
-    renderAi(outcome,bet);
-    msg.textContent = (win>0 ? ((outcome==='tie'&&selected!=='tie')?'Égalité — mise remboursée':'Gagné ! +'+win+' jetons') : (outcome+' gagne — perdu')) + sideMsg;
-    // Animation signature : la main gagnante (Player/Banker) est surlignée d'un liseré doré ; perte = assombrissement discret.
+    // Ordre de la table : Player, Banker, Player, Banker, puis la 3e carte du Player et celle du Banker si elles existent.
+    const order=['p','b','p','b']; if(player.length>2) order.push('p'); if(banker.length>2) order.push('b');
+    const shownP=[], shownB=[];
+    const show=side=>{
+      const hand=side==='p'?player:banker, shown=side==='p'?shownP:shownB, c=hand[shown.length]; if(!c) return;
+      shown.push(c);
+      (side==='p'?playerCardsEl:bankerCardsEl).appendChild(C.renderCard(c,false));
+      (side==='p'?playerScoreEl:bankerScoreEl).textContent=bacTotal(shown);
+    };
+    const settle=()=>{
+      if(!dealing) return;
+      dealing=false; pendingSettle=null; tableEl.classList.remove('dealing');
+      if(dealCtl){ dealCtl.cancel(); dealCtl=null; }
+      while(shownP.length<player.length) show('p'); // distribution accélérée : les cartes restantes arrivent d'un coup
+      while(shownB.length<banker.length) show('b');
+      bankerScoreEl.textContent=bTotal; playerScoreEl.textContent=pTotal;
+      const win=payout(pick,stake,outcome);
+      let sideWin=0, sideMsg='';
+      if(sideP){ if(isPair(player)){ sideWin+=SIDE_COST*SIDE_MULT; sideMsg+=' · Paire Joueur +'+(SIDE_COST*SIDE_MULT); } }
+      if(sideB){ if(isPair(banker)){ sideWin+=SIDE_COST*SIDE_MULT; sideMsg+=' · Paire Banquier +'+(SIDE_COST*SIDE_MULT); } }
+      const totalWin=win+sideWin;
+      renderAi(outcome,stake);
+      msg.textContent = (win>0 ? ((outcome==='tie'&&pick!=='tie')?'Égalité — mise remboursée':'Gagné ! +'+win+' jetons') : (outcome+' gagne — perdu')) + sideMsg;
+      // Animation signature : la main gagnante (Player/Banker) est surlignée d'un liseré doré ; perte = assombrissement discret.
+      bankerZoneEl.classList.remove('zone-win'); playerZoneEl.classList.remove('zone-win');
+      if(outcome==='banker') bankerZoneEl.classList.add('zone-win');
+      else if(outcome==='player') playerZoneEl.classList.add('zone-win');
+      if(totalWin===0) C.flashLoss(panelEl);
+      C.state.balance+=totalWin; C.saveBalance(); C.renderBalance();
+      C.recordGame('baccarat', totalBet, totalWin); if(totalWin>0) C.flashWin(msg);
+      render();
+    };
+    // Table vidée avant la 1re carte : les cartes de la manche précédente disparaissent, les IA repassent « en attente ».
+    bankerCardsEl.innerHTML=''; playerCardsEl.innerHTML=''; bankerScoreEl.textContent=''; playerScoreEl.textContent='';
     bankerZoneEl.classList.remove('zone-win'); playerZoneEl.classList.remove('zone-win');
-    if(outcome==='banker') bankerZoneEl.classList.add('zone-win');
-    else if(outcome==='player') playerZoneEl.classList.add('zone-win');
-    if(totalWin===0) C.flashLoss(panelEl);
-    C.state.balance+=totalWin; C.saveBalance(); C.renderBalance();
-    C.recordGame('baccarat', totalBet, totalWin); if(totalWin>0) C.flashWin(msg);
-    render();
+    renderAi(null,0);
+    if(C.forgetCards) C.forgetCards(tableEl);
+    dealing=true; pendingSettle=settle; tableEl.classList.add('dealing'); render();
+    msg.textContent='Distribution des cartes… (clique sur la table pour accélérer)';
+    const ctl=(C.paceDeal||instantDeal)(order.length,k=>show(order[k]),settle);
+    dealCtl=dealing?ctl:null; // déjà revenu à false si la manche s'est réglée d'un coup (mouvement réduit)
+  });
+  // Pendant la distribution lente, un clic sur la table (ou Espace / Entrée) la termine tout de suite.
+  tableEl.addEventListener('click',()=>{ if(dealCtl) dealCtl.skip(); });
+  document.addEventListener('keydown',e=>{
+    if(!dealCtl||(e.code!=='Space'&&e.key!=='Enter')||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey) return;
+    if(!document.getElementById('view-baccarat').classList.contains('active')) return;
+    // Décalé d'un tour : le raccourci « Espace = Distribuer » (shortcuts.js) traite le même appui juste après,
+    // et le bouton redevient actif dès la fin de la distribution — il relancerait aussitôt une manche.
+    e.preventDefault(); const ctl=dealCtl; setTimeout(()=>ctl.skip(),0);
   });
   render();
 })();

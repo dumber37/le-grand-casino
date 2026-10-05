@@ -217,7 +217,9 @@
   document.addEventListener('keydown',e=>{
     if(!dealCtl||(e.code!=='Space'&&e.key!=='Enter')||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey) return;
     if(!document.getElementById('view-blackjack').classList.contains('active')) return;
-    e.preventDefault(); dealCtl.skip();
+    // Décalé d'un tour : le raccourci « Espace = Distribuer » (shortcuts.js) traite le même appui juste après ;
+    // sur un blackjack naturel la manche se termine tout de suite et le bouton redeviendrait actif.
+    e.preventDefault(); const ctl=dealCtl; setTimeout(()=>ctl.skip(),0);
   });
   dealBtn.addEventListener('click',deal); hitBtn.addEventListener('click',hit); standBtn.addEventListener('click',stand);
   doubleBtn.addEventListener('click',doubleDown); splitBtn.addEventListener('click',split);

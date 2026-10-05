@@ -95,6 +95,15 @@
   let turn=0, handActive=false, pendingHuman=-1, handNo=0, lastMsg='Choisis tes blinds puis lance une main.';
   let timer=null, turnTimer=null, inHandler=null;
   let view=null, raiseTo=0, lastActKey='', renderedBoard=0, renderedBoardNo=-1;
+  // Distribution lente (C.paceDeal, deal-anim.js) : une carte à la fois, ~1,5 s entre deux cartes — d'abord les
+  // 2 cartes privées de chacun (une carte à chaque joueur en partant de la gauche du bouton, puis la seconde),
+  // ensuite le flop, le turn et la river carte par carte. La main est tirée d'un coup comme avant (paquet, cartes
+  // privées, tableau) : seul l'affichage est étalé. dealShown = ce qui est déjà posé ({hole:[…], board}), null le
+  // reste du temps ; les IA décident d'après leurs vraies cartes, jamais d'après ce qui est affiché ; le jeu ne
+  // reprend (mises) qu'une fois la dernière carte posée.
+  let dealShown=null, dealCtl=null, dealHint=false;
+  const DEAL_HINT=' Distribution… (clique sur la table pour accélérer)';
+  const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
   let guestMode=false, guestInvested=0;   // guestMode : je suis assis à la table d'un ami (hôte)
   // ---- Partie d'essai : jetons fictifs, séparés du solde réel (jamais lus ni modifiés tant
   // qu'elle est active), et jamais de recordGame en démo (stats/historique/missions/VIP
@@ -141,16 +150,19 @@
   }
   function snapshot(viewer){
     const me=players[viewer];
+    // Pendant la distribution lente, seules les cartes déjà posées sont visibles (pour moi comme pour les amis).
+    const nh=(i,p)=>dealShown?(dealShown.hole[i]||0):p.hole.length;
     const seats=players.map((p,i)=>({
       name:p.name, icon:p.icon, kind:p.kind, stack:stackOf(p), bet:p.bet, folded:p.folded, allIn:p.allIn,
       av:p.kind==='local'?(C.avatars?C.avatars.myTraits():null):(p.av||null),
       lastAction:p.lastAction, handName:p.handName, won:p.won, dealer:i===dealer,
-      turn:handActive&&turn===i&&!p.folded, hole:(i===viewer||p.reveal||p.folded)?p.hole:null, nHole:p.hole.length
+      turn:handActive&&turn===i&&!p.folded, hole:(i===viewer||p.reveal||p.folded)?p.hole.slice(0,nh(i,p)):null, nHole:nh(i,p)
     }));
     const act=(handActive&&pendingHuman===viewer&&me)?actInfo(me):null;
     let text=lastMsg;
     if(act) text='À toi de jouer — '+(act.toCall>0?'à payer : '+Math.min(act.toCall,act.stack):'tu peux checker')+'.';
-    return {seats,me:viewer,board:board.slice(),pot:potTotal(),street,handActive,handNo,msg:text,act,sb,bb};
+    if(dealShown&&dealHint) text+=DEAL_HINT;
+    return {seats,me:viewer,board:dealShown?board.slice(0,dealShown.board):board.slice(),pot:potTotal(),street,handActive,handNo,msg:text,act,sb,bb};
   }
 
   // ---------- Rendu (identique pour l'hôte, le solo et les invités : tout vient d'un instantané) ----------
@@ -161,7 +173,7 @@
     const px=isMe?40:30;
     av.innerHTML=C.avatars?(isMe?C.avatars.html('Toi',px):(C.avatars.htmlTraits(s.av,px)||C.avatars.html(s.name,px))):s.icon;
     const nm=document.createElement('div'); nm.className='pk-name'; nm.textContent=s.name+(isMe&&s.kind!=='ai'&&s.name!=='Toi'?' (toi)':'');
-    if(s.dealer&&s.nHole){ const b=document.createElement('span'); b.className='pk-dealer'; b.textContent='D'; nm.appendChild(b); }
+    if(s.dealer&&(s.nHole||st.handActive)){ const b=document.createElement('span'); b.className='pk-dealer'; b.textContent='D'; nm.appendChild(b); }
     const stk=document.createElement('div'); stk.className='pk-stack'; stk.textContent='💰 '+s.stack;
     const row=document.createElement('div'); row.className='pk-cards';
     if(s.hole&&s.hole.length) s.hole.forEach(c=>row.appendChild(C.renderCard(c,false,isMe)));
@@ -276,14 +288,33 @@
     const N=players.length;
     dealer=((dealer+1)%N+N)%N;
     players.forEach(p=>{ p.hole=[deck.pop(),deck.pop()]; });
-    C.sound&&C.sound('card');
     const sbI=N===2?dealer:(dealer+1)%N, bbI=N===2?(dealer+1)%N:(dealer+2)%N;
     putIn(players[sbI],sb); players[sbI].lastAction='Petite blind '+sb;
     putIn(players[bbI],bb); players[bbI].lastAction='Grosse blind '+bb;
     currentBet=Math.max.apply(null,players.map(p=>p.bet)); minRaise=bb;
     turn=(bbI+1)%N; handActive=true; pendingHuman=-1;
     say('Nouvelle main — blinds '+sb+'/'+bb+(multi?' — '+players.filter(p=>p.kind!=='ai').length+' joueurs humains.':'.'));
-    render(); schedule(step,700);
+    // Les blinds sont déjà versées ; le croupier distribue une carte à la fois en partant de la gauche du bouton
+    // (1re carte à chacun, puis la 2e), puis la main reprend. Le conseil « clique pour accélérer » n'est affiché
+    // qu'à celui qui peut l'utiliser (jamais dans l'instantané envoyé aux amis).
+    const seq=[]; for(let r=0;r<2;r++) for(let k=1;k<=N;k++) seq.push({hole:(dealer+k)%N});
+    dealCards(seq,{hole:players.map(()=>0),board:0},()=>schedule(step,700),{forget:true,hint:!multi});
+  }
+  // Pose les cartes de `seq` une à une (voir dealShown) puis appelle after(). `start` = ce qui est déjà visible.
+  function dealCards(seq,start,after,o){
+    o=o||{};
+    dealShown=start; dealHint=!!o.hint;
+    if(o.forget&&C.forgetCards) C.forgetCards(feltEl); // nouvelle donne : chaque carte part bien de la main du croupier
+    feltEl.classList.add('dealing'); render();
+    const finish=()=>{
+      dealShown=null; dealCtl=null; dealHint=false; feltEl.classList.remove('dealing');
+      render(); after();
+    };
+    const ctl=(C.paceDeal||instantDeal)(seq.length,k=>{
+      const s=seq[k]; if(s.board) dealShown.board++; else dealShown.hole[s.hole]++;
+      render();
+    },finish,{lead:o.lead,tail:o.tail});
+    dealCtl=dealShown?ctl:null; // déjà revenu à null si la distribution s'est faite d'un coup (mouvement réduit)
   }
   function roundOver(){
     const alive=players.filter(p=>!p.folded);
@@ -294,7 +325,7 @@
     return actors.every(p=>p.acted&&p.bet===currentBet);
   }
   function step(){
-    if(!handActive) return;
+    if(!handActive||dealShown) return; // distribution en cours : la main reprend toute seule à la dernière carte
     if(players.filter(p=>!p.folded).length===1) return settle(false);
     if(roundOver()) return advanceStreet();
     const N=players.length; let idx=-1;
@@ -335,13 +366,16 @@
   function advanceStreet(){
     players.forEach(p=>{ p.bet=0; p.acted=false; });
     currentBet=0; minRaise=bb; pendingHuman=-1;
+    const before=board.length;
     if(street==='preflop'){ board.push(deck.pop(),deck.pop(),deck.pop()); street='flop'; }
     else if(street==='flop'){ board.push(deck.pop()); street='turn'; }
     else if(street==='turn'){ board.push(deck.pop()); street='river'; }
     else return settle(true);
-    C.sound&&C.sound('card');
     turn=N2(dealer+1);
-    render(); schedule(step,900);
+    // Flop, turn, river : les cartes du tableau sont posées une à une (voir dealCards), puis les mises reprennent.
+    const n=board.length-before;
+    dealCards(Array.from({length:n},()=>({board:true})),{hole:players.map(p=>p.hole.length),board:before},()=>schedule(step,600),
+      {lead:450,tail:350,hint:!players.some(p=>p.kind==='remote')});
   }
   const N2=i=>((i%players.length)+players.length)%players.length;
 
@@ -502,6 +536,13 @@
     if(players.length) render(); else updateMp();
   }));
   dealBtn.addEventListener('click',startHand);
+  // Pendant la distribution lente, un clic sur la table (ou Espace / Entrée) l'accélère (hôte ou solo seulement).
+  feltEl.addEventListener('click',()=>{ if(dealCtl) dealCtl.skip(); });
+  document.addEventListener('keydown',e=>{
+    if(!dealCtl||(e.code!=='Space'&&e.key!=='Enter')||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey) return;
+    if(!el('view-poker').classList.contains('active')) return;
+    e.preventDefault(); dealCtl.skip();
+  });
   document.addEventListener('balance-changed',()=>{ if(!handActive&&!guestMode) dealBtn.disabled=bal()<need(); });
 
   // ---------- Partie d'essai ----------

@@ -19,6 +19,15 @@
   const msgHandlers=[], peerLeftHandlers=[], leaveHandlers=[];
   const notifyChange=()=>document.dispatchEvent(new Event('friends-changed'));
   let mySide=null, myBet=25, escrow=0, roster=[];
+  // Distribution lente (C.paceDeal, deal-anim.js) : chaque appareil étale lui-même l'affichage des cartes du
+  // résultat reçu ; le règlement (gain, solde, enregistrement) n'a lieu qu'après la dernière carte. Pendant ce
+  // temps (dealing) : ni nouvelle mise ni nouvelle distribution. flushDeal() règle tout de suite — appelé en
+  // quittant le salon, si l'hôte part, ou à la fermeture de l'onglet : le gain d'une manche déjà jouée n'est
+  // jamais perdu, et on ne peut pas se faire rembourser une mise après un résultat perdant.
+  let dealing=false, dealCtl=null, finishDeal=null;
+  const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
+  const flushDeal=()=>{ if(finishDeal) finishDeal(); };
+  window.addEventListener('pagehide',flushDeal);
 
   const msgEl=$('fr-message');
   const say=t=>{ msgEl.textContent=t; };
@@ -51,6 +60,7 @@
   // ---------- Mise de côté (escrow) : même solde partagé, jamais négatif ----------
   function refund(){ if(escrow>0){ C.state.balance+=escrow; C.saveBalance(); C.renderBalance(); escrow=0; } }
   function commit(){
+    if(dealing){ say('Distribution en cours — mise à la fin de la manche.'); return false; }
     if(!mySide){ say('Choisis Player, Banker ou Tie.'); return false; }
     refund();
     if(C.state.balance<myBet){ say('Solde insuffisant.'); syncMine(); return false; }
@@ -72,7 +82,7 @@
   // une mise, l'hôte distribue tout seul après un court délai.
   let autoDealTimer=null;
   function checkAutoDeal(r){
-    if(role!=='host'||autoDealTimer||r.length<2) return;
+    if(role!=='host'||autoDealTimer||r.length<2||dealing) return;
     const ready=p=>p.bet>0&&p.side;
     if(r.every(ready)){
       say('Tous les joueurs ont misé — distribution...');
@@ -102,7 +112,7 @@
 
   // ---------- Manche (hôte) ----------
   function deal(){
-    if(role!=='host') return;
+    if(role!=='host'||dealing) return;
     const list=buildRoster();
     if(!list.some(p=>p.bet>0&&p.side)){ say('Personne n’a encore validé de mise.'); return; }
     const res=C.baccarat.deal();
@@ -112,32 +122,64 @@
     applyResult(msg);
   }
   function applyResult(m){
-    const bc=$('fr-bankerCards'), pc=$('fr-playerCards');
-    bc.innerHTML=''; m.banker.forEach(c=>bc.appendChild(C.renderCard(c,false)));
-    pc.innerHTML=''; m.player.forEach(c=>pc.appendChild(C.renderCard(c,false)));
-    $('fr-bankerScore').textContent=m.bTotal; $('fr-playerScore').textContent=m.pTotal;
+    flushDeal(); // une manche précédente encore en cours d'affichage est réglée d'abord
+    const bc=$('fr-bankerCards'), pc=$('fr-playerCards'), felt=$('fr-felt');
     const bz=bc.closest('.zone'), pz=pc.closest('.zone');
-    bz.classList.remove('zone-win'); pz.classList.remove('zone-win');
-    if(m.outcome==='banker') bz.classList.add('zone-win'); else if(m.outcome==='player') pz.classList.add('zone-win');
-    C.sound&&C.sound('card');
-    renderPlayers(m.players,m.players);
     const meId=role==='host'?0:myId, mine=m.players.find(p=>p.id===meId);
-    say((m.outcome==='tie'?'Égalité':SIDES[m.outcome]+' gagne')+' ('+m.pTotal+' – '+m.bTotal+').');
-    if(escrow>0&&(!mine||mine.bet!==escrow)){
-      // Ma mise est arrivée chez l'hôte APRÈS la distribution : elle n'a pas été comptée, on me la rend.
-      refund();
-      if(role==='guest'&&hostConn) sendTo(hostConn.dc,{t:'bet',side:null,bet:0});
-      say(msgEl.textContent+' Ta mise est arrivée trop tard pour cette manche : elle t’a été rendue.');
-    } else if(escrow>0){
-      const stake=escrow, win=mine?mine.win:0; escrow=0;
-      C.state.balance+=win; C.saveBalance(); C.renderBalance();
-      say(msgEl.textContent+(win>0?' Tu gagnes +'+win+' jetons !':' Perdu.'));
-      C.recordGame('baccarat',stake,win);
-      if(win>0) C.flashWin(msgEl); else C.flashLoss($('fr-table'));
-    }
-    mySide=null; syncSides();
-    if(role==='host') broadcastRoster();
+    // Ma mise est arrivée chez l'hôte APRÈS la distribution : elle n'a pas été comptée, on me la rend tout de suite
+    // (cela ne dépend pas du résultat, donc rien à attendre) ; seul le message est ajouté à la fin de la distribution.
+    const late=escrow>0&&(!mine||mine.bet!==escrow);
+    if(late){ refund(); if(role==='guest'&&hostConn) sendTo(hostConn.dc,{t:'bet',side:null,bet:0}); }
+    // Cartes posées une à une : Player, Banker, Player, Banker, puis les éventuelles 3es cartes.
+    const order=['p','b','p','b']; if(m.player.length>2) order.push('p'); if(m.banker.length>2) order.push('b');
+    const shownP=[], shownB=[];
+    const show=side=>{
+      const hand=side==='p'?m.player:m.banker, shown=side==='p'?shownP:shownB, c=hand[shown.length]; if(!c) return;
+      shown.push(c);
+      (side==='p'?pc:bc).appendChild(C.renderCard(c,false));
+      $(side==='p'?'fr-playerScore':'fr-bankerScore').textContent=C.baccarat.total(shown);
+    };
+    const finish=()=>{
+      if(!dealing) return;
+      dealing=false; finishDeal=null; felt.classList.remove('dealing');
+      if(dealCtl){ dealCtl.cancel(); dealCtl=null; }
+      while(shownP.length<m.player.length) show('p'); // distribution accélérée : les cartes restantes arrivent d'un coup
+      while(shownB.length<m.banker.length) show('b');
+      $('fr-bankerScore').textContent=m.bTotal; $('fr-playerScore').textContent=m.pTotal;
+      if(m.outcome==='banker') bz.classList.add('zone-win'); else if(m.outcome==='player') pz.classList.add('zone-win');
+      C.sound&&C.sound('card');
+      renderPlayers(m.players,m.players);
+      say((m.outcome==='tie'?'Égalité':SIDES[m.outcome]+' gagne')+' ('+m.pTotal+' – '+m.bTotal+').');
+      if(late){
+        say(msgEl.textContent+' Ta mise est arrivée trop tard pour cette manche : elle t’a été rendue.');
+      } else if(escrow>0){
+        const stake=escrow, win=mine?mine.win:0; escrow=0;
+        C.state.balance+=win; C.saveBalance(); C.renderBalance();
+        say(msgEl.textContent+(win>0?' Tu gagnes +'+win+' jetons !':' Perdu.'));
+        C.recordGame('baccarat',stake,win);
+        if(win>0) C.flashWin(msgEl); else C.flashLoss($('fr-table'));
+      }
+      mySide=null; syncSides();
+      if(role==='host') broadcastRoster();
+    };
+    // Table vidée avant la 1re carte (les cartes de la manche précédente disparaissent).
+    bc.innerHTML=''; pc.innerHTML=''; $('fr-bankerScore').textContent=''; $('fr-playerScore').textContent='';
+    bz.classList.remove('zone-win'); pz.classList.remove('zone-win');
+    if(C.forgetCards) C.forgetCards(felt);
+    dealing=true; finishDeal=finish; felt.classList.add('dealing');
+    say('Distribution des cartes…');
+    const ctl=(C.paceDeal||instantDeal)(order.length,k=>show(order[k]),finish);
+    dealCtl=dealing?ctl:null; // déjà revenu à false si la manche s'est réglée d'un coup (mouvement réduit)
   }
+  // Pendant la distribution lente, un clic sur la table (ou Espace / Entrée) l'accélère — sur ton écran seulement.
+  $('fr-felt').addEventListener('click',()=>{ if(dealCtl) dealCtl.skip(); });
+  document.addEventListener('keydown',e=>{
+    if(!dealCtl||(e.code!=='Space'&&e.key!=='Enter')||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey) return;
+    if(!$('view-friends').classList.contains('active')) return;
+    // Décalé d'un tour : le raccourci « Espace = Distribuer » (shortcuts.js) traite le même appui juste après,
+    // et le bouton de l'hôte redevient actif dès la fin de la distribution.
+    e.preventDefault(); const ctl=dealCtl; setTimeout(()=>ctl.skip(),0);
+  });
 
   // ---------- Hôte : invitations ----------
   function setupHostMessages(entry){
@@ -353,7 +395,10 @@
   }
   function onHostLost(){
     if(role!=='guest') return;
-    refund(); leave(true); say('L’hôte a quitté le salon — ta mise en attente t’a été rendue.');
+    // Une manche déjà jouée mais encore en cours d'affichage est réglée d'abord : rien à rembourser dans ce cas.
+    const hadDeal=!!finishDeal;
+    flushDeal(); refund(); leave(true);
+    say(hadDeal?'L’hôte a quitté le salon — la dernière manche a été réglée avant ton départ.':'L’hôte a quitté le salon — ta mise en attente t’a été rendue.');
   }
 
   // ---------- Interface ----------
@@ -366,6 +411,7 @@
   function updateHostUi(){ if(role==='host') $('fr-count').textContent=peers.length+' / '+MAX_FRIENDS+' amis connectés'; notifyChange(); }
   function syncSides(){ $('fr-sides').querySelectorAll('button').forEach(b=>b.classList.toggle('sel',b.dataset.side===mySide)); $('fr-betAmount').textContent=myBet; }
   function leave(silent){
+    flushDeal(); // manche en cours d'affichage : réglée avant de partir (jamais perdue, jamais remboursée à tort)
     refund();
     leaveHandlers.forEach(f=>{ try{ f(); }catch(x){} });
     peers.forEach(p=>{ try{ p.pc.close(); }catch(e){} }); peers=[];
