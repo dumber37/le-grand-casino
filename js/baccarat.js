@@ -19,7 +19,7 @@
   const bankerZoneEl=bankerCardsEl.closest('.zone'), playerZoneEl=playerCardsEl.closest('.zone');
   const panelEl=document.querySelector('#view-baccarat .panel'), tableEl=document.querySelector('#view-baccarat .bj-table');
   // Distribution lente (C.paceDeal, deal-anim.js) : comme à une vraie table, le croupier pose UNE carte à la
-  // fois — Player, Banker, Player, Banker, puis les éventuelles 3es cartes — ~1,5 s entre deux cartes. La manche
+  // fois — Player, Banker, Player, Banker, puis les éventuelles 3es cartes — ~1 s entre deux cartes. La manche
   // est tirée d'un coup (dealRound, inchangé) ; seul l'affichage est étalé, et le résultat (gain, message, solde)
   // n'apparaît qu'après la dernière carte. dealing bloque une nouvelle donne ; pendingSettle règle la manche
   // tout de suite si l'onglet se ferme en pleine distribution (le gain n'est jamais perdu).

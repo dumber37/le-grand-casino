@@ -137,7 +137,7 @@
     aiHands=AI_SEATS.map(()=>({cards:[deck.pop(),deck.pop()],result:''}));
     currentIdx=0; hasSplit=false; inRound=true;
     // Le croupier distribue une carte à la fois : 1re carte à chacun (Toi, Léa, Marco, croupier), puis la
-    // 2e carte à chacun — ~1,5 s entre deux cartes. Les boutons d'action restent éteints jusqu'à la fin.
+    // 2e carte à chacun — ~1 s entre deux cartes. Les boutons d'action restent éteints jusqu'à la fin.
     const order=[]; for(let r=0;r<2;r++){ order.push('me'); AI_SEATS.forEach((_,i)=>order.push(i)); order.push('dealer'); }
     shown={me:0,ai:AI_SEATS.map(()=>0),dealer:0};
     if(C.forgetCards) C.forgetCards(tableEl);

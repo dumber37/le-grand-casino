@@ -13,13 +13,21 @@
   const demoBtn=document.getElementById('vp-demoBtn'), demoBanner=document.getElementById('vp-demoBanner'), demoBalEl=document.getElementById('vp-demoBal');
   const minBet=5, maxBet=100, betStep=5;
   let bet=20, deck=[], hand=[], held=[false,false,false,false,false], phase='idle';
+  const tableEl=cardsEl.closest('.bj-table');
+  // Distribution lente (C.paceDeal, deal-anim.js) : les 5 cartes sont posées une à une (~1 s), puis, à l'échange, les
+  // cartes remplacées une à une ; le gain n'est annoncé qu'après la dernière. Tout est tiré d'un coup comme avant,
+  // seul l'affichage est étalé. phase : 'idle' | 'dealing' | 'dealt' (choix des cartes à garder) | 'drawing'.
+  // pendingSettle règle l'échange tout de suite si l'onglet se ferme en pleine distribution (le gain n'est jamais perdu).
+  let dealCtl=null, pendingSettle=null;
+  const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
+  window.addEventListener('pagehide',()=>{ if(pendingSettle) pendingSettle(); });
   // ---- Partie d'essai : jetons fictifs, séparés du solde réel (jamais lu ni modifié tant
   // qu'elle est active). Aucun recordGame en démo : stats/historique/missions/VIP restent
   // intacts, exactement comme si la partie n'avait jamais eu lieu. ----
   let demoMode=false, demoBalance=500;
   const bal=()=>demoMode?demoBalance:C.state.balance;
   function toggleDemo(){
-    if(phase==='dealt') return; // pas de bascule en pleine main, pour éviter toute confusion
+    if(phase!=='idle') return; // pas de bascule en pleine main (ni pendant la distribution), pour éviter toute confusion
     demoMode=!demoMode; demoBalance=500;
     demoBtn.textContent=demoMode?'🎓 Quitter la partie d’essai':'🎓 Partie d’essai';
     demoBanner.classList.toggle('show',demoMode);
@@ -61,10 +69,6 @@
   // toute la main et ferait revoler TOUTES les cartes à chaque clic, y compris celles déjà en jeu.
   function renderCards(animateMask){
     cardsEl.innerHTML='';
-    if(!hand.length){
-      for(let i=0;i<5;i++){ const ph=document.createElement('div'); ph.className='vp-slot vp-empty'; cardsEl.appendChild(ph); }
-      return;
-    }
     hand.forEach((c,i)=>{
       const slot=document.createElement('div'); slot.className='vp-slot'+(held[i]?' vp-held':'');
       const cardEl=C.renderCard(c,false,true);
@@ -84,48 +88,87 @@
       }
       cardsEl.appendChild(slot);
     });
+    // Emplacements pas encore distribués (main vide, ou distribution en cours) : cases vides en pointillé.
+    for(let i=hand.length;i<5;i++){ const ph=document.createElement('div'); ph.className='vp-slot vp-empty'; cardsEl.appendChild(ph); }
   }
   function highlightPaytable(mult){
     Array.from(paytableEl.children).forEach(row=>row.classList.toggle('vp-hit', mult>0 && parseInt(row.dataset.mult,10)===mult));
   }
   function render(){
     betEl.textContent=bet;
-    dealBtn.textContent=phase==='dealt'?'ÉCHANGER':'DISTRIBUER';
-    dealBtn.disabled=phase==='idle'&&(bet<=0||bal()<bet);
-    betMinus.disabled=betPlus.disabled=(phase==='dealt');
-    demoBtn.disabled=phase==='dealt';
+    dealBtn.textContent=(phase==='dealt'||phase==='drawing')?'ÉCHANGER':'DISTRIBUER';
+    dealBtn.disabled=(phase==='idle'&&(bet<=0||bal()<bet))||phase==='dealing'||phase==='drawing';
+    betMinus.disabled=betPlus.disabled=(phase!=='idle');
+    demoBtn.disabled=(phase!=='idle');
   }
   betMinus.addEventListener('click',()=>{ if(phase==='idle'){ bet=Math.max(minBet,bet-betStep); render(); } });
   betPlus.addEventListener('click',()=>{ if(phase==='idle'){ bet=Math.min(maxBet,bet+betStep); render(); } });
   document.addEventListener('balance-changed',render);
 
   function deal(){
+    if(phase!=='idle') return;
     if(bal()<bet){ msg.textContent='Solde insuffisant.'; return; }
     if(demoMode){ demoBalance-=bet; demoBalEl.textContent=demoBalance; } else { C.state.balance-=bet; C.trackWager(bet); C.saveBalance(); C.renderBalance(); }
-    deck=C.newDeck(); hand=[deck.pop(),deck.pop(),deck.pop(),deck.pop(),deck.pop()]; held=[false,false,false,false,false];
-    C.sound&&C.sound('card');
-    phase='dealt';
+    deck=C.newDeck(); const dealt=[deck.pop(),deck.pop(),deck.pop(),deck.pop(),deck.pop()]; held=[false,false,false,false,false];
+    // Les 5 cartes sont tirées d'un coup ; le croupier les pose une à une, de gauche à droite.
+    hand=[]; phase='dealing';
     cardsEl.classList.remove('vp-win'); highlightPaytable(-1);
-    msg.textContent='Choisis les cartes à garder, puis échange.';
-    renderCards([true,true,true,true,true]); render();
+    msg.textContent='Distribution des cartes… (clique sur la table pour accélérer)';
+    if(C.forgetCards) C.forgetCards(tableEl); // nouvelle donne : chaque carte part bien de la main du croupier
+    tableEl.classList.add('dealing');
+    renderCards(); render();
+    const finish=()=>{
+      if(phase!=='dealing') return;
+      dealCtl=null; tableEl.classList.remove('dealing');
+      hand=dealt.slice(); phase='dealt';
+      msg.textContent='Choisis les cartes à garder, puis échange.';
+      renderCards([true,true,true,true,true]); render();
+    };
+    const ctl=(C.paceDeal||instantDeal)(5,k=>{ hand.push(dealt[k]); renderCards(); },finish);
+    dealCtl=phase==='dealing'?ctl:null; // déjà revenu à 'dealt' si la main s'est faite d'un coup (mouvement réduit)
   }
   function draw(){
-    const wasHeld=held.slice();
-    for(let i=0;i<5;i++){ if(!held[i]) hand[i]=deck.pop(); }
-    C.sound&&C.sound('card');
-    const res=evaluateHand(hand);
-    const win=res.mult>0?bet*res.mult:0;
-    if(demoMode) demoBalance+=win; else { C.state.balance+=win; C.saveBalance(); C.renderBalance(); }
-    if(demoMode) demoBalEl.textContent=demoBalance;
-    phase='idle'; held=[false,false,false,false,false];
-    renderCards(wasHeld.map(h=>!h)); render(); highlightPaytable(res.mult);
-    cardsEl.classList.remove('vp-win'); void cardsEl.offsetWidth;
-    if(win>0){ msg.textContent=res.name+' ! +'+win+' jetons'+(demoMode?' (essai)':''); cardsEl.classList.add('vp-win'); C.flashWin(msg); }
-    else { msg.textContent=res.name+(demoMode?' (essai).':'.'); C.flashLoss(cardsEl); }
-    // Pas de recordGame en partie d'essai : stats, historique, missions et VIP ne doivent
-    // refléter que les vraies parties, jamais l'entraînement.
-    if(!demoMode) C.recordGame('videopoker', bet, win);
+    if(phase!=='dealt') return;
+    const wasHeld=held.slice(), idxs=[];
+    for(let i=0;i<5;i++){ if(!held[i]) idxs.push(i); }
+    const fresh=idxs.map(()=>deck.pop());
+    // L'échange est tiré d'un coup (et évalué) ; seuls l'affichage — cartes remplacées une à une — et l'annonce du
+    // gain sont étalés dans le temps. Mise, mode essai et main finale sont figés ici.
+    const finalHand=hand.slice(); idxs.forEach((i,k)=>{ finalHand[i]=fresh[k]; });
+    const res=evaluateHand(finalHand), stake=bet, isDemo=demoMode, win=res.mult>0?stake*res.mult:0;
+    phase='drawing'; render();
+    let settled=false;
+    const settle=()=>{
+      if(settled) return; settled=true; pendingSettle=null; tableEl.classList.remove('dealing');
+      if(dealCtl){ dealCtl.cancel(); dealCtl=null; }
+      hand=finalHand;
+      if(isDemo) demoBalance+=win; else { C.state.balance+=win; C.saveBalance(); C.renderBalance(); }
+      if(isDemo) demoBalEl.textContent=demoBalance;
+      phase='idle'; held=[false,false,false,false,false];
+      renderCards(wasHeld.map(h=>!h)); render(); highlightPaytable(res.mult);
+      cardsEl.classList.remove('vp-win'); void cardsEl.offsetWidth;
+      if(win>0){ msg.textContent=res.name+' ! +'+win+' jetons'+(isDemo?' (essai)':''); cardsEl.classList.add('vp-win'); C.flashWin(msg); }
+      else { msg.textContent=res.name+(isDemo?' (essai).':'.'); C.flashLoss(cardsEl); }
+      // Pas de recordGame en partie d'essai : stats, historique, missions et VIP ne doivent
+      // refléter que les vraies parties, jamais l'entraînement.
+      if(!isDemo) C.recordGame('videopoker', stake, win);
+    };
+    pendingSettle=settle;
+    if(!idxs.length){ settle(); return; } // tout gardé : rien à distribuer
+    msg.textContent='Distribution des cartes… (clique sur la table pour accélérer)';
+    tableEl.classList.add('dealing');
+    const ctl=(C.paceDeal||instantDeal)(idxs.length,k=>{ hand[idxs[k]]=fresh[k]; renderCards(); },settle);
+    dealCtl=settled?null:ctl; // déjà réglé si l'échange s'est fait d'un coup (mouvement réduit)
   }
   dealBtn.addEventListener('click',()=>{ phase==='dealt'?draw():deal(); });
+  // Pendant la distribution lente, un clic sur la table (ou Espace / Entrée) la termine tout de suite.
+  tableEl.addEventListener('click',()=>{ if(dealCtl) dealCtl.skip(); });
+  document.addEventListener('keydown',e=>{
+    if(!dealCtl||(e.code!=='Space'&&e.key!=='Enter')||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey) return;
+    if(!document.getElementById('view-videopoker').classList.contains('active')) return;
+    // Décalé d'un tour : le raccourci « Espace = Distribuer / Échanger » (shortcuts.js) traite le même appui juste
+    // après, et le bouton redevient actif dès la fin de la distribution — il lancerait aussitôt l'échange.
+    e.preventDefault(); const ctl=dealCtl; setTimeout(()=>ctl.skip(),0);
+  });
   renderCards(); render();
 })();

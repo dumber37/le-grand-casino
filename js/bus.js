@@ -5,7 +5,7 @@
   const C=window.Casino;
   let bet=15, deck=[], cards=[], active=false, currentBet=0;
   const betEl=document.getElementById('bus-betAmount'), msg=document.getElementById('bus-message');
-  const stageEl=document.getElementById('bus-stage'), cardsEl=document.getElementById('bus-cards');
+  const stageEl=document.getElementById('bus-stage'), cardsEl=document.getElementById('bus-cards'), tableEl=cardsEl.closest('.bj-table');
   const multEl=document.getElementById('bus-mult'), startBtn=document.getElementById('bus-startBtn'), actionsEl=document.getElementById('bus-actions');
   const MULTS=[2,3,4,20];
   function rankVal(c){ if(c.r==='A') return 14; if(c.r==='K') return 13; if(c.r==='Q') return 12; if(c.r==='J') return 11; return parseInt(c.r,10); }
@@ -87,35 +87,58 @@
     stageEl.textContent='Étape 1 : la carte est-elle rouge ou noire ?'; multEl.textContent='Multiplicateur : x1';
     setActions([{label:'Rouge', onClick:()=>guess1('rouge')},{label:'Noir', onClick:()=>guess1('noir')}]);
   }
+  // Une seule carte par étape : elle est posée tout de suite (le croupier la lance), mais le résultat n'est annoncé
+  // qu'après ~1 s (C.paceReveal, deal-anim.js) pour la laisser arriver et se retourner. Les boutons sont éteints
+  // pendant ce temps ; pendingRun joue le résultat tout de suite si l'onglet se ferme (le gain n'est jamais perdu).
+  let revealCtl=null, pendingRun=null;
+  const instantReveal=onDone=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout de suite
+  window.addEventListener('pagehide',()=>{ if(pendingRun) pendingRun(); });
+  function reveal(run){
+    actionsEl.querySelectorAll('button').forEach(b=>{ b.disabled=true; });
+    let ran=false;
+    const once=()=>{ if(ran) return; ran=true; pendingRun=null; revealCtl=null; tableEl.classList.remove('dealing'); run(); };
+    pendingRun=once; tableEl.classList.add('dealing');
+    const ctl=(C.paceReveal||instantReveal)(once);
+    revealCtl=ran?null:ctl;
+  }
+  tableEl.addEventListener('click',()=>{ if(revealCtl) revealCtl.skip(); }); // un clic sur la table annonce le résultat tout de suite
   function guess1(g){
-    const c=deck.pop(); cards.push(c); C.sound&&C.sound('card'); renderCards();
-    const col=['♥','♦'].includes(c.s)?'rouge':'noir';
-    if(g!==col){ endRound(0, "C'était "+col+'. Perdu.'); return; }
-    multEl.textContent='Multiplicateur : x'+MULTS[0]; stageEl.textContent='Étape 2 : plus haute ou plus basse que la précédente ?'; renderDots(1,0);
-    setActions([{label:'Plus haute', onClick:()=>guess2('haute')},{label:'Plus basse', onClick:()=>guess2('basse')},{label:'Encaisser (x'+MULTS[0]+')', onClick:()=>endRound(currentBet*MULTS[0], 'Encaissé ! +'+(currentBet*MULTS[0])+' jetons')}]);
+    const c=deck.pop(); cards.push(c); renderCards();
+    reveal(()=>{
+      const col=['♥','♦'].includes(c.s)?'rouge':'noir';
+      if(g!==col){ endRound(0, "C'était "+col+'. Perdu.'); return; }
+      multEl.textContent='Multiplicateur : x'+MULTS[0]; stageEl.textContent='Étape 2 : plus haute ou plus basse que la précédente ?'; renderDots(1,0);
+      setActions([{label:'Plus haute', onClick:()=>guess2('haute')},{label:'Plus basse', onClick:()=>guess2('basse')},{label:'Encaisser (x'+MULTS[0]+')', onClick:()=>endRound(currentBet*MULTS[0], 'Encaissé ! +'+(currentBet*MULTS[0])+' jetons')}]);
+    });
   }
   function guess2(g){
-    const prev=cards[0]; const c=deck.pop(); cards.push(c); C.sound&&C.sound('card'); renderCards();
-    const prevVal=rankVal(prev), val=rankVal(c);
-    if(val===prevVal){ endRound(0,'Égalité, perdu.'); return; }
-    const actual=val>prevVal?'haute':'basse';
-    if(g!==actual){ endRound(0,"C'était plus "+actual+'. Perdu.'); return; }
-    multEl.textContent='Multiplicateur : x'+MULTS[1]; stageEl.textContent='Étape 3 : la carte est-elle entre les deux premières ou en dehors ?'; renderDots(2,1);
-    setActions([{label:'Entre', onClick:()=>guess3('entre')},{label:'En dehors', onClick:()=>guess3('dehors')},{label:'Encaisser (x'+MULTS[1]+')', onClick:()=>endRound(currentBet*MULTS[1], 'Encaissé ! +'+(currentBet*MULTS[1])+' jetons')}]);
+    const prev=cards[0]; const c=deck.pop(); cards.push(c); renderCards();
+    reveal(()=>{
+      const prevVal=rankVal(prev), val=rankVal(c);
+      if(val===prevVal){ endRound(0,'Égalité, perdu.'); return; }
+      const actual=val>prevVal?'haute':'basse';
+      if(g!==actual){ endRound(0,"C'était plus "+actual+'. Perdu.'); return; }
+      multEl.textContent='Multiplicateur : x'+MULTS[1]; stageEl.textContent='Étape 3 : la carte est-elle entre les deux premières ou en dehors ?'; renderDots(2,1);
+      setActions([{label:'Entre', onClick:()=>guess3('entre')},{label:'En dehors', onClick:()=>guess3('dehors')},{label:'Encaisser (x'+MULTS[1]+')', onClick:()=>endRound(currentBet*MULTS[1], 'Encaissé ! +'+(currentBet*MULTS[1])+' jetons')}]);
+    });
   }
   function guess3(g){
     const v1=rankVal(cards[0]), v2=rankVal(cards[1]); const lo=Math.min(v1,v2), hi=Math.max(v1,v2);
-    const c=deck.pop(); cards.push(c); C.sound&&C.sound('card'); renderCards(); const val=rankVal(c);
-    if(val===lo||val===hi){ endRound(0,'Égalité, perdu.'); return; }
-    const actual=(val>lo&&val<hi)?'entre':'dehors';
-    if(g!==actual){ endRound(0,'Elle était '+(actual==='entre'?'entre les deux':'en dehors')+'. Perdu.'); return; }
-    multEl.textContent='Multiplicateur : x'+MULTS[2]; stageEl.textContent='Étape 4 : quel est le symbole exact de la dernière carte ?'; renderDots(3,2);
-    setActions([{label:'♠', onClick:()=>guess4('♠')},{label:'♥', onClick:()=>guess4('♥')},{label:'♦', onClick:()=>guess4('♦')},{label:'♣', onClick:()=>guess4('♣')},{label:'Encaisser (x'+MULTS[2]+')', onClick:()=>endRound(currentBet*MULTS[2], 'Encaissé ! +'+(currentBet*MULTS[2])+' jetons')}]);
+    const c=deck.pop(); cards.push(c); renderCards(); const val=rankVal(c);
+    reveal(()=>{
+      if(val===lo||val===hi){ endRound(0,'Égalité, perdu.'); return; }
+      const actual=(val>lo&&val<hi)?'entre':'dehors';
+      if(g!==actual){ endRound(0,'Elle était '+(actual==='entre'?'entre les deux':'en dehors')+'. Perdu.'); return; }
+      multEl.textContent='Multiplicateur : x'+MULTS[2]; stageEl.textContent='Étape 4 : quel est le symbole exact de la dernière carte ?'; renderDots(3,2);
+      setActions([{label:'♠', onClick:()=>guess4('♠')},{label:'♥', onClick:()=>guess4('♥')},{label:'♦', onClick:()=>guess4('♦')},{label:'♣', onClick:()=>guess4('♣')},{label:'Encaisser (x'+MULTS[2]+')', onClick:()=>endRound(currentBet*MULTS[2], 'Encaissé ! +'+(currentBet*MULTS[2])+' jetons')}]);
+    });
   }
   function guess4(g){
-    const c=deck.pop(); cards.push(c); C.sound&&C.sound('card'); renderCards();
-    if(g!==c.s){ endRound(0,"C'était "+c.s+'. Perdu au dernier virage.'); return; }
-    endRound(currentBet*MULTS[3], 'Bus complet ! +'+(currentBet*MULTS[3])+' jetons'); renderDots(4,3);
+    const c=deck.pop(); cards.push(c); renderCards();
+    reveal(()=>{
+      if(g!==c.s){ endRound(0,"C'était "+c.s+'. Perdu au dernier virage.'); return; }
+      endRound(currentBet*MULTS[3], 'Bus complet ! +'+(currentBet*MULTS[3])+' jetons'); renderDots(4,3);
+    });
   }
   startBtn.addEventListener('click',start);
   render(); renderRivals(null,0);

@@ -41,7 +41,11 @@
   $('bsm-betPlus').addEventListener('click',()=>{ myBet=Math.min(MAX_BET,myBet+5); betEl.textContent=myBet; });
   betEl.textContent=myBet;
 
-  function resetSeat(s){ s.stage=0; s.cards=[]; s.done=false; s.mult=0; s.busted=false; }
+  function resetSeat(s){ s.stage=0; s.cards=[]; s.done=false; s.mult=0; s.busted=false; s.busy=false; }
+  // Une seule carte par étape : elle est posée tout de suite (visible par tous), mais le résultat n'est annoncé qu'après
+  // ~1 s (C.paceReveal, deal-anim.js) pour la laisser arriver et se retourner ; le siège est « occupé » (busy) entre-temps,
+  // donc ni nouveau choix ni encaissement possibles. Repli si deal-anim.js manque : tout de suite.
+  const instantReveal=onDone=>{ onDone(); return {skip(){},cancel(){}}; };
   function newRound(){
     handNo++; roundActive=false;
     const peers=(F()&&F().role()==='host')?F().peers():[];
@@ -101,16 +105,22 @@
     return ['♠','♥','♦','♣'][Math.floor(Math.random()*4)];
   }
   function guess(s,g){
+    if(s.busy||s.done) return;
     clearTimeout(turnTimers[s.peerId||'me']);
     const before=s.cards.slice(); const c=drawFor(s);
     const res=R().checkGuess(s.stage+1,before,c,g);
-    C.sound&&C.sound('card');
-    if(!res.ok){ s.mult=0; settleSeat(s,false); render(); return; }
-    s.mult=R().MULTS[s.stage]; s.stage++;
-    if(s.stage>=4) settleSeat(s,true);
-    render();
+    s.busy=true; render(); // la carte est visible ; le résultat arrive un peu plus tard
+    let ran=false;
+    (C.paceReveal||instantReveal)(()=>{
+      if(ran) return; ran=true; s.busy=false;
+      if(s.done){ render(); return; } // le joueur est parti pendant ce temps : déjà réglé
+      if(!res.ok){ s.mult=0; settleSeat(s,false); render(); return; }
+      s.mult=R().MULTS[s.stage]; s.stage++;
+      if(s.stage>=4) settleSeat(s,true);
+      render();
+    });
   }
-  function cashout(s){ settleSeat(s,true); render(); }
+  function cashout(s){ if(s.busy) return; settleSeat(s,true); render(); }
   function checkAllDone(){
     if(seats.every(s=>s.done)){ setTimeout(()=>{ newRound(); },2200); }
     render();
@@ -118,7 +128,7 @@
 
   // ---------- Rendu ----------
   function snapshotFor(meIdx){
-    return {handNo, roundActive, seats:seats.map((s,i)=>({name:s.name,kind:s.kind,bet:s.bet,stage:s.stage,cards:s.cards,done:s.done,mult:s.mult})), me:meIdx, msg:msg.textContent};
+    return {handNo, roundActive, seats:seats.map((s,i)=>({name:s.name,kind:s.kind,bet:s.bet,stage:s.stage,cards:s.cards,done:s.done,mult:s.mult,busy:!!s.busy})), me:meIdx, msg:msg.textContent};
   }
   function render(){
     // render() ne tourne que côté hôte/solo (l'invité reçoit un instantané tout fait) : mon
@@ -147,7 +157,7 @@
     });
     msg.textContent=s.msg;
     betBox.style.display=(!anyStarted&&!guestMode)?'':'none';
-    const canAct=me&&!me.done&&anyStarted;
+    const canAct=me&&!me.done&&anyStarted&&!me.busy;
     actionsEl.innerHTML=''; actionsEl.style.display=canAct?'flex':'none';
     if(canAct){
       const opts=me.stage===0?[['Rouge','rouge'],['Noir','noir']]:me.stage===1?[['Plus haute','haute'],['Plus basse','basse']]:me.stage===2?[['Entre','entre'],['En dehors','dehors']]:[['♠','♠'],['♥','♥'],['♦','♦'],['♣','♣']];

@@ -95,7 +95,7 @@
   let turn=0, handActive=false, pendingHuman=-1, handNo=0, lastMsg='Choisis tes blinds puis lance une main.';
   let timer=null, turnTimer=null, inHandler=null;
   let view=null, raiseTo=0, lastActKey='', renderedBoard=0, renderedBoardNo=-1;
-  // Distribution lente (C.paceDeal, deal-anim.js) : une carte à la fois, ~1,5 s entre deux cartes — d'abord les
+  // Distribution lente (C.paceDeal, deal-anim.js) : une carte à la fois, ~1 s entre deux cartes — d'abord les
   // 2 cartes privées de chacun (une carte à chaque joueur en partant de la gauche du bouton, puis la seconde),
   // ensuite le flop, le turn et la river carte par carte. La main est tirée d'un coup comme avant (paquet, cartes
   // privées, tableau) : seul l'affichage est étalé. dealShown = ce qui est déjà posé ({hole:[…], board}), null le

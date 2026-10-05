@@ -22,20 +22,20 @@
 (function(){
   const C=window.Casino, root=document.documentElement;
 
-  /* Cadence « de casino » (blackjack) : au lieu de jeter toutes les cartes d'un coup, le croupier en
-     pose UNE à la fois, C.DEAL_STEP_MS (~1,5 s) entre deux cartes. Le jeu tire sa donne comme avant
-     et donne seulement l'ordre de pose : onCard(k) affiche la k-ième carte, onDone() rend la main au
-     joueur. `lead` laisse la table se vider avant la 1re carte, `tail` laisse la dernière carte
+  /* Cadence « de casino » (tous les jeux de cartes) : au lieu de jeter toutes les cartes d'un coup, le
+     croupier en pose UNE à la fois, C.DEAL_STEP_MS (1 s) entre deux cartes. Le jeu tire sa donne comme
+     avant et donne seulement l'ordre de pose : onCard(k) affiche la k-ième carte, onDone() rend la main
+     au joueur. `lead` laisse la table se vider avant la 1re carte, `tail` laisse la dernière carte
      atterrir avant la suite. Mouvement réduit / animations indisponibles : tout d'un coup (onDone
      seul), exactement comme avant. Renvoie {skip, cancel} : skip() termine tout de suite. */
-  C.DEAL_STEP_MS=1500;
+  C.DEAL_STEP_MS=1000;
   C.paceDeal=function(n,onCard,onDone,o){
     o=o||{};
     const gap=o.gap||C.DEAL_STEP_MS, lead=o.lead!=null?o.lead:350, tail=o.tail!=null?o.tail:650;
     const animated=root.classList.contains('deal-js')&&root.getAttribute('data-motion')!=='reduce';
     let i=0, timer=null, over=false;
     const finish=()=>{ if(over) return; over=true; clearTimeout(timer); onDone&&onDone(); };
-    if(!animated){ finish(); return {skip(){}, cancel(){}}; }
+    if(!animated||!(n>0)){ finish(); return {skip(){}, cancel(){}}; }
     const next=()=>{
       if(over) return;
       onCard(i++);
@@ -43,6 +43,11 @@
     };
     timer=setTimeout(next,lead);
     return {skip:finish, cancel(){ over=true; clearTimeout(timer); }};
+  };
+  // Une seule carte posée (Ride the Bus, Hi-Lo...) : le résultat n'est annoncé qu'après un temps (C.DEAL_STEP_MS)
+  // pour laisser la carte arriver et se retourner. Même contrat que paceDeal : onDone() puis {skip, cancel}.
+  C.paceReveal=function(onDone,o){
+    return C.paceDeal(1,function(){},onDone,Object.assign({lead:0,tail:C.DEAL_STEP_MS},o));
   };
 
   if(!window.MutationObserver||!Element.prototype.animate) return;

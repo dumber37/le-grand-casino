@@ -144,7 +144,7 @@
     dealer=[deck.pop(),deck.pop()];
     active=true; turn=-1;
     // Le croupier distribue une carte à la fois : 1re carte à chaque joueur puis au croupier, puis la 2e carte
-    // à chacun — ~1,5 s entre deux cartes ; le premier tour de jeu ne commence qu'à la fin.
+    // à chacun — ~1 s entre deux cartes ; le premier tour de jeu ne commence qu'à la fin.
     const order=[]; for(let r=0;r<2;r++){ seats.forEach((_,i)=>order.push(i)); order.push('dealer'); }
     dealShown={seats:seats.map(()=>0),dealer:0};
     if(C.forgetCards) C.forgetCards(tableEl);

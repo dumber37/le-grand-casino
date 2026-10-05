@@ -13,6 +13,12 @@
   const startBtn=$('hl-startBtn'), hiBtn=$('hl-hiBtn'), loBtn=$('hl-loBtn'), cashBtn=$('hl-cashBtn'), actionsEl=$('hl-actions');
   const multEl=$('hl-mult'), potEl=$('hl-potential'), betMinus=$('hl-betMinus'), betPlus=$('hl-betPlus');
   const tableEl=document.querySelector('#view-hilo .bj-table');
+  // Une seule carte par pari : elle est posée tout de suite (le croupier la lance), mais le résultat n'est annoncé
+  // qu'après ~1 s (C.paceReveal, deal-anim.js) pour la laisser arriver et se retourner. Les boutons sont éteints
+  // (revealing) pendant ce temps ; pendingRun joue le résultat tout de suite si l'onglet se ferme (le gain n'est jamais perdu).
+  let revealing=false, revealCtl=null, pendingRun=null;
+  const instantReveal=onDone=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout de suite
+  window.addEventListener('pagehide',()=>{ if(pendingRun) pendingRun(); });
 
   const val=c=>c.r==='A'?14:c.r==='K'?13:c.r==='Q'?12:c.r==='J'?11:parseInt(c.r,10);
   function chances(){
@@ -26,7 +32,9 @@
     startBtn.disabled=active||C.state.balance<bet;
     betMinus.disabled=betPlus.disabled=active;
     actionsEl.style.display=active?'flex':'none';
-    if(active){
+    if(active&&revealing){
+      hiBtn.disabled=loBtn.disabled=cashBtn.disabled=true; // la carte arrive : on attend le résultat
+    } else if(active){
       const p=chances();
       hiBtn.disabled=p.hi===0; loBtn.disabled=p.lo===0;
       hiBtn.innerHTML='▲ Plus haut<small>'+(p.hi?'x'+(mult*stepMult(p.hi)).toFixed(2)+' · '+Math.round(p.hi*100)+' %':'impossible')+'</small>';
@@ -64,19 +72,28 @@
     render();
   }
   function guess(dir){
-    if(!active) return;
+    if(!active||revealing) return;
     const p=chances(), pw=dir==='hi'?p.hi:p.lo;
     if(!pw) return;
     const next=deck.pop();
     const ok=dir==='hi'?val(next)>val(cur):val(next)<val(cur);
-    addTrail(cur); showCard(next); C.sound&&C.sound('card');
-    if(!ok){ end(0,(val(next)===val(cur)?'Égalité — ':'')+'Perdu : '+next.r+next.s+'.'); return; }
-    mult*=stepMult(pw); steps++; cur=next;
-    if(deck.length<2){ const win=Math.round(roundBet*mult); end(win,'Paquet épuisé — encaissé automatiquement : +'+win+' jetons'); return; }
-    msg.textContent='Bonne réponse ! Continue ou encaisse.';
-    render();
+    addTrail(cur); showCard(next);
+    revealing=true; render(); // boutons éteints le temps que la carte arrive
+    const outcome=()=>{
+      if(!ok){ end(0,(val(next)===val(cur)?'Égalité — ':'')+'Perdu : '+next.r+next.s+'.'); return; }
+      mult*=stepMult(pw); steps++; cur=next;
+      if(deck.length<2){ const win=Math.round(roundBet*mult); end(win,'Paquet épuisé — encaissé automatiquement : +'+win+' jetons'); return; }
+      msg.textContent='Bonne réponse ! Continue ou encaisse.';
+      render();
+    };
+    let ran=false;
+    const once=()=>{ if(ran) return; ran=true; pendingRun=null; revealCtl=null; revealing=false; if(tableEl) tableEl.classList.remove('dealing'); outcome(); };
+    pendingRun=once; if(tableEl) tableEl.classList.add('dealing');
+    const ctl=(C.paceReveal||instantReveal)(once);
+    revealCtl=ran?null:ctl;
   }
-  function cash(){ if(!active||steps===0) return; const win=Math.round(roundBet*mult); end(win,'Encaissé ! +'+win+' jetons (x'+mult.toFixed(2)+')'); }
+  function cash(){ if(!active||steps===0||revealing) return; const win=Math.round(roundBet*mult); end(win,'Encaissé ! +'+win+' jetons (x'+mult.toFixed(2)+')'); }
+  if(tableEl) tableEl.addEventListener('click',()=>{ if(revealCtl) revealCtl.skip(); }); // un clic sur la table annonce le résultat tout de suite
   startBtn.addEventListener('click',start);
   hiBtn.addEventListener('click',()=>guess('hi'));
   loBtn.addEventListener('click',()=>guess('lo'));
