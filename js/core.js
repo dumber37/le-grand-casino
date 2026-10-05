@@ -173,10 +173,27 @@ window.Casino = (function(){
     return '<div class="game-card"><button class="fav-star'+(isFav?' active':'')+'" data-game="'+g.key+'" aria-label="Favori">'+(isFav?'★':'☆')+'</button>'
       +'<div class="gc-icon">'+g.icon+'</div><div class="gc-name">'+g.name+'</div><div class="gc-tag">'+g.tag+'</div><button data-view="'+g.key+'">Jouer</button></div>';
   }
+  // Catégories de jeux : un seul rangement pour l'accueil (ci-dessous) ; le menu latéral (index.html,
+  // .side-group) reprend exactement la même répartition. Les salons multijoueurs (« Salon entre amis »)
+  // restent hors catégorie : ce n'est pas un jeu mais l'endroit où l'on joue à plusieurs.
+  const GAME_CATS=[
+    {id:'machines',icon:'🎰',name:'Machines automatiques',games:['slots','dragon','roulette']},
+    {id:'cards',icon:'🃏',name:'Jeux de cartes',games:['blackjack','baccarat','poker','videopoker','bus','war','hilo']},
+    {id:'quick',icon:'⚡',name:'Jeux rapides',games:['coinflip','mines','crash','plinko','tower']},
+    {id:'draws',icon:'🎲',name:'Dés & tirages',games:['craps','keno','scratch','cases']}
+  ];
+  C.GAME_CATS=GAME_CATS;
   function renderHome(){
     const popularGrid=document.getElementById('popularGrid'), favGrid=document.getElementById('favGrid'), favSection=document.getElementById('favSection');
     if(!popularGrid) return;
-    popularGrid.innerHTML=GAMES_META.map(gameCardHTML).join('');
+    // Un jeu qui n'aurait pas (encore) de catégorie est ajouté en fin de liste plutôt que de disparaître de l'accueil.
+    const byKey={}; GAMES_META.forEach(g=>{ byKey[g.key]=g; });
+    const placed=new Set(); GAME_CATS.forEach(c=>c.games.forEach(k=>placed.add(k)));
+    const orphans=GAMES_META.filter(g=>!placed.has(g.key));
+    popularGrid.innerHTML=GAME_CATS.map(c=>{
+      const list=c.games.map(k=>byKey[k]).filter(Boolean);
+      return '<h3 class="cat-title"><span>'+c.icon+' '+c.name.replace('&','&amp;')+'</span><small>'+list.length+' jeux</small></h3><div class="game-grid">'+list.map(gameCardHTML).join('')+'</div>';
+    }).join('')+(orphans.length?'<h3 class="cat-title"><span>Autres jeux</span><small>'+orphans.length+'</small></h3><div class="game-grid">'+orphans.map(gameCardHTML).join('')+'</div>':'');
     const favGames=GAMES_META.filter(g=>favorites.includes(g.key));
     if(favGames.length){ favSection.style.display='block'; favGrid.innerHTML=favGames.map(gameCardHTML).join(''); }
     else { favSection.style.display='none'; }
@@ -676,10 +693,40 @@ window.Casino = (function(){
   }
 
   // ====== MODULE: Navigation ======
+  // Catégories repliables du menu latéral (Machines automatiques, Jeux de cartes...). Ce que l'utilisateur
+  // ouvre/ferme à la main est mémorisé ; le groupe qui contient la page affichée s'ouvre tout seul (sans
+  // être mémorisé : sinon, à force de naviguer, tout resterait ouvert) et son titre reste mis en valeur
+  // même replié. Aucun bouton data-view n'est touché : la navigation elle-même est inchangée.
+  const NAV_KEY='grand-casino-nav-groups';
+  let navOpen=[];
+  try{ const p=JSON.parse(localStorage.getItem(NAV_KEY)||'[]'); if(Array.isArray(p)) navOpen=p.filter(x=>typeof x==='string'); }catch(e){}
+  const navGroups=Array.from(document.querySelectorAll('.side-group'));
+  function setNavGroup(g,open,save){
+    const head=g.querySelector('.side-cat'), sub=g.querySelector('.side-sub'); if(!head||!sub) return;
+    g.classList.toggle('open',open); head.setAttribute('aria-expanded',String(open)); sub.hidden=!open;
+    if(save){
+      navOpen=navOpen.filter(x=>x!==g.dataset.cat); if(open) navOpen.push(g.dataset.cat);
+      try{ localStorage.setItem(NAV_KEY,JSON.stringify(navOpen)); }catch(e){}
+    }
+  }
+  navGroups.forEach(g=>setNavGroup(g,navOpen.includes(g.dataset.cat),false));
+  // autoGroup : le groupe ouvert tout seul pour la page affichée ; il se referme quand on passe à une autre
+  // catégorie (le menu reste court), sauf si l'utilisateur l'a aussi ouvert lui-même (alors mémorisé).
+  let autoGroup=null;
+  function syncNavGroups(name){
+    let active=null;
+    navGroups.forEach(g=>{
+      const has=!!g.querySelector('.side-sub button[data-view="'+name+'"]');
+      g.classList.toggle('has-active',has); if(has) active=g;
+    });
+    if(autoGroup&&autoGroup!==active){ if(!navOpen.includes(autoGroup.dataset.cat)) setNavGroup(autoGroup,false,false); autoGroup=null; }
+    if(active&&!active.classList.contains('open')){ setNavGroup(active,true,false); autoGroup=active; }
+  }
   function switchView(name){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     const target=document.getElementById('view-'+name); if(target) target.classList.add('active');
     document.querySelectorAll('.side-nav button[data-view], .bottom-nav button[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+    syncNavGroups(name);
     const titles={home:'Accueil',floor:'Plan du casino',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',plinko:'Plinko',hilo:'Hi-Lo',scratch:'Cartes à gratter',tower:'Dragon Tower',wheel:'Roue de la chance',daily:'Défi du jour',season:'Pass saisonnier',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',challenges:'Défis',weekly:'Tournoi hebdomadaire',leaderboard:'Classement',account:'Connexion',profil:'Profil',shop:'Boutique',parametres:'Paramètres'};
     document.getElementById('viewTitle').textContent=titles[name]||name;
     document.getElementById('sidebar').classList.remove('open');
@@ -700,6 +747,14 @@ window.Casino = (function(){
     else if(name==='parametres') renderRestorePoints();
   }
   document.addEventListener('click',(e)=>{
+    const catEl=e.target.closest('.side-cat');
+    if(catEl){
+      const g=catEl.closest('.side-group'), open=!g.classList.contains('open');
+      if(g===autoGroup) autoGroup=null; // choix explicite : on ne le referme plus automatiquement
+      setNavGroup(g,open,true);
+      if(open&&g.scrollIntoView) g.scrollIntoView({block:'nearest',behavior:'smooth'}); // dégage les jeux qui viennent d'apparaître
+      return;
+    }
     const viewEl=e.target.closest('[data-view]'); if(viewEl){ switchView(viewEl.dataset.view); return; }
     const starEl=e.target.closest('.fav-star'); if(starEl){ toggleFavorite(starEl.dataset.game); return; }
   });

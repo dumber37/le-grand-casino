@@ -65,26 +65,48 @@
       <button data-view="home" class="active">🏠 Accueil</button>
       <div class="side-section">Casino</div>
       <button data-view="floor">🗺️ Plan du casino</button>
-      <button data-view="slots">🎰 Machines à sous</button>
-      <button data-view="dragon">🐉 Fortune Dragon</button>
-      <button data-view="blackjack">🃏 Blackjack</button>
-      <button data-view="roulette">🎡 Roulette</button>
-      <button data-view="bus">🚌 Ride the Bus</button>
-      <button data-view="baccarat">🎴 Baccarat</button>
-      <button data-view="coinflip">🪙 Pile ou Face</button>
-      <button data-view="mines">💣 Mines</button>
-      <button data-view="crash">🚀 Crash</button>
-      <button data-view="war">⚔️ Bataille</button>
-      <button data-view="keno">🔢 Keno</button>
-      <button data-view="plinko">🔻 Plinko</button>
-      <button data-view="hilo">↕️ Hi-Lo</button>
-      <button data-view="scratch">🎟️ Cartes à gratter</button>
-      <button data-view="tower">🐲 Dragon Tower</button>
-      <button data-view="craps">🎲 Craps</button>
-      <button data-view="videopoker">♠️ Vidéo Poker</button>
-      <button data-view="poker">♣️ Poker (vs IA)</button>
+      <!-- Catégories repliables (voir le module Navigation de core.js) : chaque jeu garde son bouton data-view,
+           seul son rangement change. Garder cette liste alignée sur GAME_CATS (core.js, accueil). -->
+      <div class="side-group" data-cat="machines">
+        <button class="side-cat" type="button" aria-expanded="false" aria-controls="cat-machines">🎰 Machines automatiques <span class="sc-n">3</span><span class="sc-chev" aria-hidden="true"></span></button>
+        <div class="side-sub" id="cat-machines" role="group" aria-label="Machines automatiques" hidden>
+          <button data-view="slots">🎰 Machines à sous</button>
+          <button data-view="dragon">🐉 Fortune Dragon</button>
+          <button data-view="roulette">🎡 Roulette</button>
+        </div>
+      </div>
+      <div class="side-group" data-cat="cards">
+        <button class="side-cat" type="button" aria-expanded="false" aria-controls="cat-cards">🃏 Jeux de cartes <span class="sc-n">7</span><span class="sc-chev" aria-hidden="true"></span></button>
+        <div class="side-sub" id="cat-cards" role="group" aria-label="Jeux de cartes" hidden>
+          <button data-view="blackjack">🃏 Blackjack</button>
+          <button data-view="baccarat">🎴 Baccarat</button>
+          <button data-view="poker">♣️ Poker (vs IA)</button>
+          <button data-view="videopoker">♠️ Vidéo Poker</button>
+          <button data-view="bus">🚌 Ride the Bus</button>
+          <button data-view="war">⚔️ Bataille</button>
+          <button data-view="hilo">↕️ Hi-Lo</button>
+        </div>
+      </div>
+      <div class="side-group" data-cat="quick">
+        <button class="side-cat" type="button" aria-expanded="false" aria-controls="cat-quick">⚡ Jeux rapides <span class="sc-n">5</span><span class="sc-chev" aria-hidden="true"></span></button>
+        <div class="side-sub" id="cat-quick" role="group" aria-label="Jeux rapides" hidden>
+          <button data-view="coinflip">🪙 Pile ou Face</button>
+          <button data-view="mines">💣 Mines</button>
+          <button data-view="crash">🚀 Crash</button>
+          <button data-view="plinko">🔻 Plinko</button>
+          <button data-view="tower">🐲 Dragon Tower</button>
+        </div>
+      </div>
+      <div class="side-group" data-cat="draws">
+        <button class="side-cat" type="button" aria-expanded="false" aria-controls="cat-draws">🎲 Dés &amp; tirages <span class="sc-n">4</span><span class="sc-chev" aria-hidden="true"></span></button>
+        <div class="side-sub" id="cat-draws" role="group" aria-label="Dés et tirages" hidden>
+          <button data-view="craps">🎲 Craps</button>
+          <button data-view="keno">🔢 Keno</button>
+          <button data-view="scratch">🎟️ Cartes à gratter</button>
+          <button data-view="cases">📦 Ouverture de Caisses</button>
+        </div>
+      </div>
       <button data-view="friends">🤝 Salon entre amis</button>
-      <button data-view="cases">📦 Ouverture de Caisses</button>
       <div class="side-section">Quotidien</div>
       <button data-view="wheel">🎡 Roue quotidienne</button>
       <button data-view="daily">🗓️ Défi du jour</button>
@@ -164,8 +186,8 @@
           <h2 class="section-title">Vos favoris</h2>
           <div class="game-grid" id="favGrid"></div>
         </div>
-        <h2 class="section-title">Jeux populaires</h2>
-        <div class="game-grid" id="popularGrid"></div>
+        <h2 class="section-title">Tous les jeux</h2>
+        <div class="game-cats" id="popularGrid"></div>
       </section>
 
       <section class="view" id="view-floor"><div class="panel">
