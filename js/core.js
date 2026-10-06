@@ -283,6 +283,7 @@ window.Casino = (function(){
     if(idx>=0){ favorites.splice(idx,1); showToast('Retiré des favoris'); }
     else { favorites.push(key); showToast('Ajouté aux favoris'); }
     saveFavorites(); renderHome();
+    const cv=document.getElementById('view-category'); if(catShown&&cv&&cv.classList.contains('active')) renderCategory(catShown);
   }
 
   // ====== MODULE: Achievements ======
@@ -583,6 +584,31 @@ window.Casino = (function(){
       favEl.textContent=entries.length?(GAME_NAMES[entries[0][0]]||entries[0][0]):'–';
     }
   }
+  // Modifier son pseudo (Profil) : 2 à 20 caractères, sans chevrons ni caractères de contrôle (C.str). Il est mémorisé comme avant
+  // (PSEUDO_KEY, déjà inclus dans les sauvegardes) ; « pseudo-changed » prévient les modules qui l'affichent (avatar automatique,
+  // salon d'amis, classement en ligne). Dans un salon déjà ouvert, les autres joueurs voient le nouveau nom à la prochaine connexion.
+  (function(){
+    const row=document.getElementById('pf-nameRow'), form=document.getElementById('pf-nameForm'), input=document.getElementById('pf-nameInput');
+    const msgEl=document.getElementById('pf-nameMsg'), editBtn=document.getElementById('pf-editBtn'), cancelBtn=document.getElementById('pf-nameCancel');
+    if(!row||!form||!input||!editBtn) return;
+    const say=t=>{ if(msgEl) msgEl.textContent=t||''; };
+    function setOpen(open){ form.hidden=!open; row.hidden=open; if(open){ input.value=pseudo; say(''); input.focus(); input.select(); } }
+    editBtn.addEventListener('click',()=>setOpen(true));
+    cancelBtn.addEventListener('click',()=>{ setOpen(false); say(''); });
+    input.addEventListener('keydown',e=>{ if(e.key==='Escape'){ setOpen(false); say(''); } });
+    form.addEventListener('submit',e=>{
+      e.preventDefault();
+      const v=C.str(input.value,40).replace(/\s+/g,' ').trim().slice(0,20).trim();
+      if(v.length<2){ say('Au moins 2 caractères.'); input.focus(); return; }
+      if(v!==pseudo){
+        pseudo=v; try{ localStorage.setItem(PSEUDO_KEY,pseudo); }catch(err){}
+        renderProfile();
+        document.dispatchEvent(new Event('pseudo-changed'));
+        showToast('✅ Pseudo modifié : '+v);
+      }
+      setOpen(false); say(v===pseudo?'Pseudo enregistré.':'');
+    });
+  })();
   function renderPerGameStats(){
     const el=document.getElementById('st-pergame'); if(!el) return;
     el.innerHTML=GAMES_META.map(g=>{
@@ -836,19 +862,43 @@ window.Casino = (function(){
   function syncNavGroups(name){
     let active=null;
     navGroups.forEach(g=>{
-      const has=!!g.querySelector('.side-sub button[data-view="'+name+'"]');
+      const has=name==='cat-'+g.dataset.cat||!!g.querySelector('.side-sub button[data-view="'+name+'"]');
       g.classList.toggle('has-active',has); if(has) active=g;
     });
     if(autoGroup&&autoGroup!==active){ if(!navOpen.includes(autoGroup.dataset.cat)) setNavGroup(autoGroup,false,false); autoGroup=null; }
     if(active&&!active.classList.contains('open')){ setNavGroup(active,true,false); autoGroup=active; }
   }
+  // Page d'une catégorie (clic sur « Jeux de cartes »…) : le choix des jeux s'affiche à droite. Nom de vue « cat-<id> ».
+  const GAME_DESC={slots:'3 rouleaux, un levier, le jackpot à x50',dragon:'5 rouleaux, 3 lignes, thème chinois',roulette:'Mise sur un numéro, une couleur, une série',
+    blackjack:'Bats le croupier sans dépasser 21 · avec des IA',baccarat:'Joueur, Banquier ou Égalité',poker:'Texas Hold’em contre 3 IA',videopoker:'Un tirage, un échange, la meilleure main',
+    bus:'Rouge/noir, plus/moins… jusqu’au bout du trajet',war:'La carte la plus haute gagne',hilo:'Plus haut ou plus bas ? Enchaîne les bonnes réponses',
+    coinflip:'Une pièce, une chance sur deux',mines:'Évite les mines, encaisse quand tu veux',crash:'Retire-toi avant que la fusée explose',plinko:'Laisse tomber la bille dans les cases',tower:'Grimpe la tour, étage après étage',
+    craps:'Deux dés, des mises à la chaîne',keno:'Choisis tes numéros, regarde le tirage',scratch:'Gratte et découvre les symboles',cases:'Ouvre des caisses et tente la rare'};
+  let catShown=null;
+  function renderCategory(id){
+    const cat=GAME_CATS.find(c=>c.id===id); if(!cat) return false;
+    catShown=id;
+    const byKey={}; GAMES_META.forEach(g=>{ byKey[g.key]=g; });
+    const list=cat.games.map(k=>byKey[k]).filter(Boolean);
+    document.getElementById('catIcon').textContent=cat.icon;
+    document.getElementById('catName').textContent=cat.name;
+    document.getElementById('catSub').textContent=list.length+' jeux — choisis celui auquel tu veux jouer';
+    document.getElementById('catGrid').innerHTML=list.map(g=>{
+      const isFav=favorites.includes(g.key);
+      return '<div class="game-card"><button class="fav-star'+(isFav?' active':'')+'" data-game="'+g.key+'" aria-label="Favori">'+(isFav?'★':'☆')+'</button>'
+        +'<div class="gc-icon">'+g.icon+'</div><div class="gc-name">'+g.name+'</div><div class="gc-desc">'+(GAME_DESC[g.key]||g.tag)+'</div><button data-view="'+g.key+'">Jouer</button></div>';
+    }).join('');
+    return true;
+  }
   function switchView(name){
+    let catId=null;
+    if(name.indexOf('cat-')===0){ catId=name.slice(4); if(!renderCategory(catId)){ name='home'; catId=null; } }
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-    const target=document.getElementById('view-'+name); if(target) target.classList.add('active');
+    const target=document.getElementById(catId?'view-category':'view-'+name); if(target) target.classList.add('active');
     document.querySelectorAll('.side-nav button[data-view], .bottom-nav button[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
     syncNavGroups(name);
     const titles={home:'Accueil',floor:'Plan du casino',slots:'Machines à sous',dragon:'Fortune Dragon',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',friends:'Salon entre amis',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',plinko:'Plinko',hilo:'Hi-Lo',scratch:'Cartes à gratter',tower:'Dragon Tower',wheel:'Roue de la chance',daily:'Défi du jour',season:'Pass saisonnier',stats:'Statistiques',history:'Historique',achievements:'Achievements',missions:'Missions',vip:'Statut VIP',halloffame:'Hall of Fame',challenges:'Défis',weekly:'Tournoi hebdomadaire',leaderboard:'Classement',account:'Connexion',profil:'Profil',shop:'Boutique',parametres:'Paramètres'};
-    document.getElementById('viewTitle').textContent=titles[name]||name;
+    document.getElementById('viewTitle').textContent=catId?GAME_CATS.find(c=>c.id===catId).name:(titles[name]||name);
     document.getElementById('sidebar').classList.remove('open');
     // Rendu différé : chaque vue de progression ne reconstruit son contenu qu'à son ouverture,
     // avec les données déjà sauvegardées par recordGame (jamais périmées, jamais reconstruites en trop).
@@ -869,8 +919,12 @@ window.Casino = (function(){
   document.addEventListener('click',(e)=>{
     const catEl=e.target.closest('.side-cat');
     if(catEl){
-      const g=catEl.closest('.side-group'), open=!g.classList.contains('open');
+      // Clic sur une catégorie : la page de la catégorie (choix des jeux) s'affiche à droite et le groupe s'ouvre ;
+      // un second clic alors qu'on y est déjà replie simplement le groupe.
+      const g=catEl.closest('.side-group'), here=catShown===g.dataset.cat&&document.getElementById('view-category').classList.contains('active');
+      const open=here?!g.classList.contains('open'):true;
       if(g===autoGroup) autoGroup=null; // choix explicite : on ne le referme plus automatiquement
+      if(!here) switchView('cat-'+g.dataset.cat);
       setNavGroup(g,open,true);
       if(open&&g.scrollIntoView) g.scrollIntoView({block:'nearest',behavior:'smooth'}); // dégage les jeux qui viennent d'apparaître
       return;

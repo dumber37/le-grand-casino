@@ -465,8 +465,8 @@ html[data-season="christmas"] #hdrSeason{filter:drop-shadow(0 0 6px rgba(70,200,
   border:1px solid var(--cb-accent);background:radial-gradient(circle,var(--cb-accent) 0 18%,rgba(0,0,0,.4) 20% 100%);
   box-shadow:0 0 0 2px rgba(0,0,0,.3);
 }
-:root[data-cardback="royal"] .card-back{--cb-pat:rgba(192,132,252,.42);--cb-a:#3b1066;--cb-b:#14031f;--cb-accent:#c084fc}
-:root[data-cardback="dragon"] .card-back{--cb-pat:rgba(232,193,74,.45);--cb-a:#8f1522;--cb-b:#2a050a;--cb-accent:#e8c14a}
+:root[data-cardback="royal"] .card-back,.card-back.cb-royal{--cb-pat:rgba(192,132,252,.42);--cb-a:#3b1066;--cb-b:#14031f;--cb-accent:#c084fc}
+:root[data-cardback="dragon"] .card-back,.card-back.cb-dragon{--cb-pat:rgba(232,193,74,.45);--cb-a:#8f1522;--cb-b:#2a050a;--cb-accent:#e8c14a}
 .card-3d.lg .card-face{font-size:16px;border-radius:9px}
 .card-3d.lg .card-back{border-radius:9px}
 

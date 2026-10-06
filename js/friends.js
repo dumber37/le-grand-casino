@@ -13,7 +13,9 @@
   if(!$('view-friends')) return;
   const MAX_FRIENDS=4, SIDES={player:'Player',banker:'Banker',tie:'Tie'};
   const validSide=k=>Object.prototype.hasOwnProperty.call(SIDES,k); // « __proto__ » & co ne sont pas des camps
-  const myName=(function(){ try{ return localStorage.getItem('grand-casino-pseudo')||'Joueur'; }catch(e){ return 'Joueur'; } })();
+  const readName=()=>{ try{ return localStorage.getItem('grand-casino-pseudo')||'Joueur'; }catch(e){ return 'Joueur'; } };
+  let myName=readName();
+  document.addEventListener('pseudo-changed',()=>{ myName=readName(); }); // pseudo modifié dans Profil : pris en compte aux prochaines connexions
 
   let role=null, peers=[], pending=null, hostConn=null, nextId=1, myId=0;
   // Passerelle pour d'autres jeux (poker) : ils réutilisent CETTE connexion via C.friends (voir fin du fichier).

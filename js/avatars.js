@@ -250,5 +250,7 @@ window.Casino=window.Casino||{};
 
   C.avatars={html,htmlTraits,face,pseudo,mountDealers,myTraits,clean,remember,refreshFrameLocks,
     FRAMES,frameUnlocked,setFrame,buyFrame,getEquippedFrame:()=>equippedFrame};
+  // L'avatar automatique dépend du pseudo : s'il change, on redessine l'aperçu et on prévient les tables.
+  document.addEventListener('pseudo-changed',()=>{ const box=document.getElementById('av-editor'); if(box) refreshEditor(box); else refreshProfileAvatar(); document.dispatchEvent(new Event('avatar-changed')); });
   mountDealers(); buildEditor(); refreshProfileAvatar();
 })();

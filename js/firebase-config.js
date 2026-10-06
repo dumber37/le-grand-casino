@@ -40,6 +40,28 @@
          allow delete: if true;
        }
 
+   CLASSEMENT EN LIGNE (page « Classement ») : à ajouter à côté des blocs
+   ci-dessus. Tout le monde peut LIRE la liste (aucun compte pour la voir) ;
+   chaque joueur connecté n'écrit/supprime que SON document, avec uniquement
+   ces 9 champs et des valeurs plausibles :
+
+       match /leaderboard/{uid} {
+         allow read: if true;
+         allow create, update: if request.auth != null && request.auth.uid == uid
+           && request.resource.data.keys().hasOnly(['name','balance','totalWon','totalWagered','biggestWin','crashBestMult','gamesPlayed','vipIdx','updatedAt'])
+           && request.resource.data.name is string && request.resource.data.name.size() <= 20
+           && request.resource.data.balance is number && request.resource.data.balance >= 0 && request.resource.data.balance <= 1000000000000
+           && request.resource.data.totalWon is number && request.resource.data.totalWagered is number
+           && request.resource.data.biggestWin is number && request.resource.data.crashBestMult is number
+           && request.resource.data.gamesPlayed is number && request.resource.data.vipIdx is number
+           && request.resource.data.updatedAt is number;
+         allow delete: if request.auth != null && request.auth.uid == uid;
+       }
+
+   Sans ce bloc, la page Classement affiche « classement en ligne pas encore
+   activé » (le reste du site n'est pas touché). Les chiffres viennent du
+   navigateur de chaque joueur : classement amical, pas infalsifiable.
+
    Sans le second bloc, le bouton « Générer un code rapide » du Salon
    entre amis échoue avec une erreur "permission-denied" — le Salon
    entre amis reste utilisable via son mode avancé (code/lien/QR

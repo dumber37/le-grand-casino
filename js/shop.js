@@ -117,9 +117,12 @@ window.Casino = window.Casino || {};
     else if(owned) action='<button data-equip-'+attr+'="'+it.id+'">Équiper</button>';
     else action='<button data-buy-'+attr+'="'+it.id+'"'+(C.state.balance<it.cost?' disabled':'')+'>Acheter — '+it.cost+' 🪙</button>';
     return '<div class="shop-item">'+visual+'<div class="shop-item-body"><div class="shop-item-name">'+it.name+'</div><div class="shop-item-price">'+(it.cost>0?it.cost+' jetons':'Gratuit')+'</div></div>'
-      +(preview&&it.id!=='classic'?'<button class="fr-copy" data-preview-'+attr+'="'+it.id+'" style="margin:0 6px 0 0">Aperçu</button>':'')+action+'</div>';
+      +(preview&&it.id!=='classic'?'<button class="fr-copy" data-preview-'+attr+'="'+it.id+'" style="margin:0 6px 0 0">Aperçu</button>':'')
+      +(attr==='felt'&&it.id!=='classic'?pvBtn('felt',it.id):'')+action+'</div>';
   }
 
+  // Bouton « Aperçu » (ouvre la fenêtre d'aperçu, voir plus bas) : toujours placé AVANT le bouton d'action, qui reste le dernier enfant de la ligne.
+  const pvBtn=(type,id)=>'<button type="button" class="sp-btn" data-pv="'+type+':'+id+'" aria-label="Aperçu">👁 Aperçu</button>';
   function swatchHtml(colors){ return '<span class="shop-swatch">'+colors.map(c=>'<i style="background:'+c+'"></i>').join('')+'</span>'; }
 
   function themeItemHtml(t){
@@ -129,7 +132,7 @@ window.Casino = window.Casino || {};
     else if(owned) action='<button data-equip-theme="'+t.id+'">Équiper</button>';
     else action='<button data-buy-theme="'+t.id+'"'+(C.state.balance<t.cost?' disabled':'')+'>Acheter — '+t.cost+' 🪙</button>';
     return '<div class="shop-item">'+swatchHtml(t.swatch)+'<div class="shop-item-body"><div class="shop-item-name">'+t.name+'</div>'
-      +(t.cost>0?'<div class="shop-item-price">'+t.cost+' jetons</div>':'<div class="shop-item-price">Gratuit</div>')+'</div>'+action+'</div>';
+      +(t.cost>0?'<div class="shop-item-price">'+t.cost+' jetons</div>':'<div class="shop-item-price">Gratuit</div>')+'</div>'+(t.id!=='dark'&&!equipped?pvBtn('theme',t.id):'')+action+'</div>';
   }
   function frameItemHtml(f){
     if(f.id==='none') return '';
@@ -147,7 +150,7 @@ window.Casino = window.Casino || {};
     }
     return '<div class="shop-item"><span class="shop-swatch shop-frame-preview"><span class="av-frame frame-'+f.id+'" style="width:34px;height:34px"><span class="shop-frame-dot">'+f.icon+'</span></span></span>'
       +'<div class="shop-item-body"><div class="shop-item-name">'+f.name+'</div>'
-      +(f.cost!=null?'<div class="shop-item-price">'+f.cost+' jetons</div>':'<div class="shop-item-price">Achievement</div>')+'</div>'+action+'</div>';
+      +(f.cost!=null?'<div class="shop-item-price">'+f.cost+' jetons</div>':'<div class="shop-item-price">Achievement</div>')+'</div>'+pvBtn('frame',f.id)+action+'</div>';
   }
   function cardbackItemHtml(c){
     const owned=cardbackOwned(c), equipped=currentCardback()===c.id;
@@ -156,7 +159,7 @@ window.Casino = window.Casino || {};
     else if(owned) action='<button data-equip-cardback="'+c.id+'">Équiper</button>';
     else action='<button data-buy-cardback="'+c.id+'"'+(C.state.balance<c.cost?' disabled':'')+'>Acheter — '+c.cost+' 🪙</button>';
     return '<div class="shop-item">'+swatchHtml(c.swatch)+'<div class="shop-item-body"><div class="shop-item-name">'+c.name+'</div>'
-      +(c.cost>0?'<div class="shop-item-price">'+c.cost+' jetons</div>':'<div class="shop-item-price">Gratuit</div>')+'</div>'+action+'</div>';
+      +(c.cost>0?'<div class="shop-item-price">'+c.cost+' jetons</div>':'<div class="shop-item-price">Gratuit</div>')+'</div>'+(c.id!=='classic'?pvBtn('cardback',c.id):'')+action+'</div>';
   }
   function chipSkinItemHtml(m){
     const owned=C.chips.skinOwned(m.id), equipped=C.chips.getEquippedSkin()===m.id;
@@ -165,7 +168,7 @@ window.Casino = window.Casino || {};
     else if(owned) action='<button data-equip-chipskin="'+m.id+'">Équiper</button>';
     else action='<button data-buy-chipskin="'+m.id+'"'+(C.state.balance<m.cost?' disabled':'')+'>Acheter — '+m.cost+' 🪙</button>';
     return '<div class="shop-item">'+swatchHtml(chipSkinSwatch(m.id))+'<div class="shop-item-body"><div class="shop-item-name">'+m.name+'</div>'
-      +(m.cost>0?'<div class="shop-item-price">'+m.cost+' jetons</div>':'<div class="shop-item-price">Gratuit</div>')+'</div>'+action+'</div>';
+      +(m.cost>0?'<div class="shop-item-price">'+m.cost+' jetons</div>':'<div class="shop-item-price">Gratuit</div>')+'</div>'+pvBtn('chipskin',m.id)+action+'</div>';
   }
 
   function render(){
@@ -209,6 +212,88 @@ window.Casino = window.Casino || {};
     const eqF2=e.target.closest('[data-equip-felt]');
     if(eqF2){ try{ localStorage.setItem(FELT_KEY,eqF2.dataset.equipFelt); }catch(x){} applyFelt(eqF2.dataset.equipFelt); render(); return; }
   });
+  // ---------- Fenêtre d'aperçu ----------
+  // Chaque article (thème, cadre, dos de carte, peau de jetons, tapis) s'essaie avant l'achat. Le bouton d'action de la
+  // fenêtre est la copie de celui de la ligne (Acheter / Équiper / Équipé) : mêmes attributs, donc le même code d'achat.
+  // Les cartes d'aperçu portent data-no-deal (deal-anim.js ne les « distribue » pas). Un thème peut en plus s'essayer sur toute
+  // la page pendant 15 s, sans rien enregistrer : fermer / terminer rétablit le thème précédent.
+  let modal=null, tryEnd=null;
+  const esc=C.escapeHtml;
+  function ensureModal(){
+    if(modal) return modal;
+    modal=document.createElement('div'); modal.className='shop-modal'; modal.hidden=true;
+    modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true'); modal.setAttribute('aria-labelledby','spTitle');
+    modal.innerHTML='<div class="sp-card"><h3 id="spTitle"></h3><div class="sp-stage" id="spStage" data-no-deal></div><p class="sp-note" id="spNote"></p><div class="sp-actions" id="spActions"></div></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{
+      if(e.target===modal||e.target.closest('[data-sp-close]')){ closePreview(); return; }
+      const tt=e.target.closest('[data-sp-try]'); if(tt){ tryTheme(tt.dataset.spTry); return; }
+      const card=e.target.closest('#spStage .card-3d'); if(card&&card.dataset.flip){ const fl=card.querySelector('.card-flip'); if(fl){ fl.classList.toggle('is-back'); C.sound&&C.sound('card'); } return; }
+      if(e.target.closest('#spActions [data-buy-theme],#spActions [data-equip-theme],#spActions [data-buy-frame],#spActions [data-equip-frame],#spActions [data-buy-cardback],#spActions [data-equip-cardback],#spActions [data-buy-chipskin],#spActions [data-equip-chipskin],#spActions [data-buy-felt],#spActions [data-equip-felt]')) closePreview();
+    });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&modal&&!modal.hidden) closePreview(); });
+    return modal;
+  }
+  function closePreview(){ if(modal) modal.hidden=true; }
+  function pvCard(card,back){ const c=C.renderCard(card,back,true); c.dataset.flip='1'; c.style.cursor='pointer'; return c; }
+  function stageCards(extra){
+    const row=document.createElement('div'); row.className='sp-cards';
+    [pvCard({r:'A',s:'♠'},false),pvCard({r:'K',s:'♥'},true),pvCard({r:'7',s:'♦'},true)].forEach(c=>{ if(extra) extra(c); row.appendChild(c); });
+    return row;
+  }
+  function openPreview(spec){
+    const type=spec.split(':')[0], id=spec.slice(type.length+1);
+    const btn=document.querySelector('#view-shop [data-pv="'+spec.replace(/"/g,'')+'"]'); if(!btn) return;
+    const item=btn.closest('.shop-item'), action=item&&item.lastElementChild;
+    const name=item&&item.querySelector('.shop-item-name')?item.querySelector('.shop-item-name').textContent:id;
+    const m=ensureModal(), stage=m.querySelector('#spStage'), note=m.querySelector('#spNote'), acts=m.querySelector('#spActions');
+    m.querySelector('#spTitle').textContent='Aperçu — '+name; stage.innerHTML=''; note.textContent=''; acts.innerHTML='';
+    if(type==='cardback'){
+      const row=stageCards(c=>c.querySelectorAll('.card-back').forEach(b=>b.classList.add('cb-'+id)));
+      stage.appendChild(row); note.textContent='Visible sur toutes les tables de cartes. Clique une carte pour la retourner.';
+    } else if(type==='felt'){
+      const f=FELTS.find(x=>x.id===id)||FELTS[0];
+      const felt=document.createElement('div'); felt.className='sp-felt';
+      felt.style.background='radial-gradient(ellipse at 50% 30%,'+f.swatch[0]+' 0%,'+f.swatch[1]+' 58%,'+f.swatch[2]+' 100%)';
+      felt.appendChild(stageCards()); const ch=document.createElement('div'); ch.className='sp-chips'; ch.innerHTML=C.chips?C.chips.html(125,{scale:1}):''; felt.appendChild(ch);
+      stage.appendChild(felt); note.textContent='Le tapis habille les tables de cartes (blackjack, baccarat, poker…).';
+    } else if(type==='chipskin'){
+      const wrap=document.createElement('div'); wrap.className='sp-chiprow';
+      wrap.innerHTML=[1,5,10,25,50,100,500,1000].map(v=>'<span class="sp-chip1">'+C.chips.html(v,{skin:id,label:false,scale:1.15})+'<small>'+v+'</small></span>').join('');
+      const pile=document.createElement('div'); pile.className='sp-pile'; pile.innerHTML=C.chips.html(1375,{skin:id,maxCols:5,scale:1.2});
+      stage.appendChild(wrap); stage.appendChild(pile); note.textContent='Les jetons de tes mises prennent ces couleurs.';
+    } else if(type==='frame'){
+      const A=C.avatars, f=A.FRAMES.find(x=>x.id===id); if(!f) return;
+      const av=document.createElement('div'); av.className='sp-avatar';
+      av.innerHTML='<span class="av-frame frame-'+esc(f.id)+'" style="width:110px;height:110px">'+(A.htmlTraits(A.myTraits(),110)||'')+'</span>';
+      stage.appendChild(av); note.textContent='Le cadre entoure ton avatar dans le profil et aux tables.';
+    } else if(type==='theme'){
+      const t=THEMES.find(x=>x.id===id); if(!t) return;
+      const mock=document.createElement('div'); mock.className='sp-theme'; mock.style.background=t.swatch[0];
+      mock.innerHTML='<div class="spt-bar" style="background:'+t.swatch[2]+'"></div><div class="spt-table" style="background:'+t.swatch[1]+'"><span>🃏</span><span>🎰</span><span>🎡</span></div><div class="spt-line" style="background:'+t.swatch[2]+'"></div><div class="spt-line short" style="background:'+t.swatch[2]+'"></div>';
+      stage.appendChild(mock); note.textContent='Aperçu simplifié — « Essayer sur la page » applique vraiment le thème pendant 15 secondes, sans l’enregistrer.';
+      const tr=document.createElement('button'); tr.type='button'; tr.className='sp-try'; tr.dataset.spTry=id; tr.textContent='🎨 Essayer sur la page (15 s)'; acts.appendChild(tr);
+    } else return;
+    if(action&&action.tagName==='BUTTON'){ const copy=document.createElement('span'); copy.innerHTML=action.outerHTML; acts.appendChild(copy.firstChild); }
+    const close=document.createElement('button'); close.type='button'; close.className='sp-close'; close.dataset.spClose='1'; close.textContent='Fermer'; acts.appendChild(close);
+    m.hidden=false; close.focus();
+  }
+  function tryTheme(id){
+    const t=THEMES.find(x=>x.id===id); if(!t) return;
+    closePreview(); if(tryEnd) tryEnd(true);
+    const root=document.documentElement, before=root.getAttribute('data-theme');
+    const put=v=>{ if(v&&v!=='dark') root.setAttribute('data-theme',v); else root.removeAttribute('data-theme'); };
+    put(id);
+    const bar=document.createElement('div'); bar.className='sp-trybar';
+    bar.innerHTML='<span>🎨 Aperçu : <b>'+esc(t.name)+'</b> — rien n’est enregistré</span><button type="button">Terminer l’aperçu</button>';
+    document.body.appendChild(bar);
+    let timer=setTimeout(()=>tryEnd(true),15000);
+    const onClick=e=>{ if(e.target.closest('[data-buy-theme],[data-equip-theme]')) tryEnd(false); else if(e.target.closest('[data-view]')) tryEnd(true); };
+    document.addEventListener('click',onClick,true);
+    bar.querySelector('button').addEventListener('click',()=>tryEnd(true));
+    tryEnd=function(restore){ clearTimeout(timer); document.removeEventListener('click',onClick,true); bar.remove(); if(restore) put(before); tryEnd=null; };
+  }
+  document.addEventListener('click',e=>{ const b=e.target.closest('[data-pv]'); if(b&&b.closest('#view-shop')) openPreview(b.dataset.pv); });
   // Seule la Boutique affichée a besoin de se redessiner quand le solde change (boutons « Acheter »
   // grisés) : sans cette garde, chaque mise dans n'importe quel jeu reconstruisait ses 4 listes.
   document.addEventListener('balance-changed', ()=>{ const v=document.getElementById('view-shop'); if(v&&v.classList.contains('active')) render(); });

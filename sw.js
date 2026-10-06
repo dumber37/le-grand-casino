@@ -6,7 +6,7 @@
    versionné : à chaque changement de fichiers, incrémenter le
    suffixe fait automatiquement place nette de l'ancien cache.
    ============================================================ */
-const CACHE_NAME = 'grand-casino-v56';
+const CACHE_NAME = 'grand-casino-v57';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './css/base.css', './css/slots.css', './css/dragon-slots.css', './css/blackjack.css',
@@ -16,7 +16,7 @@ const ASSETS = [
   './js/core.js', './js/firebase-config.js', './js/firebase-shared.js', './js/turn-config.js','./js/seasonal.js', './js/a11y.js', './js/pin-lock.js', './js/win-effects.js', './js/deal-anim.js', './js/audio.js', './js/slot-engine.js', './js/slots.js',
   './js/dragon-slots.js', './js/blackjack.js', './js/roulette-scene.js', './js/roulette.js', './js/bus.js',
   './js/baccarat.js', './js/coinflip.js', './js/war.js', './js/keno.js', './js/craps.js', './js/plinko.js', './js/hilo.js', './js/scratch.js', './js/tower.js', './js/weekly.js', './js/season.js', './js/stats-chart.js', './js/wheel.js', './js/daily-challenge.js', './js/shop.js', './js/mines.js', './js/crash.js',
-  './js/video-poker.js', './js/cases.js', './js/poker.js', './js/friends.js', './js/friends-compare.js', './js/friends-extras.js', './js/home-ticker.js', './js/avatars.js', './js/chips.js', './js/multi-blackjack.js', './js/multi-bus.js', './js/multi-crash.js', './js/floor.js', './js/challenges.js', './js/cloud-sync.js', './js/leaderboard.js', './js/shortcuts.js', './js/ambiance.js',
+  './js/video-poker.js', './js/cases.js', './js/poker.js', './js/friends.js', './js/friends-compare.js', './js/friends-extras.js', './js/home-ticker.js', './js/avatars.js', './js/chips.js', './js/multi-blackjack.js', './js/multi-bus.js', './js/multi-crash.js', './js/floor.js', './js/challenges.js', './js/cloud-sync.js', './js/leaderboard.js', './js/online-leaderboard.js','./js/shortcuts.js', './js/ambiance.js',
   './js/qrcode-lib.js', './js/qrcode.js', './js/install-prompt.js', './js/save-transfer.js',
   './js/sw-register.js', './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-192.png', './assets/icon-maskable-512.png'
 ];

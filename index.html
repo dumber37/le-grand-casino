@@ -190,6 +190,11 @@
         <div class="game-cats" id="popularGrid"></div>
       </section>
 
+      <section class="view" id="view-category">
+        <div class="cat-head"><span class="cat-head-icon" id="catIcon" aria-hidden="true"></span><div><h2 id="catName"></h2><p id="catSub"></p></div></div>
+        <div class="game-grid cat-grid" id="catGrid"></div>
+      </section>
+
       <section class="view" id="view-floor"><div class="panel">
         <div class="scene-header"><span class="sh-icon">🗺️</span><div><div class="sh-name">Plan du casino</div><div class="sh-desc">Balade-toi dans les salles — clique une table ou une zone pour y jouer</div></div></div>
         <div class="floor-stage">
@@ -935,7 +940,16 @@
       <section class="view" id="view-profil"><div class="panel">
         <div style="text-align:center;margin-bottom:14px">
           <div class="avatar" id="pf-avatar">🎲</div>
-          <div style="color:var(--gold-bright);font-size:1rem;margin-top:8px" id="pf-pseudo">Joueur</div>
+          <div class="pf-name-row" id="pf-nameRow">
+            <span class="pf-pseudo" id="pf-pseudo">Joueur</span>
+            <button type="button" class="pf-edit" id="pf-editBtn" aria-label="Modifier mon pseudo" title="Modifier mon pseudo">✏️ Modifier</button>
+          </div>
+          <form class="pf-name-form" id="pf-nameForm" hidden autocomplete="off">
+            <input type="text" id="pf-nameInput" maxlength="20" aria-label="Nouveau pseudo" placeholder="Ton pseudo (2 à 20 caractères)">
+            <button type="submit" class="primary-btn">Valider</button>
+            <button type="button" id="pf-nameCancel">Annuler</button>
+          </form>
+          <p class="pf-name-msg" id="pf-nameMsg" aria-live="polite"></p>
         </div>
         <details class="info-disclosure av-details" open>
           <summary>🎨 Personnaliser mon avatar</summary>
@@ -1077,15 +1091,25 @@
 
       <section class="view" id="view-leaderboard"><div class="panel">
         <div class="scene-header"><span class="sh-icon">📊</span><div><div class="sh-name">Classement</div><div class="sh-desc">Compare ta progression avec tes amis</div></div></div>
-        <p class="acc-hint">Ce site n'a pas de serveur central : pour comparer ton score à celui d'un ami, demande-lui d'exporter sa sauvegarde (Paramètres → « Exporter ma sauvegarde ») et importe son fichier ici. Rien n'est envoyé nulle part — tout reste sur cet appareil.</p>
         <div class="lb-controls">
           <select id="lb-sort" aria-label="Trier le classement par">
+            <option value="balance">Solde actuel</option>
             <option value="totalWon">Total gagné</option>
             <option value="totalWagered">Total misé</option>
             <option value="biggestWin">Plus gros gain</option>
             <option value="crashBestMult">Meilleur multiplicateur Crash</option>
             <option value="gamesPlayed">Parties jouées</option>
           </select>
+        </div>
+        <div class="lb-online" id="lb-online" style="display:none">
+          <h2 class="section-title">🌍 Classement en ligne <small class="lb-live" id="lb-live"></small></h2>
+          <p class="lb-status" id="lb-onlineStatus"></p>
+          <div id="lb-onlineList"></div>
+          <div class="lb-online-actions" id="lb-onlineActions"></div>
+        </div>
+        <h2 class="section-title">Comparer avec des sauvegardes d'amis</h2>
+        <p class="acc-hint">Pour comparer ton score à celui d'un ami hors ligne, demande-lui d'exporter sa sauvegarde (Paramètres → « Exporter ma sauvegarde ») et importe son fichier ici. Cette partie reste sur cet appareil : rien n'est envoyé nulle part.</p>
+        <div class="lb-controls">
           <button class="primary-btn" id="lb-addBtn">+ Ajouter un ami</button>
           <input type="file" id="lb-fileInput" accept="application/json,.json" style="display:none">
         </div>
@@ -1209,6 +1233,7 @@
 <script src="js/challenges.js"></script>
 <script src="js/cloud-sync.js"></script>
 <script src="js/leaderboard.js"></script>
+<script src="js/online-leaderboard.js"></script>
 <script src="js/ambiance.js"></script>
 <script src="js/sw-register.js"></script>
 <script src="js/install-prompt.js"></script>

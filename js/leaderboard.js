@@ -91,6 +91,7 @@ window.Casino=window.Casino||{};
   // Exposé pour core.js : appelé à chaque ouverture de la vue (switchView), comme les autres
   // rendus différés (renderStats, renderChallenges, renderAccount...).
   C.renderLeaderboard=render;
+  C.leaderboardSummary=mySummary; // résumé de MES chiffres, repris par le classement en ligne (online-leaderboard.js)
 
   sortEl.addEventListener('change',render);
   addBtn.addEventListener('click',()=>fileInput.click());

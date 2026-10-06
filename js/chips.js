@@ -32,14 +32,14 @@ window.Casino=window.Casino||{};
   let equippedSkin='classic';
   try{ const s=localStorage.getItem(SKIN_KEY); if(s&&CHIP_SKINS[s]) equippedSkin=s; }catch(e){}
   function setChipSkin(id){ if(!CHIP_SKINS[id]) return; equippedSkin=id; try{ localStorage.setItem(SKIN_KEY,id); }catch(e){} }
-  function DENOMS_current(){ return CHIP_SKINS[equippedSkin]; }
+  function DENOMS_current(skin){ return CHIP_SKINS[skin]||CHIP_SKINS[equippedSkin]; } // skin : aperçu d'une peau non équipée (Boutique)
   const MAX_STACK=10, MAX_COLS=4, THICK=3.6, TOP_H=16;
 
   // Décompose un montant en piles {denom, n}. On choisit à chaque étape la plus grosse valeur qui
   // tient AU MOINS DEUX FOIS dans le reste : la mise se lit alors en vraies piles (jetons empilés),
   // et plus elle est grosse, plus les piles sont hautes — plutôt qu'un jeton de chaque valeur.
-  function split(amount){
-    const DENOMS=DENOMS_current();
+  function split(amount,skin){
+    const DENOMS=DENOMS_current(skin);
     let left=Math.max(0,Math.floor(amount)), out=[];
     while(left>0){
       const d=DENOMS.find(x=>left>=2*x.v)||DENOMS[DENOMS.length-1];
@@ -50,7 +50,7 @@ window.Casino=window.Casino||{};
   function html(amount,opts){
     opts=opts||{};
     if(!(amount>0)) return '';
-    const cols=split(amount).slice(0,opts.maxCols||MAX_COLS);
+    const cols=split(amount,opts.skin).slice(0,opts.maxCols||MAX_COLS);
     let s='<span class="chips" style="--cs:'+(opts.scale||1)+'">';
     cols.forEach(col=>{
       const n=Math.min(col.n,MAX_STACK), h=Math.round(TOP_H+(n-1)*THICK+3);

@@ -214,7 +214,7 @@
     if(!added.size&&!cleared.size) return;
     const now=Date.now(), groups=new Map();
     added.forEach(card=>{
-      if(!card.isConnected||!card.parentElement) return;
+      if(!card.isConnected||!card.parentElement||card.closest('[data-no-deal]')) return; // [data-no-deal] : cartes de décor (aperçus de la Boutique), jamais distribuées
       const cont=card.parentElement, key=keyOf(cont);
       if(!groups.has(key)) groups.set(key,{cont,cards:[]});
       groups.get(key).cards.push(card);

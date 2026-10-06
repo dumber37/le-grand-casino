@@ -21,5 +21,11 @@
 .lb-name{display:flex;align-items:center;gap:8px;color:var(--cream);flex:1;min-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-vip{font-size:.72rem;white-space:nowrap;flex-shrink:0;color:var(--muted)}
 .lb-metric{color:var(--gold-bright);font-weight:bold;font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0;min-width:56px;text-align:right}
+/* Classement en ligne (js/online-leaderboard.js) */
+.lb-live{margin-left:8px;font-size:.68rem;font-weight:normal;color:var(--good);letter-spacing:.04em}
+.lb-status{margin:2px 4px 10px;font-size:.78rem;color:var(--muted);line-height:1.45}
+.lb-online-actions{display:flex;gap:10px;justify-content:center;margin:12px 0 4px;flex-wrap:wrap}
+.lb-online-actions button{padding:9px 16px;border-radius:10px;font-family:inherit;font-size:.8rem;cursor:pointer;background:var(--bg-deep);border:1px solid var(--border);color:var(--cream)}
+.lb-online-actions .primary-btn{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#2a1f05;border:none;font-weight:bold}
 .lb-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:4px;flex-shrink:0;border-radius:6px}
 .lb-remove:hover{color:var(--red);background:rgba(163,53,47,.12)}
