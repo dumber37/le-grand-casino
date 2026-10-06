@@ -98,3 +98,19 @@ html[data-felt="onyx"]{--tf-a:#50565f;--tf-b:#2e3238;--tf-c:#121417}
 .cat-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:20px 4px 10px;font-size:.9rem;font-weight:600;color:var(--cream);letter-spacing:.02em}
 .cat-title:first-child{margin-top:4px}
 .cat-title small{font-size:.68rem;font-weight:400;color:var(--muted)}
+
+/* ---- Paramètres : vitesse de distribution des cartes (voir js/deal-anim.js) ---- */
+.settings-row.stack{flex-direction:column;align-items:stretch;gap:10px}
+.settings-row.stack .seg{display:flex}
+.settings-row.stack .seg button{flex:1;padding:8px 4px;font-size:.8rem}
+.ds-line{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ds-line .fr-copy{margin-top:0;padding:6px 12px;font-size:.76rem;flex:none}
+.ds-preview{display:flex;gap:7px;min-height:38px;align-items:center}
+.ds-preview i{
+  display:block;width:24px;height:34px;border-radius:5px;border:1px solid var(--gold);
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 3px,transparent 3px 6px),linear-gradient(135deg,var(--felt),var(--felt-dark));
+  box-shadow:0 2px 5px rgba(0,0,0,.45);opacity:.16;transform:translateY(-9px) scale(.85);
+  transition:opacity .22s ease,transform .22s ease;
+}
+.ds-preview i.on{opacity:1;transform:none}
+.ds-hint{margin:0;color:var(--muted);font-size:.76rem;line-height:1.45}

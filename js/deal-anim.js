@@ -23,16 +23,20 @@
   const C=window.Casino, root=document.documentElement;
 
   /* Cadence « de casino » (tous les jeux de cartes) : au lieu de jeter toutes les cartes d'un coup, le
-     croupier en pose UNE à la fois, C.DEAL_STEP_MS (1 s) entre deux cartes. Le jeu tire sa donne comme
-     avant et donne seulement l'ordre de pose : onCard(k) affiche la k-ième carte, onDone() rend la main
-     au joueur. `lead` laisse la table se vider avant la 1re carte, `tail` laisse la dernière carte
-     atterrir avant la suite. Mouvement réduit / animations indisponibles : tout d'un coup (onDone
+     croupier en pose UNE à la fois, C.DEAL_STEP_MS entre deux cartes (réglable dans Paramètres, 1 s par
+     défaut ; 0 = instantanée). Le jeu tire sa donne comme avant et donne seulement l'ordre de pose :
+     onCard(k) affiche la k-ième carte, onDone() rend la main au joueur. `lead` laisse la table se vider
+     avant la 1re carte, `tail` laisse la dernière carte atterrir avant la suite (plus courts aux vitesses
+     rapides). Mouvement réduit / animations indisponibles / vitesse instantanée : tout d'un coup (onDone
      seul), exactement comme avant. Renvoie {skip, cancel} : skip() termine tout de suite. */
+  const SPEED_KEY='grand-casino-deal-speed', SPEEDS=[0,500,1000,1500]; // millisecondes entre deux cartes
   C.DEAL_STEP_MS=1000;
+  try{ const v=parseInt(localStorage.getItem(SPEED_KEY),10); if(SPEEDS.indexOf(v)>=0) C.DEAL_STEP_MS=v; }catch(e){}
   C.paceDeal=function(n,onCard,onDone,o){
     o=o||{};
-    const gap=o.gap||C.DEAL_STEP_MS, lead=o.lead!=null?o.lead:350, tail=o.tail!=null?o.tail:650;
-    const animated=root.classList.contains('deal-js')&&root.getAttribute('data-motion')!=='reduce';
+    const gap=o.gap!=null?o.gap:C.DEAL_STEP_MS, k=Math.min(1,gap/1000);
+    const lead=o.lead!=null?o.lead:Math.max(150,350*k), tail=o.tail!=null?o.tail:Math.max(450,650*k);
+    const animated=root.classList.contains('deal-js')&&root.getAttribute('data-motion')!=='reduce'&&gap>0;
     let i=0, timer=null, over=false;
     const finish=()=>{ if(over) return; over=true; clearTimeout(timer); onDone&&onDone(); };
     if(!animated||!(n>0)){ finish(); return {skip(){}, cancel(){}}; }
@@ -50,7 +54,41 @@
     return C.paceDeal(1,function(){},onDone,Object.assign({lead:0,tail:C.DEAL_STEP_MS},o));
   };
 
-  if(!window.MutationObserver||!Element.prototype.animate) return;
+  // ---- Réglage « Vitesse de distribution des cartes » (page Paramètres) : 4 vitesses, mémorisées (et incluses
+  // dans les sauvegardes, voir EXTRA_KEYS de core.js) ; un petit aperçu pose 5 cartes au rythme choisi. ----
+  const $=id=>document.getElementById(id);
+  const speedBtns=Array.prototype.slice.call(document.querySelectorAll('#dealSpeed button'));
+  const SPEED_HINT={0:'Toutes les cartes sont posées d’un coup.',500:'Environ 0,5 s entre deux cartes.',1000:'Environ 1 s entre deux cartes.',1500:'Environ 1,5 s entre deux cartes.'};
+  const HINT_ALL=' S’applique au blackjack, baccarat, poker, vidéo poker, bataille, Ride the Bus et Hi-Lo ; un clic sur la table accélère toujours la distribution en cours.';
+  const reducedNow=()=>root.getAttribute('data-motion')==='reduce';
+  function syncSpeedUi(){
+    speedBtns.forEach(b=>{ const on=parseInt(b.dataset.ms,10)===C.DEAL_STEP_MS; b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on)); });
+    const hint=$('dealSpeedHint'); if(!hint) return;
+    hint.textContent=reducedNow()
+      ? 'Sans effet tant que « Réduire les animations » est activé : les cartes sont alors posées d’un coup.'
+      : (SPEED_HINT[C.DEAL_STEP_MS]||'')+HINT_ALL;
+  }
+  let previewTimers=[];
+  function previewSpeed(){
+    const cards=Array.prototype.slice.call(document.querySelectorAll('#dealSpeedPreview i'));
+    previewTimers.forEach(clearTimeout); previewTimers=[];
+    cards.forEach(c=>c.classList.remove('on'));
+    const step=reducedNow()?0:C.DEAL_STEP_MS;
+    cards.forEach((c,k)=>{ previewTimers.push(setTimeout(()=>c.classList.add('on'),150+k*step)); });
+  }
+  C.setDealSpeed=function(ms){
+    if(SPEEDS.indexOf(ms)<0) return;
+    C.DEAL_STEP_MS=ms;
+    try{ localStorage.setItem(SPEED_KEY,String(ms)); }catch(e){}
+    syncSpeedUi();
+  };
+  speedBtns.forEach(b=>b.addEventListener('click',()=>{ C.setDealSpeed(parseInt(b.dataset.ms,10)); previewSpeed(); }));
+  if($('dealSpeedTest')) $('dealSpeedTest').addEventListener('click',previewSpeed);
+  if($('a11yMotion')) $('a11yMotion').addEventListener('click',()=>setTimeout(syncSpeedUi,0)); // le texte d'aide suit « Réduire les animations »
+  syncSpeedUi();
+
+  // Sans MutationObserver / Element.animate, aucune carte n'est animée : le réglage n'aurait aucun effet, on le masque.
+  if(!window.MutationObserver||!Element.prototype.animate){ if($('dealSpeedRow')) $('dealSpeedRow').style.display='none'; return; }
   root.classList.add('deal-js');
 
   const GAP=170, FLIGHT=480, FLIP_AT=.55, MEM_TTL=90000;

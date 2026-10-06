@@ -1097,6 +1097,17 @@
         <div class="settings-row"><span>🌙 Thème sombre</span><button class="toggle on" id="themeToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row"><span>🔊 Son</span><button class="toggle on" id="soundToggle" aria-pressed="true">Activé</button></div>
         <div class="settings-row"><span>🎃 Décor saisonnier automatique</span><button class="toggle on" id="seasonalToggle" aria-pressed="true">Activé</button></div>
+        <div class="settings-row stack" id="dealSpeedRow">
+          <span>🃏 Vitesse de distribution des cartes</span>
+          <div class="seg" id="dealSpeed" role="group" aria-label="Vitesse de distribution des cartes">
+            <button data-ms="0">Instantanée</button><button data-ms="500">Rapide</button><button data-ms="1000">Normale</button><button data-ms="1500">Lente</button>
+          </div>
+          <div class="ds-line">
+            <div class="ds-preview" id="dealSpeedPreview" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+            <button class="fr-copy" id="dealSpeedTest" type="button">▶ Aperçu</button>
+          </div>
+          <p class="ds-hint" id="dealSpeedHint"></p>
+        </div>
         <div class="settings-row" id="installRow" style="display:none"><span>📲 Installer l'application</span><button class="primary-btn" id="installAppBtn" style="padding:8px 16px;flex:none">Installer</button></div>
         <h2 class="section-title">Accessibilité</h2>
         <div class="settings-row"><span>🔠 Taille du texte</span>
