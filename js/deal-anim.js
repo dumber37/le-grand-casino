@@ -62,8 +62,38 @@
   const SPEED_HINT={0:'Toutes les cartes sont posées d’un coup.',500:'Environ 0,5 s entre deux cartes.',1000:'Environ 1 s entre deux cartes.',1500:'Environ 1,5 s entre deux cartes.'};
   const HINT_ALL=' S’applique au blackjack, baccarat, poker, vidéo poker, bataille, Ride the Bus et Hi-Lo ; un clic sur la table accélère toujours la distribution en cours.';
   const reducedNow=()=>root.getAttribute('data-motion')==='reduce';
+  // ---- Raccourci sur chaque table de cartes : une puce « ⏱ Normale » dans l'en-tête du jeu ; un clic passe à la vitesse
+  // suivante (Instantanée → Rapide → Normale → Lente → ...). Même réglage que dans Paramètres, partagé par tous les jeux. ----
+  const SPEED_NAME={0:'Instantanée',500:'Rapide',1000:'Normale',1500:'Lente'};
+  const animSupported=!!(window.MutationObserver&&Element.prototype.animate);
+  const speedChips=[];
+  if(animSupported) ['blackjack','baccarat','poker','videopoker','war','bus','hilo','friends'].forEach(v=>{
+    const head=document.querySelector('#view-'+v+' .scene-header'); if(!head) return;
+    const b=document.createElement('button'); b.type='button'; b.className='speed-chip';
+    b.addEventListener('click',()=>{
+      const next=SPEEDS[(SPEEDS.indexOf(C.DEAL_STEP_MS)+1)%SPEEDS.length];
+      C.setDealSpeed(next);
+      if(C.showToast){
+        // un seul message à la fois : des clics rapides remplacent le précédent au lieu de les empiler
+        const box=$('toastContainer'); if(box) box.querySelectorAll('.toast[data-speed]').forEach(t=>t.remove());
+        C.showToast('🃏 Distribution : '+SPEED_NAME[next]+(next>0?' ('+(next/1000).toLocaleString('fr-FR')+' s entre deux cartes)':' (tout d’un coup)'));
+        if(box&&box.lastElementChild) box.lastElementChild.dataset.speed='1';
+      }
+    });
+    head.appendChild(b); speedChips.push(b);
+  });
+  function syncSpeedChips(){
+    const name=SPEED_NAME[C.DEAL_STEP_MS]||'Normale', off=reducedNow();
+    speedChips.forEach(b=>{
+      b.innerHTML='<span aria-hidden="true">⏱</span> '+name;
+      b.disabled=off;
+      b.title=off?'Sans effet tant que « Réduire les animations » est activé':'Vitesse de distribution : '+name+' — clique pour changer';
+      b.setAttribute('aria-label','Vitesse de distribution : '+name+(off?' (sans effet : animations réduites)':'. Clique pour changer.'));
+    });
+  }
   function syncSpeedUi(){
     speedBtns.forEach(b=>{ const on=parseInt(b.dataset.ms,10)===C.DEAL_STEP_MS; b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on)); });
+    syncSpeedChips();
     const hint=$('dealSpeedHint'); if(!hint) return;
     hint.textContent=reducedNow()
       ? 'Sans effet tant que « Réduire les animations » est activé : les cartes sont alors posées d’un coup.'
