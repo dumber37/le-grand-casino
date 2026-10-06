@@ -50,7 +50,8 @@
     else {
       const p2=deck.pop(), d2=deck.pop(), pv2=rankVal(p2), dv2=rankVal(d2);
       seq.push({el:playerEl,card:p2,war:true},{el:dealerEl,card:d2});
-      if(pv2>dv2){ win=roundBet*3; text='Guerre gagnée ! +'+win+' jetons'; }
+      // Guerre gagnée : mise doublée comme une victoire normale (x2). À x3 le retour du jeu montait à ≈ 103 % (avantage au joueur) ; à x2 il est de 100 %.
+      if(pv2>dv2){ win=roundBet*2; text='Guerre gagnée ! +'+win+' jetons'; }
       else if(pv2<dv2){ win=0; text='Guerre perdue.'; }
       else { win=roundBet; text='Double égalité — mise remboursée.'; }
     }

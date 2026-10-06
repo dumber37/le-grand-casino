@@ -234,7 +234,7 @@ window.Casino = window.Casino || {};
             }
           });
           if(count>=stopAt[cols-1]){
-            let win=0, anyJackpot=false, winningLines=0, maxLinePayout=0;
+            let win=0, anyJackpot=false, winningLines=0, maxLinePayout=0, pairSum=0;
             const fullCells=[], pairCells=[];
             for(let r=0;r<rows;r++){
               const icons=grid[r].map(s=>s.icon);
@@ -248,10 +248,13 @@ window.Casino = window.Casino || {};
                 if(jackpotIcon!==null&&maxIcon===jackpotIcon) anyJackpot=true;
                 for(let c=0;c<cols;c++) fullCells.push(cellAt(c,r));
               } else if(maxCount>=2){
-                win+=Math.round(bet*pairMultiplier);
+                // Les petites combinaisons de toutes les lignes sont additionnées PUIS arrondies à l'entier inférieur (au lieu
+                // d'arrondir chaque ligne) : sinon, à petite mise, l'arrondi de chaque ligne gonflait le retour.
+                pairSum+=bet*pairMultiplier;
                 for(let c=0;c<cols;c++) if(icons[c]===maxIcon) pairCells.push(cellAt(c,r));
               }
             }
+            win+=Math.floor(pairSum+1e-9);
             if(fullCells.length){
               msg.textContent=(anyJackpot?'JACKPOT ! +':'Gagné ! +')+win+' jetons'+(winningLines>1?' ('+winningLines+' lignes)':'');
               blinkReels(fullCells, anyJackpot); if(pairCells.length) blinkReels(pairCells,false); showWinLine();

@@ -10,6 +10,9 @@
     gameKey: 'dragon',
     defaultBet: 10, minBet: 5, maxBet: 100, betStep: 5,
     rows: 3, cols: 5,
+    // Une « petite combinaison » (2 symboles identiques ou plus sur une ligne de 5) est quasi systématique (98 % des lignes) et
+    // paie sur CHACUNE des 3 lignes : à 0,5 × la mise le retour atteignait ≈ 154 %. À 0,3 × la mise : ≈ 96 % (équilibré).
+    pairMultiplier: 0.3,
     jackpotIcon: '🐉',
     // Embrase la bannière GRAND de la cabine quand le dragon d'or tombe — purement décoratif,
     // n'affecte jamais le calcul du gain (déjà déterminé par le moteur avant cet appel).
