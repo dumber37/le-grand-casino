@@ -99,6 +99,7 @@ window.Casino=window.Casino||{};
 
   async function publish(force){
     if(!user||!optedIn||!fb) return;
+    if(C.challengeActive) return; // pendant un Défi personnel le solde est fictif : jamais publié (repris à la fin du défi)
     const now=Date.now();
     if(!force&&now-lastPub<PUBLISH_EVERY){ clearTimeout(pubTimer); pubTimer=setTimeout(()=>publish(true),PUBLISH_EVERY-(now-lastPub)); return; }
     lastPub=now;

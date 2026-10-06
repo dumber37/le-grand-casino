@@ -64,7 +64,9 @@
   }));
 
   function finish(roundBet,roundRisk,slot){
-    const mult=TABLES[roundRisk][slot], win=Math.round(roundBet*mult);
+    // Arrondi sans biais : un gain « virgule cinq » (ex. 1,5 jeton) est arrondi vers le haut ou vers le bas à égalité de chances, au lieu de
+    // toujours vers le haut — sinon, à la mise minimale (5), Plinko rendait plus de 100 % (103,7 % en risque « moyen »).
+    const mult=TABLES[roundRisk][slot], raw=roundBet*mult, win=Math.floor(raw+Math.random());
     hitSlot=slot; ball=null; draw();
     C.state.balance+=win; C.saveBalance(); C.renderBalance();
     C.recordGame('plinko',roundBet,win);

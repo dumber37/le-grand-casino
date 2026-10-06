@@ -80,6 +80,9 @@
 
   function validate(){
     if(playedToday||picks.length===0) return;
+    // Relu dans le stockage : un autre onglet ouvert avant la partie du jour pouvait sinon la rejouer et toucher la récompense deux fois.
+    const done=readState();
+    if(done&&done.date===todayStr()){ showResult(done); return; }
     const drawn=todaysDrawnNumbers();
     const matches=picks.filter(p=>drawn.includes(p)).length;
     const reward=REWARD_BY_MATCHES[matches]||0;

@@ -716,6 +716,23 @@ window.Casino = (function(){
     document.dispatchEvent(new Event('balance-changed'));
   };
 
+  // Plusieurs onglets du site ouverts en même temps : chacun garde sa propre copie du solde et des stats en mémoire et réécrit TOUT le
+  // stockage à chaque partie — l'onglet resté en retard écrasait donc le solde de l'autre (argent perdu… ou recréé : on perdait tout
+  // dans un onglet, on rejouait avec le solde périmé de l'autre). Désormais, quand un AUTRE onglet change le solde, le total misé, les
+  // stats, l'historique, les missions ou les succès, celui-ci adopte aussitôt la nouvelle valeur (le stockage reste la source commune).
+  // Pendant un Défi personnel le solde affiché est fictif : on ne touche à rien.
+  window.addEventListener('storage',e=>{
+    if(e.storageArea!==localStorage||C.challengeActive) return;
+    try{
+      if(e.key===BAL_KEY){ const v=parseInt(e.newValue,10); if(!isNaN(v)){ C.state.balance=Math.max(0,v); C.renderBalance(true); } }
+      else if(e.key===WAG_KEY){ const v=parseInt(e.newValue,10); if(!isNaN(v)){ C.state.totalWagered=Math.max(0,v); C.renderBalance(true); } }
+      else if(e.key===STATS_KEY){ const p=JSON.parse(e.newValue); if(p&&typeof p==='object'&&!Array.isArray(p)){ stats=Object.assign({gamesPlayed:0,totalWon:0,biggestWin:0,perGame:{}},C.cleanSaved(STATS_KEY,p)); if(!stats.perGame||typeof stats.perGame!=='object') stats.perGame={}; } }
+      else if(e.key===HIST_KEY){ const p=JSON.parse(e.newValue); if(Array.isArray(p)) history=C.cleanSaved(HIST_KEY,p); }
+      else if(e.key===MISSIONS_KEY){ loadMissions(); renderMissions(); }
+      else if(e.key===ACH_KEY){ const p=JSON.parse(e.newValue); if(Array.isArray(p)) unlockedAch=C.cleanSaved(ACH_KEY,p); }
+    }catch(err){}
+  });
+
   document.getElementById('resetBtn').addEventListener('click',()=>{ C.createRestorePoint('Avant la réinitialisation du solde'); C.state.balance=500; C.saveBalance(); C.renderBalance(true); });
 
   // ====== MODULE: Sauvegarde exportable / importable ======

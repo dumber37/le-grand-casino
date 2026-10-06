@@ -50,7 +50,11 @@
   }
   function spin(){
     if(spinning||alreadySpunToday()) return;
-    spinning=true; updateStatus();
+    spinning=true;
+    // Le tour du jour est marqué TOUT DE SUITE (et non à la fin des 4,3 s) : sinon un second onglet pouvait tourner la roue pendant ce
+    // temps et toucher deux récompenses. Le gain est déjà tiré ; il est crédité à la fin, ou tout de suite si on quitte la page.
+    try{ localStorage.setItem(LAST_KEY, todayStr()); }catch(e){}
+    updateStatus();
     if(stageEl) stageEl.classList.add('spinning');
     msg.textContent='La roue tourne...';
     C.sound&&C.sound('spin');
@@ -64,17 +68,21 @@
     const delta=((target-currentMod)+360)%360;
     wheelRotation+=6*360+delta;
     wheelEl.style.transform='rotate('+wheelRotation+'deg)';
-    setTimeout(()=>{
+    let paid=false, timer=0;
+    const pay=()=>{
+      if(paid) return; paid=true; clearTimeout(timer); pendingPay=null;
       if(stageEl) stageEl.classList.remove('spinning');
       const reward=TIERS[idx].value;
       C.state.balance+=reward; C.saveBalance(); C.renderBalance();
       C.recordGame('wheel', 0, reward);
-      try{ localStorage.setItem(LAST_KEY, todayStr()); }catch(e){}
       msg.textContent='Tu gagnes '+reward+' jetons !';
       C.flashWin(msg);
       spinning=false; updateStatus();
-    }, 4300);
+    };
+    pendingPay=pay; timer=setTimeout(pay, 4300);
   }
+  let pendingPay=null;
+  if(C.onPageLeave) C.onPageLeave(()=>{ if(pendingPay) pendingPay(); }); // la roue a déjà été tournée : le gain n'est jamais perdu
   spinBtn.addEventListener('click', spin);
   buildWheel(); updateStatus();
 })();
