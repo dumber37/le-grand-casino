@@ -641,8 +641,43 @@ window.Casino = (function(){
   C.challengeActive = false;
   C.saveBalance = function(){ try{ if(C.challengeActive) return; localStorage.setItem(BAL_KEY,String(C.state.balance)); localStorage.setItem(WAG_KEY,String(C.state.totalWagered)); }catch(e){} };
   C.trackWager = function(amount){ C.state.totalWagered+=amount; };
-  C.renderBalance = function(){
-    ['hdrBalance','home-balance','pf-balance'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=C.state.balance; });
+  // Le solde affiché « roule » jusqu'à sa nouvelle valeur quand il AUGMENTE (gain), avec un petit +N qui monte et
+  // s'efface sous l'en-tête ; une baisse (mise) s'affiche tout de suite. Purement visuel : C.state.balance est déjà à jour,
+  // et un minuteur de secours pose la valeur exacte même si l'onglet est masqué (pas d'images) ; rien ne bouge si
+  // « Réduire les animations » est actif.
+  let dispBal=null, lastBal=null, balRaf=0, balTimer=0;
+  function paintBalance(v){ dispBal=v; ['hdrBalance','home-balance','pf-balance'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=v; }); }
+  function popGain(delta){
+    const anchor=document.getElementById('hdrBalance'); if(!anchor||!anchor.getClientRects().length||!anchor.animate) return;
+    const r=anchor.getBoundingClientRect(), p=document.createElement('span');
+    document.querySelectorAll('.bal-pop').forEach(n=>n.remove());
+    p.className='bal-pop'; p.textContent='+'+Math.round(delta);
+    p.style.left=Math.round(r.left+r.width/2)+'px'; p.style.top=Math.round(r.bottom-4)+'px';
+    document.body.appendChild(p);
+    const a=p.animate([
+      {opacity:0,transform:'translate(-50%,-4px) scale(.8)'},
+      {opacity:1,transform:'translate(-50%,6px) scale(1.08)',offset:.18},
+      {opacity:1,transform:'translate(-50%,14px) scale(1)',offset:.7},
+      {opacity:0,transform:'translate(-50%,26px) scale(.95)'}
+    ],{duration:1300,easing:'ease-out'});
+    a.onfinish=a.oncancel=()=>p.remove(); setTimeout(()=>p.remove(),1700);
+  }
+  // instant = true pour un changement qui n'est PAS un gain de jeu (remise à 500, début / fin d'un Défi personnel) : pas de compte ni de +N.
+  function showBalance(target,instant){
+    if(!instant&&target===lastBal&&dispBal!==target) return; // même cible : le compte en cours se poursuit (un renderBalance « à vide » ne le coupe pas)
+    cancelAnimationFrame(balRaf); clearTimeout(balTimer);
+    const from=dispBal, gain=lastBal==null?0:target-lastBal; lastBal=target;
+    if(instant||from==null||!(gain>0)||!(target>from)||document.hidden||document.documentElement.getAttribute('data-motion')==='reduce'){ paintBalance(target); return; }
+    const t0=performance.now(), dur=Math.min(900,350+(target-from)*2);
+    const step=now=>{ const k=Math.min(1,(now-t0)/dur); paintBalance(Math.round(from+(target-from)*(1-Math.pow(1-k,3)))); if(k<1) balRaf=requestAnimationFrame(step); };
+    balRaf=requestAnimationFrame(step);
+    balTimer=setTimeout(()=>{ cancelAnimationFrame(balRaf); paintBalance(C.state.balance); },dur+150);
+    const hb=document.getElementById('hdrBalance');
+    if(hb){ hb.classList.remove('bal-up'); void hb.offsetWidth; hb.classList.add('bal-up'); hb.addEventListener('animationend',()=>hb.classList.remove('bal-up'),{once:true}); }
+    popGain(gain);
+  }
+  C.renderBalance = function(instant){
+    showBalance(C.state.balance,instant===true);
     const level=Math.floor(C.state.totalWagered/1000)+1;
     const xpInLevel=C.state.totalWagered%1000;
     ['hdrLevel','home-level'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=level; });
@@ -655,7 +690,7 @@ window.Casino = (function(){
     document.dispatchEvent(new Event('balance-changed'));
   };
 
-  document.getElementById('resetBtn').addEventListener('click',()=>{ C.createRestorePoint('Avant la réinitialisation du solde'); C.state.balance=500; C.saveBalance(); C.renderBalance(); });
+  document.getElementById('resetBtn').addEventListener('click',()=>{ C.createRestorePoint('Avant la réinitialisation du solde'); C.state.balance=500; C.saveBalance(); C.renderBalance(true); });
 
   // ====== MODULE: Sauvegarde exportable / importable ======
   // Regroupe toutes les clés localStorage du site (y compris grand-casino-sound, propre à

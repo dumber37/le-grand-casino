@@ -89,7 +89,7 @@ window.Casino=window.Casino||{};
     peak=selectedCapital;
     C.challengeActive=true;
     C.state.balance=selectedCapital;
-    C.renderBalance();
+    C.renderBalance(true); // le capital du défi n'est pas un gain : pas de compte ni de +N
     active=true;
     endAt=Date.now()+selectedDuration*1000;
     const g=GAMES.find(x=>x.key===selectedGame);
@@ -126,7 +126,7 @@ window.Casino=window.Casino||{};
     // l'ajoute au VRAI solde ici, elle n'est jamais perdue.
     const pending=C.state.pendingChallengeCredit||0; C.state.pendingChallengeCredit=0;
     C.state.balance=realBalance+pending; C.state.totalWagered=realWagered;
-    C.saveBalance(); C.renderBalance();
+    C.saveBalance(); C.renderBalance(true); // retour au vrai solde : pas un gain
     hud.style.display='none';
     const g=GAMES.find(x=>x.key===selectedGame);
     const gname=g?g.name:selectedGame;

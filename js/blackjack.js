@@ -8,6 +8,9 @@
   // la donne ({me, ai:[…], dealer}), null le reste du temps (tout est alors visible) ; `dealCtl` permet
   // d'accélérer. La donne est tirée d'un coup comme avant : seul l'affichage est étalé dans le temps.
   let shown=null, dealCtl=null;
+  // Fin de manche étalée (voir finishFlow) : le résultat n'est réglé qu'à la fin ; endCtl sert à la régler tout de suite
+  // si on quitte la page entre-temps (la mise est déjà prise, le gain ne doit pas se perdre).
+  let endCtl=null;
   const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
   const betEl=document.getElementById('bj-betAmount'), msg=document.getElementById('bj-message');
   const dealerCardsEl=document.getElementById('bj-dealerCards'), dealerScoreEl=document.getElementById('bj-dealerScore');
@@ -49,7 +52,7 @@
   let aiHands=AI_SEATS.map(()=>({cards:[],result:''}));
   const aiSeatsEl=document.getElementById('bj-aiSeats');
   function playAiHands(){
-    aiHands.forEach((h,i)=>{ while(h.cards.length&&C.bjRules.aiShouldHit(h.cards,dealerHand[0],AI_SEATS[i].risky)){ h.cards.push(deck.pop()); C.sound&&C.sound('card'); } });
+    aiHands.forEach((h,i)=>{ while(h.cards.length&&C.bjRules.aiShouldHit(h.cards,dealerHand[0],AI_SEATS[i].risky)) h.cards.push(deck.pop()); });
   }
   function resolveAi(){
     const d=handScore(dealerHand), dealerBJ=d===21&&dealerHand.length===2;
@@ -84,18 +87,21 @@
     // Retournement animé de la carte cachée du croupier : si elle est déjà à l'écran (pas de
     // tirage supplémentaire entre-temps), on se contente de retirer sa classe .is-back — la
     // transition CSS sur .card-flip fait le reste (même technique que la pièce de Pile ou
-    // Face). Sinon (première distribution, ou le croupier a dû tirer une carte de plus), on
-    // reconstruit tout comme avant : aucun changement de comportement dans ce cas.
+    // Face). Quand le croupier tire ensuite (fin de manche étalée), seule la nouvelle carte est
+    // ajoutée, pour ne pas couper ce retournement. Sinon (première distribution, ou le croupier
+    // a dû tirer d'un coup), on reconstruit tout comme avant.
+    const dCards=shown?dealerHand.slice(0,shown.dealer):dealerHand, have=dealerCardsEl.children.length;
     const holeCardEl=dealerCardsEl.children[1]&&dealerCardsEl.children[1].querySelector('.card-flip.is-back');
-    if(revealDealer&&holeCardEl&&dealerCardsEl.children.length===dealerHand.length){
+    if(revealDealer&&holeCardEl&&have===dCards.length){
       holeCardEl.classList.remove('is-back');
       C.sound&&C.sound('card');
+    } else if(revealDealer&&!holeCardEl&&have>=2&&have<dCards.length){
+      for(let i=have;i<dCards.length;i++) dealerCardsEl.appendChild(C.renderCard(dCards[i],false,true));
     } else {
-      const dCards=shown?dealerHand.slice(0,shown.dealer):dealerHand;
       dealerCardsEl.innerHTML='';
       dCards.forEach((c,i)=>dealerCardsEl.appendChild(C.renderCard(c,i===1&&!revealDealer,true)));
     }
-    dealerScoreEl.textContent=revealDealer?handScore(dealerHand):((shown?shown.dealer:dealerHand.length)?cardValue(dealerHand[0]):'');
+    dealerScoreEl.textContent=revealDealer?handScore(dCards):(dCards.length?cardValue(dealerHand[0]):'');
     renderAi();
     playerZonesEl.innerHTML='';
     hands.forEach((h,idx)=>{
@@ -185,10 +191,32 @@
   }
   function finishFlow(){
     if(currentIdx+1<hands.length){ currentIdx++; renderTable(false); render(); msg.textContent=hasSplit?'Joue la main '+(currentIdx+1)+'.':''; return; }
+    // Fin de manche : les joueurs IA puis le croupier jouent. Tout est tiré d'un coup, dans le même ordre de pioche qu'avant ;
+    // seul l'AFFICHAGE est étalé (cartes des IA, retournement de la carte cachée, tirages du croupier, un peu plus vif que la
+    // donne) et le résultat n'est réglé qu'une fois la dernière carte posée — tout de suite si on clique ou si on quitte la page.
+    const aiBefore=aiHands.map(h=>h.cards.length);
     playAiHands();
     const anyAlive=hands.some(h=>handScore(h.cards)<=21)||aiHands.some(h=>h.cards.length&&handScore(h.cards)<=21);
-    if(anyAlive){ while(handScore(dealerHand)<17){ dealerHand.push(deck.pop()); C.sound&&C.sound('card'); } }
-    inRound=false; renderTable(true); resolve();
+    if(anyAlive){ while(handScore(dealerHand)<17) dealerHand.push(deck.pop()); }
+    const seq=[]; aiHands.forEach((h,i)=>{ for(let n=aiBefore[i];n<h.cards.length;n++) seq.push(i); });
+    if(!seq.length&&dealerHand.length===2){ inRound=false; renderTable(true); resolve(); return; } // rien d'autre à montrer que la carte cachée
+    seq.push('hole'); for(let n=2;n<dealerHand.length;n++) seq.push('dealer');
+    shown={me:99,ai:aiBefore.slice(),dealer:2};
+    tableEl.classList.add('dealing');
+    renderTable(false); render(); msg.textContent='Le croupier joue… (clique sur la table pour accélérer)';
+    const gap=C.DEAL_STEP_MS>0?Math.max(350,Math.round(C.DEAL_STEP_MS*0.6)):0;
+    let atOnce=true; // vrai tant que paceDeal n'est pas revenu : onDone appelé dans ce laps de temps = tout s'est fait d'un coup
+    const ctl=(C.paceDeal||instantDeal)(seq.length,k=>{
+      const who=seq[k];
+      if(who==='dealer') shown.dealer++; else if(who!=='hole') shown.ai[who]++;
+      renderTable(who==='hole'||who==='dealer');
+    },()=>{
+      shown=null; dealCtl=endCtl=null; tableEl.classList.remove('dealing');
+      if(atOnce&&seq.length>1&&C.sound) C.sound('card'); // vitesse « Instantanée » / mouvement réduit : un seul bruit de cartes
+      inRound=false; renderTable(true); resolve();
+    },{gap,lead:450});
+    atOnce=false;
+    dealCtl=endCtl=shown?ctl:null; // `shown` est déjà revenu à null si tout s'est fait d'un coup
   }
   function resolve(){
     resolveAi();
@@ -214,6 +242,7 @@
   renderAi();
   // Pendant la distribution lente, un clic sur la table (ou Espace / Entrée) la termine tout de suite.
   tableEl.addEventListener('click',()=>{ if(dealCtl) dealCtl.skip(); });
+  if(C.onPageLeave) C.onPageLeave(()=>{ if(endCtl) endCtl.skip(); });
   document.addEventListener('keydown',e=>{
     if(!dealCtl||(e.code!=='Space'&&e.key!=='Enter')||e.ctrlKey||e.altKey||e.metaKey||e.shiftKey) return;
     if(!document.getElementById('view-blackjack').classList.contains('active')) return;

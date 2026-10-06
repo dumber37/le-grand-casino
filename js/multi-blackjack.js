@@ -25,6 +25,9 @@
   // null le reste du temps. snapshotFor() n'envoie (à l'hôte comme aux amis) que les cartes déjà posées : la
   // donne est tirée d'un coup comme avant, seul l'affichage est étalé dans le temps.
   let dealShown=null, dealCtl=null;
+  // Fin de manche étalée côté hôte (finishRound) : `endShown` = {dealer: cartes du croupier déjà posées, open: carte cachée
+  // retournée ?} pendant que le croupier joue, null le reste du temps ; endCtl règle la manche tout de suite si on quitte la page.
+  let endShown=null, endCtl=null;
   const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
 
   function switchMode(m){
@@ -50,10 +53,11 @@
 
   // ---------- Hôte : table ----------
   function snapshotFor(viewerSeatIdx){
-    const dl=dealShown?dealer.slice(0,dealShown.dealer):dealer.slice();
+    const dl=dealShown?dealer.slice(0,dealShown.dealer):(endShown?dealer.slice(0,endShown.dealer):dealer.slice());
+    const open=!active||!!(endShown&&endShown.open);
     return {
-      handNo, active, dealer:dl, dealerScore:active?(dl[0]?R().cardValue(dl[0]):''):R().handScore(dealer),
-      revealDealer:!active,
+      handNo, active, dealer:dl, dealerScore:open?R().handScore(dl):(dl[0]?R().cardValue(dl[0]):''),
+      revealDealer:open,
       seats:seats.map((s,i)=>({name:s.name,kind:s.kind,cards:dealShown?s.cards.slice(0,dealShown.seats[i]):s.cards,bet:s.bet,done:s.done,result:s.result,turn:active&&turn===i})),
       me:viewerSeatIdx, msg:msg.textContent
     };
@@ -68,11 +72,14 @@
   function draw(s){
     view=s;
     // Même retournement animé qu'en solo (blackjack.js) : carte déjà affichée → juste enlever
-    // .is-back (transition CSS) ; sinon reconstruction normale, comme avant.
-    const holeCardEl=dCardsEl.children[1]&&dCardsEl.children[1].querySelector('.card-flip.is-back');
-    if(s.revealDealer&&holeCardEl&&dCardsEl.children.length===s.dealer.length){
+    // .is-back (transition CSS) ; quand le croupier tire ensuite, seule la nouvelle carte est ajoutée (le retournement
+    // n'est pas coupé) ; sinon reconstruction normale, comme avant.
+    const holeCardEl=dCardsEl.children[1]&&dCardsEl.children[1].querySelector('.card-flip.is-back'), haveD=dCardsEl.children.length;
+    if(s.revealDealer&&holeCardEl&&haveD===s.dealer.length){
       holeCardEl.classList.remove('is-back');
       C.sound&&C.sound('card');
+    } else if(s.revealDealer&&!holeCardEl&&haveD>=2&&haveD<s.dealer.length){
+      for(let i=haveD;i<s.dealer.length;i++) dCardsEl.appendChild(C.renderCard(s.dealer[i],false,true));
     } else {
       dCardsEl.innerHTML=''; s.dealer.forEach((c,i)=>dCardsEl.appendChild(C.renderCard(c,i===1&&!s.revealDealer,true)));
     }
@@ -166,8 +173,9 @@
     dealCtl=dealShown?ctl:null; // déjà revenu à null si la donne s'est faite d'un coup (mouvement réduit)
   }
   dealBtn.addEventListener('click',startDeal);
-  // Pendant la distribution lente, l'hôte peut l'accélérer d'un clic sur la table.
-  tableEl.addEventListener('click',()=>{ if(dealCtl) dealCtl.skip(); });
+  // Pendant la distribution lente (ou le jeu du croupier), l'hôte peut l'accélérer d'un clic sur la table.
+  tableEl.addEventListener('click',()=>{ const ctl=dealCtl||endCtl; if(ctl) ctl.skip(); });
+  if(C.onPageLeave) C.onPageLeave(()=>{ if(endCtl) endCtl.skip(); }); // mises déjà prises : le résultat se règle avant de quitter
 
   function advanceTurn(){
     clearTimeout(turnTimer);
@@ -208,7 +216,28 @@
 
   function finishRound(){
     const anyAlive=seats.some(s=>R().handScore(s.cards)<=21);
-    if(anyAlive){ while(R().dealerShouldHit(dealer)){ dealer.push(deck.pop()); C.sound&&C.sound('card'); } }
+    if(anyAlive){ while(R().dealerShouldHit(dealer)) dealer.push(deck.pop()); }
+    if(dealer.length===2||!C.paceDeal){ settleRound(); return; } // le croupier ne tire pas : retournement de la carte cachée, résultat tout de suite
+    // Le croupier joue : retourne sa carte cachée puis tire, une carte à la fois (un peu plus vif que la donne, comme en solo).
+    // Les tirages sont déjà faits ; les amis suivent les instantanés envoyés à chaque étape. Le résultat n'est réglé qu'à la fin.
+    turn=-1; endShown={dealer:2,open:false};
+    const seq=['hole']; for(let n=2;n<dealer.length;n++) seq.push('dealer');
+    tableEl.classList.add('dealing');
+    msg.textContent='Le croupier joue…'; render();
+    const gap=C.DEAL_STEP_MS>0?Math.max(350,Math.round(C.DEAL_STEP_MS*0.6)):0;
+    let atOnce=true; // vrai tant que paceDeal n'est pas revenu : onDone appelé dans ce laps de temps = tout s'est fait d'un coup
+    const ctl=C.paceDeal(seq.length,k=>{
+      if(seq[k]==='hole') endShown.open=true; else endShown.dealer++;
+      render();
+    },()=>{
+      endShown=null; endCtl=null; tableEl.classList.remove('dealing');
+      if(atOnce&&C.sound) C.sound('card'); // vitesse « Instantanée » / mouvement réduit : un seul bruit de cartes
+      settleRound();
+    },{gap,lead:450});
+    atOnce=false;
+    endCtl=endShown?ctl:null; // `endShown` est déjà revenu à null si tout s'est fait d'un coup
+  }
+  function settleRound(){
     active=false; turn=-1;
     const msgs=[];
     seats.forEach(s=>{

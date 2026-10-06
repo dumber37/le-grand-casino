@@ -122,8 +122,8 @@
   if(!window.MutationObserver||!Element.prototype.animate){ if($('dealSpeedRow')) $('dealSpeedRow').style.display='none'; return; }
   root.classList.add('deal-js');
 
-  const GAP=170, FLIGHT=480, FLIP_AT=.55, MEM_TTL=90000;
-  const memory=new Map();        // empreinte d'emplacement -> {labels, fly:{idx:{start,tilt,faceUp}}, t}
+  const GAP=170, FLIGHT=480, FLIP_AT=.55, MEM_TTL=90000, FLIP_MS=500;
+  const memory=new Map();        // empreinte d'emplacement -> {labels, fly:{idx:{start,tilt,faceUp}}, rev:{idx:instant}, t}
   const busyUntil=new WeakMap(); // table -> instant où le croupier est de nouveau libre
   // Nouvelle donne sur une table : on oublie ses cartes, sinon une carte identique à celle qui occupait
   // le même emplacement à la donne précédente serait prise pour « déjà posée » et arriverait sans vol.
@@ -179,6 +179,26 @@
     if(announce) toss(o.dealer,Math.max(0,until));
   }
 
+  // Retournement SUR PLACE d'une carte jusque-là cachée (showdown du poker : les cartes des adversaires passent de « ? » à
+  // leur vraie valeur). La carte ne repart pas de la main du croupier : on la repose face cachée (sans animation) puis on
+  // retire .is-back à l'instant `at`, ce qui déclenche la transition CSS existante. Si la table est redessinée en cours de
+  // route, la nouvelle copie reprend le retournement là où il en était (délai de transition négatif).
+  const isHiddenLabel=l=>typeof l==='string'&&l.charAt(0)==='?';
+  function armReveal(card,at,sound){
+    const flip=card.querySelector('.card-flip'); if(!flip) return;
+    const wait=at-Date.now();
+    if(wait<=-FLIP_MS) return;
+    flip.style.transition='none'; flip.classList.add('is-back'); void flip.offsetWidth; flip.style.transition='';
+    const go=()=>{
+      if(!flip.isConnected) return;
+      if(wait<0) flip.style.transitionDelay=wait+'ms';
+      flip.classList.remove('is-back');
+      if(wait<0) setTimeout(()=>{ flip.style.transitionDelay=''; },FLIP_MS);
+      if(sound) C.sound&&C.sound('card');
+    };
+    if(wait>0) setTimeout(go,wait); else go();
+  }
+
   const observer=new MutationObserver(records=>{
     const added=new Set(), cleared=new Set();
     records.forEach(rec=>{
@@ -203,21 +223,47 @@
     cleared.forEach(cont=>{ const k=keyOf(cont); if(!groups.has(k)) memory.delete(k); });
 
     const fresh=[], resumed=[];   // vols à lancer / vols en cours à reprendre sur une nouvelle copie
+    const reveals=[], revResumed=[]; // retournements sur place à lancer / à reprendre
     groups.forEach((g,key)=>{
       const mem=memory.get(key), ok=mem&&now-mem.t<MEM_TTL;
-      const prev=ok?mem.labels:[], prevFly=ok?mem.fly:{};
+      const prev=ok?mem.labels:[], prevFly=ok?mem.fly:{}, prevRev=ok&&mem.rev?mem.rev:{};
       const kids=Array.from(g.cont.children).filter(k=>k.classList.contains('card-3d'));
-      const entry={labels:kids.map(labelOf),fly:Object.assign({},prevFly),t:now,table:g.cont.closest('.bj-table')||g.cont.closest('.panel')||document.body};
+      const entry={labels:kids.map(labelOf),fly:Object.assign({},prevFly),rev:Object.assign({},prevRev),t:now,table:g.cont.closest('.bj-table')||g.cont.closest('.panel')||document.body};
       const list=[];
       g.cards.forEach(card=>{
-        const i=kids.indexOf(card);
-        if(prev[i]!==labelOf(card)){ list.push({card,i}); delete entry.fly[i]; }
-        else { const f=prevFly[i]; if(f&&now<f.start+FLIGHT) resumed.push({card,info:f}); }
+        const i=kids.indexOf(card), lab=labelOf(card);
+        if(prev[i]!==lab){
+          delete entry.fly[i]; delete entry.rev[i];
+          const fl=card.querySelector('.card-flip');
+          // Une carte qui était cachée (« ? ») et se découvre à la même place : on la retourne sur place au lieu de la redistribuer.
+          if(isHiddenLabel(prev[i])&&!isHiddenLabel(lab)&&fl&&!fl.classList.contains('is-back')) reveals.push({card,i,cont:g.cont,entry});
+          else list.push({card,i});
+        }
+        else {
+          const f=prevFly[i]; if(f&&now<f.start+FLIGHT) resumed.push({card,info:f});
+          const r=prevRev[i]; if(r&&now<r+FLIP_MS) revResumed.push({card,at:r});
+        }
       });
       memory.set(key,entry);
       if(list.length) fresh.push({cont:g.cont,cards:list,entry});
     });
     if(reduced()) return;
+
+    // Retournements sur place (showdown) : place par place, en commençant par la première, les deux cartes d'une place
+    // quasi ensemble. Plus la distribution est lente, plus le suspense est long ; « Instantanée » = tout en même temps.
+    if(reveals.length){
+      const step=C.DEAL_STEP_MS>0?Math.round(380*Math.min(1,C.DEAL_STEP_MS/1000)):0;
+      const conts=[]; reveals.forEach(r=>{ if(conts.indexOf(r.cont)<0) conts.push(r.cont); });
+      conts.sort((a,b)=>(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING)?-1:1);
+      conts.forEach((cont,s)=>{
+        reveals.filter(r=>r.cont===cont).forEach((r,c)=>{
+          const at=now+160+s*step+c*(step?110:0);
+          r.entry.rev[r.i]=at;
+          armReveal(r.card,at,c===0&&s<4);
+        });
+      });
+    }
+    revResumed.forEach(({card,at})=>{ if(card.getClientRects().length) armReveal(card,at,false); });
 
     // Vols en cours : même départ, même inclinaison — simplement sur la nouvelle copie de la carte.
     resumed.forEach(({card,info})=>{
