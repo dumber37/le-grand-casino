@@ -37,9 +37,11 @@
     onOk=cb||null; cancellable=!!canCancel;
     subEl.textContent=text; errEl.textContent=''; inputEl.value='';
     cancelBtn.style.display=canCancel?'':'none';
-    lockEl.hidden=false; setTimeout(()=>inputEl.focus(),30);
+    lockEl.hidden=false; setBehind(true); setTimeout(()=>inputEl.focus(),30);
   }
-  function hide(){ lockEl.hidden=true; inputEl.value=''; }
+  function hide(){ lockEl.hidden=true; inputEl.value=''; setBehind(false); }
+  // Derrière l'écran de verrouillage, le site ne doit plus être utilisable (ni au clavier, ni par Tab, ni par les raccourcis) : `inert`.
+  function setBehind(locked){ const s=document.querySelector('.shell'); if(s){ if(locked) s.setAttribute('inert',''); else s.removeAttribute('inert'); } }
   async function tryUnlock(){
     if(!cfg) { hide(); return; }
     const wait=lockedUntil-Date.now();

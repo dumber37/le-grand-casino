@@ -572,7 +572,11 @@
         const idx=players.findIndex(p=>p.kind==='remote'&&p.peerId===id);
         if(idx>=0&&handActive&&pendingHuman===idx&&['fold','check','call','raise'].indexOf(m.type)>=0) act(players[idx],m.type,m.to);
       }
-      else if(m.t==='pk_join'){ sb=m.sb||sb; bb=m.bb||bb; F().sendHost({t:'pk_in',bal:C.state.balance}); }
+      else if(m.t==='pk_join'){ // blinds annoncées par l'hôte : nombres entiers raisonnables uniquement (jamais d'objet piégé ni de valeur absurde)
+        const s0=Math.round(C.num(m.sb)), b0=Math.round(C.num(m.bb));
+        if(s0>=1&&s0<=100000) sb=s0; if(b0>=1&&b0<=200000) bb=b0;
+        F().sendHost({t:'pk_in',bal:C.state.balance});
+      }
       else if(m.t==='pk_state'){
         guestMode=true;
         if(!el('view-poker').classList.contains('active')){ const nav=document.querySelector('[data-view="poker"]'); if(nav) nav.click(); }

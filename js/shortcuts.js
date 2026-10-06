@@ -25,6 +25,8 @@
     if(e.ctrlKey||e.altKey||e.metaKey||e.shiftKey) return;
     const tag=document.activeElement&&document.activeElement.tagName;
     if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return; // ne jamais voler une saisie
+    // Verrou PIN ou fenêtre d'aperçu ouverts : Espace / Entrée ne lancent rien en arrière-plan (on pouvait jouer derrière l'écran verrouillé).
+    if(document.querySelector('.pin-lock:not([hidden]),.shop-modal:not([hidden])')) return;
     const activeView=document.querySelector('.view.active'); if(!activeView) return;
     const ids=PRIMARY_ACTION_BTN[activeView.id.replace('view-','')]; if(!ids) return;
     const btn=ids.map(id=>document.getElementById(id)).find(b=>b&&!b.disabled&&b.offsetParent!==null);
