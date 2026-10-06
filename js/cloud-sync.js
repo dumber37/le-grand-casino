@@ -95,13 +95,20 @@ window.Casino=window.Casino||{};
       const {auth,authMod}=await loadFirebase();
       if(mode==='signin') await authMod.signInWithEmailAndPassword(auth,email,pass);
       else await authMod.createUserWithEmailAndPassword(auth,email,pass);
+      // Demande au gestionnaire de mots de passe du navigateur d'enregistrer l'identifiant (Chrome : API Credential Management) ;
+      // le site ne garde rien, et le champ est vidé aussitôt.
+      try{ if(window.PasswordCredential&&navigator.credentials) await navigator.credentials.store(new PasswordCredential({id:email,password:pass,name:email})); }catch(e){}
+      passEl.value='';
       await afterSignIn();
     }catch(e){
       say('Erreur : '+(e&&e.code?e.code:'connexion impossible.'));
     }
   }
-  signinBtn.addEventListener('click',()=>withAuthAction('signin'));
-  signupBtn.addEventListener('click',()=>withAuthAction('signup'));
+  // Formulaire réel : Entrée valide « Se connecter » ; « Créer un compte » passe par le même envoi (le navigateur propose alors d'enregistrer).
+  let authMode='signin';
+  signinBtn.addEventListener('click',()=>{ authMode='signin'; passEl.autocomplete='current-password'; });
+  signupBtn.addEventListener('click',()=>{ authMode='signup'; passEl.autocomplete='new-password'; if(loginEl.requestSubmit) loginEl.requestSubmit(); else withAuthAction('signup'); });
+  loginEl.addEventListener('submit',e=>{ e.preventDefault(); const m=authMode; authMode='signin'; withAuthAction(m); });
 
   uploadBtn.addEventListener('click',async()=>{
     try{

@@ -1053,17 +1053,19 @@
           <ol id="acc-steps" class="acc-steps"></ol>
         </div>
 
-        <div id="acc-login" class="acc-block" style="display:none">
+        <!-- Un vrai <form> avec autocomplete username / password : le gestionnaire de mots de passe du navigateur (Google, etc.)
+             propose alors d'enregistrer puis de remplir l'identifiant — le site, lui, ne stocke jamais le mot de passe. -->
+        <form id="acc-login" class="acc-block" style="display:none" autocomplete="on" novalidate>
           <label class="fr-label" for="acc-email">Email</label>
-          <input type="email" id="acc-email" placeholder="toi@exemple.com" autocomplete="email">
+          <input type="email" id="acc-email" name="username" placeholder="toi@exemple.com" autocomplete="username" autocapitalize="none" spellcheck="false">
           <label class="fr-label" for="acc-password">Mot de passe</label>
-          <input type="password" id="acc-password" placeholder="6 caractères minimum" autocomplete="current-password">
+          <input type="password" id="acc-password" name="password" placeholder="6 caractères minimum" autocomplete="current-password">
           <div class="acc-row">
-            <button class="primary-btn" id="acc-signinBtn">Se connecter</button>
-            <button class="fr-copy" id="acc-signupBtn">Créer un compte</button>
+            <button type="submit" class="primary-btn" id="acc-signinBtn">Se connecter</button>
+            <button type="button" class="fr-copy" id="acc-signupBtn">Créer un compte</button>
           </div>
-          <button class="fr-copy" id="acc-cancelBtn" style="width:100%;margin-top:8px">Annuler</button>
-        </div>
+          <button type="button" class="fr-copy" id="acc-cancelBtn" style="width:100%;margin-top:8px">Annuler</button>
+        </form>
 
         <div id="acc-connected" class="acc-block" style="display:none">
           <div class="profile-row"><span>Connecté</span><b id="acc-userEmail">—</b></div>
