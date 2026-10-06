@@ -21,7 +21,7 @@ window.Casino = window.Casino || {};
     return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+diff));
   }
   function weekStartStr(){ return weekStartDate().toISOString().slice(0,10); }
-  function readState(){ try{ const raw=localStorage.getItem(WK_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+  function readState(){ try{ const raw=localStorage.getItem(WK_KEY); return raw?C.cleanSaved(WK_KEY,JSON.parse(raw)):null; }catch(e){ return null; } }
   function saveState(s){ try{ localStorage.setItem(WK_KEY, JSON.stringify(s)); }catch(e){} }
   function netSince(tsStart,tsEnd){
     return C.getHistory().filter(h=>h.time>=tsStart && (tsEnd==null||h.time<tsEnd)).reduce((s,h)=>s+h.net,0);
@@ -31,7 +31,7 @@ window.Casino = window.Casino || {};
   const curWeekStart=weekStartStr();
   const curWeekStartTs=weekStartDate().getTime();
   let state=readState();
-  if(!state){ state={weekStart:curWeekStart, pastWeeks:[]}; saveState(state); }
+  if(!state||!state.weekStart){ state={weekStart:curWeekStart, pastWeeks:[]}; saveState(state); }
   else if(state.weekStart!==curWeekStart){
     const prevStartTs=Date.parse(state.weekStart+'T00:00:00Z');
     const net=netSince(prevStartTs, curWeekStartTs);

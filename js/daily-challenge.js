@@ -39,7 +39,7 @@
     return pool.slice(0,10);
   }
 
-  function readState(){ try{ const raw=localStorage.getItem(STATE_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+  function readState(){ try{ const raw=localStorage.getItem(STATE_KEY); return raw?C.cleanSaved(STATE_KEY,JSON.parse(raw)):null; }catch(e){ return null; } }
   function saveState(s){ try{ localStorage.setItem(STATE_KEY, JSON.stringify(s)); }catch(e){} }
 
   let picks=[];

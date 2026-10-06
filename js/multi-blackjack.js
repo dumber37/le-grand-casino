@@ -80,10 +80,12 @@
     seatsEl.innerHTML='';
     s.seats.forEach((seat,i)=>{
       if(s.me===i) return; // affiché en bas, dans betBox/actions area
-      const d=document.createElement('div'); d.className='hand-block'+(seat.turn?' active':'')+(seat.result&&seat.result.cls?' '+seat.result.cls:'');
+      // Tout ce qui vient de l'hôte (libellé, mise, classe) est neutralisé : ni HTML ni nombre douteux dans la page.
+      const d=document.createElement('div'); d.className='hand-block'+(seat.turn?' active':'')+(seat.result&&seat.result.cls?' '+String(seat.result.cls).replace(/[^\w-]/g,''):'');
       const av=C.avatars?C.avatars.html(seat.kind==='ai'?seat.name:seat.name,22):'';
+      const sBet=C.num(seat.bet);
       d.innerHTML='<div class="zone-label"><span>'+av+C.escapeHtml(seat.name)+'</span><span>'+(seat.cards.length?R().handScore(seat.cards):'')+'</span></div>'
-        +'<div class="cards"></div><div class="hand-bet">'+(seat.result?seat.result.label:(seat.bet>0?('Mise : '+seat.bet+' '+(C.chips?C.chips.html(seat.bet,{scale:.6,label:false}):'')):'En attente'))+'</div>';
+        +'<div class="cards"></div><div class="hand-bet">'+(seat.result?C.escapeHtml(seat.result.label):(sBet>0?('Mise : '+sBet+' '+(C.chips?C.chips.html(sBet,{scale:.6,label:false}):'')):'En attente'))+'</div>';
       const row=d.querySelector('.cards'); seat.cards.forEach(c=>row.appendChild(C.renderCard(c,false)));
       seatsEl.appendChild(d);
     });
@@ -93,9 +95,10 @@
     if(s.me>=0){
       const seat=s.seats[s.me]; mine.style.display='';
       const av=C.avatars?C.avatars.html('Toi',26):'';
-      mine.className='hand-block'+(seat.turn?' active':'')+(seat.result&&seat.result.cls?' '+seat.result.cls:'');
+      mine.className='hand-block'+(seat.turn?' active':'')+(seat.result&&seat.result.cls?' '+String(seat.result.cls).replace(/[^\w-]/g,''):'');
+      const mBet=C.num(seat.bet);
       mine.innerHTML='<div class="zone-label"><span class="zl-me">'+av+'Toi</span><span>'+(seat.cards.length?R().handScore(seat.cards):'')+'</span></div>'
-        +'<div class="cards"></div><div class="hand-bet">'+(seat.result?seat.result.label:('Mise : '+seat.bet+' '+(C.chips?C.chips.html(seat.bet,{scale:.7,label:false}):'')))+'</div>';
+        +'<div class="cards"></div><div class="hand-bet">'+(seat.result?C.escapeHtml(seat.result.label):('Mise : '+mBet+' '+(C.chips?C.chips.html(mBet,{scale:.7,label:false}):'')))+'</div>';
       const row=mine.querySelector('.cards'); seat.cards.forEach(c=>row.appendChild(C.renderCard(c,false,true)));
     } else mine.style.display='none';
     msg.textContent=s.msg;

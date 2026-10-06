@@ -6,7 +6,7 @@
    versionné : à chaque changement de fichiers, incrémenter le
    suffixe fait automatiquement place nette de l'ancien cache.
    ============================================================ */
-const CACHE_NAME = 'grand-casino-v53';
+const CACHE_NAME = 'grand-casino-v54';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './css/base.css', './css/slots.css', './css/dragon-slots.css', './css/blackjack.css',
@@ -22,7 +22,9 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e)=>{
-  e.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS)).catch(()=>{}));
+  // cache:'reload' : on récupère la version DU SERVEUR, jamais une copie périmée du cache HTTP du navigateur
+  // (GitHub Pages autorise 10 min de cache : sans ça, un nouveau déploiement pouvait être « installé » avec d'anciens fichiers).
+  e.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS.map(a=>new Request(a,{cache:'reload'})))).catch(()=>{}));
   self.skipWaiting();
 });
 
@@ -39,12 +41,14 @@ self.addEventListener('fetch', (e)=>{
   // (poignée de main des salons, SDK) ne doivent jamais être mises en cache ni resservies périmées.
   if(new URL(e.request.url).origin!==self.location.origin) return;
   e.respondWith(
-    fetch(e.request).then(res=>{
+    // cache:'no-cache' : revalidation auprès du serveur à chaque chargement (réponse 304 légère si rien n'a changé), pour
+    // voir un nouveau déploiement tout de suite plutôt qu'après l'expiration du cache HTTP (10 min sur GitHub Pages).
+    fetch(e.request,{cache:'no-cache'}).then(res=>{
       if(res.ok){
         const copy=res.clone();
         caches.open(CACHE_NAME).then(cache=>cache.put(e.request, copy)).catch(()=>{});
       }
       return res;
-    }).catch(()=>caches.match(e.request))
+    }).catch(()=>caches.match(e.request,{ignoreSearch:true}))
   );
 });

@@ -92,7 +92,7 @@
   // pendant ce temps ; pendingRun joue le résultat tout de suite si l'onglet se ferme (le gain n'est jamais perdu).
   let revealCtl=null, pendingRun=null;
   const instantReveal=onDone=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout de suite
-  window.addEventListener('pagehide',()=>{ if(pendingRun) pendingRun(); });
+  C.onPageLeave(()=>{ if(pendingRun) pendingRun(); });
   function reveal(run){
     actionsEl.querySelectorAll('button').forEach(b=>{ b.disabled=true; });
     let ran=false;

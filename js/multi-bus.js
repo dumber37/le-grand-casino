@@ -150,9 +150,11 @@
     } else { cardsEl.innerHTML=''; stageEl.textContent=''; multEl.textContent=''; }
     s.seats.forEach((seat,i)=>{
       if(i===s.me) return;
-      const row=document.createElement('div'); row.className='bus-rival'+(seat.done&&seat.mult>0?' rival-best':(seat.done?' rival-out':''));
+      // Valeurs reçues de l'hôte : ramenées à des nombres avant d'être écrites dans le HTML.
+      const sMult=C.num(seat.mult), sStage=C.num(seat.stage), sBet=C.num(seat.bet);
+      const row=document.createElement('div'); row.className='bus-rival'+(seat.done&&sMult>0?' rival-best':(seat.done?' rival-out':''));
       const av=C.avatars?C.avatars.html(seat.name,22):'';
-      row.innerHTML='<span class="rival-name">'+av+C.escapeHtml(seat.name)+'</span><span class="rival-res">'+(seat.bet<=0?'en attente':(seat.done?(seat.mult>0?'encaissé x'+seat.mult:'éliminé'):'étape '+(seat.stage+1)+' — mise '+seat.bet))+'</span>';
+      row.innerHTML='<span class="rival-name">'+av+C.escapeHtml(seat.name)+'</span><span class="rival-res">'+(sBet<=0?'en attente':(seat.done?(sMult>0?'encaissé x'+sMult:'éliminé'):'étape '+(sStage+1)+' — mise '+sBet))+'</span>';
       seatsEl.appendChild(row);
     });
     msg.textContent=s.msg;

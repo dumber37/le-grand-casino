@@ -15,7 +15,7 @@
   // distribution (le gain n'est jamais perdu) ; instantDeal = repli si deal-anim.js manque (tout d'un coup).
   let dealCtl=null, pendingSettle=null;
   const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; };
-  window.addEventListener('pagehide',()=>{ if(pendingSettle) pendingSettle(); });
+  C.onPageLeave(()=>{ if(pendingSettle) pendingSettle(); });
 
   function rankVal(c){ if(c.r==='A') return 14; if(c.r==='K') return 13; if(c.r==='Q') return 12; if(c.r==='J') return 11; return parseInt(c.r,10); }
   function render(){ betEl.textContent=bet; playBtn.disabled=active||C.state.balance<bet; betMinus.disabled=betPlus.disabled=active; }

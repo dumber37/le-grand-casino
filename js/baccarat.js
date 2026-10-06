@@ -25,7 +25,7 @@
   // tout de suite si l'onglet se ferme en pleine distribution (le gain n'est jamais perdu).
   let dealing=false, dealCtl=null, pendingSettle=null;
   const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
-  window.addEventListener('pagehide',()=>{ if(pendingSettle) pendingSettle(); });
+  C.onPageLeave(()=>{ if(pendingSettle) pendingSettle(); });
   document.querySelectorAll('#bc-mainBets button').forEach(b=>{
     b.addEventListener('click',()=>{ document.querySelectorAll('#bc-mainBets button').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); selected=b.dataset.bet; });
   });

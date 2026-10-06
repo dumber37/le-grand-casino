@@ -67,7 +67,7 @@ window.Casino=window.Casino||{};
   }
   const OWNED_SKINS_KEY='grand-casino-owned-chipskins';
   let ownedSkins=[];
-  try{ const raw=localStorage.getItem(OWNED_SKINS_KEY); ownedSkins=raw?JSON.parse(raw):[]; }catch(e){}
+  try{ const raw=localStorage.getItem(OWNED_SKINS_KEY); ownedSkins=raw?(C.cleanSaved?C.cleanSaved(OWNED_SKINS_KEY,JSON.parse(raw)):JSON.parse(raw)):[]; if(!Array.isArray(ownedSkins)) ownedSkins=[]; }catch(e){}
   function saveOwnedSkins(){ try{ localStorage.setItem(OWNED_SKINS_KEY, JSON.stringify(ownedSkins)); }catch(e){} }
   function skinOwned(id){ return id==='classic' || ownedSkins.includes(id); }
   function buyChipSkin(id,cost){

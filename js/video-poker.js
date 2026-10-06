@@ -20,7 +20,7 @@
   // pendingSettle règle l'échange tout de suite si l'onglet se ferme en pleine distribution (le gain n'est jamais perdu).
   let dealCtl=null, pendingSettle=null;
   const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
-  window.addEventListener('pagehide',()=>{ if(pendingSettle) pendingSettle(); });
+  C.onPageLeave(()=>{ if(pendingSettle) pendingSettle(); });
   // ---- Partie d'essai : jetons fictifs, séparés du solde réel (jamais lu ni modifié tant
   // qu'elle est active). Aucun recordGame en démo : stats/historique/missions/VIP restent
   // intacts, exactement comme si la partie n'avait jamais eu lieu. ----

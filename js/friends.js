@@ -12,6 +12,7 @@
   const C=window.Casino, $=id=>document.getElementById(id);
   if(!$('view-friends')) return;
   const MAX_FRIENDS=4, SIDES={player:'Player',banker:'Banker',tie:'Tie'};
+  const validSide=k=>Object.prototype.hasOwnProperty.call(SIDES,k); // « __proto__ » & co ne sont pas des camps
   const myName=(function(){ try{ return localStorage.getItem('grand-casino-pseudo')||'Joueur'; }catch(e){ return 'Joueur'; } })();
 
   let role=null, peers=[], pending=null, hostConn=null, nextId=1, myId=0;
@@ -27,7 +28,7 @@
   let dealing=false, dealCtl=null, finishDeal=null;
   const instantDeal=(n,onCard,onDone)=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout d'un coup
   const flushDeal=()=>{ if(finishDeal) finishDeal(); };
-  window.addEventListener('pagehide',flushDeal);
+  C.onPageLeave(flushDeal);
 
   const msgEl=$('fr-message');
   const say=t=>{ msgEl.textContent=t; };
@@ -101,8 +102,10 @@
     list.forEach(p=>{
       const row=document.createElement('div'); row.className='fr-player';
       const me=(role==='host'?p.id===0:p.id===myId);
-      let right=p.bet>0&&p.side?SIDES[p.side]+' · '+p.bet:'n’a pas encore misé';
-      if(results){ const r=results.find(x=>x.id===p.id); if(r&&r.bet>0){ const net=r.win-r.bet; right=SIDES[r.side]+' · '+r.bet+' → '+(net>0?'+'+net:(net<0?String(net):'0')); if(net!==0) row.classList.add(net>0?'fr-win':'fr-loss'); } }
+      // Roster / résultats reçus de l'hôte : nombres et camps ramenés à des valeurs connues avant le HTML.
+      const pBet=C.num(p.bet);
+      let right=pBet>0&&validSide(p.side)?SIDES[p.side]+' · '+pBet:'n’a pas encore misé';
+      if(results){ const r=results.find(x=>x.id===p.id); const rBet=r?C.num(r.bet):0; if(r&&rBet>0&&validSide(r.side)){ const net=C.num(r.win)-rBet; right=SIDES[r.side]+' · '+rBet+' → '+(net>0?'+'+net:(net<0?String(net):'0')); if(net!==0) row.classList.add(net>0?'fr-win':'fr-loss'); } }
       const avHtml=C.avatars?(me?C.avatars.html('Toi',26):(C.avatars.htmlTraits(p.av,26)||C.avatars.html(p.name,26))):(me?'⭐ ':'🙂 ');
       row.innerHTML='<span>'+avHtml+escapeHtml(p.name)+(me?' (toi)':'')+(p.id===0?' (hôte)':'')+'</span><span>'+right+'</span>';
       box.appendChild(row);
@@ -122,6 +125,8 @@
     applyResult(msg);
   }
   function applyResult(m){
+    // Message mal formé (hôte modifié, trame corrompue) : ignoré plutôt que de casser l'affichage de la table.
+    if(!m||!Array.isArray(m.player)||!Array.isArray(m.banker)||!Array.isArray(m.players)||!validSide(m.outcome)) return;
     flushDeal(); // une manche précédente encore en cours d'affichage est réglée d'abord
     const bc=$('fr-bankerCards'), pc=$('fr-playerCards'), felt=$('fr-felt');
     const bz=bc.closest('.zone'), pz=pc.closest('.zone');
@@ -195,7 +200,7 @@
       let m; try{ m=JSON.parse(e.data); }catch(x){ return; }
       if(m.t==='hello'){
         if(entry.peer||peers.length>=MAX_FRIENDS) return;
-        const peer={id:nextId++,name:String(m.name||'Ami').slice(0,20),pc:entry.pc,dc:entry.dc,side:null,bet:0,av:C.avatars?C.avatars.clean(m.av):null};
+        const peer={id:nextId++,name:C.str(m.name,20)||'Ami',pc:entry.pc,dc:entry.dc,side:null,bet:0,av:C.avatars?C.avatars.clean(m.av):null};
         entry.peer=peer; peers.push(peer); if(pending===entry) pending=null;
         // Le code rapide de cette invitation a fait son office — le masquer évite de le montrer
         // comme encore valable une fois l'ami déjà connecté (stopRoomListener : sécurité, le
@@ -207,7 +212,7 @@
         entry.peer.av=C.avatars?C.avatars.clean(m.av):null; broadcastRoster();
       } else if(m.t==='bet'&&entry.peer){
         const p=entry.peer, b=parseInt(m.bet,10);
-        if(SIDES[m.side]&&b>0&&b<=500){ p.side=m.side; p.bet=b; } else { p.side=null; p.bet=0; }
+        if(validSide(m.side)&&b>0&&b<=500){ p.side=m.side; p.bet=b; } else { p.side=null; p.bet=0; }
         broadcastRoster();
       } else if(entry.peer&&typeof m.t==='string'&&/^(pk|bj|bs|cr|st)_/.test(m.t)){
         msgHandlers.forEach(f=>{ try{ f(m,entry.peer.id); }catch(x){} });
@@ -389,7 +394,7 @@
   function onGuestMessage(e){
     let m; try{ m=JSON.parse(e.data); }catch(x){ return; }
     if(m.t==='welcome'){ myId=m.id; role='guest'; showTable(); say('Connecté au salon de l’hôte !'); notifyChange(); }
-    else if(m.t==='roster'){ roster=m.players; renderPlayers(roster); }
+    else if(m.t==='roster'){ roster=Array.isArray(m.players)?m.players.filter(p=>p&&typeof p==='object').slice(0,MAX_FRIENDS+1):[]; renderPlayers(roster); }
     else if(m.t==='result'){ applyResult(m); }
     else if(typeof m.t==='string'&&/^(pk|bj|bs|cr|st)_/.test(m.t)){ msgHandlers.forEach(f=>{ try{ f(m,null); }catch(x){} }); }
   }

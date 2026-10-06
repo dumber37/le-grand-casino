@@ -18,7 +18,7 @@
   // (revealing) pendant ce temps ; pendingRun joue le résultat tout de suite si l'onglet se ferme (le gain n'est jamais perdu).
   let revealing=false, revealCtl=null, pendingRun=null;
   const instantReveal=onDone=>{ onDone(); return {skip(){},cancel(){}}; }; // repli si deal-anim.js manque : tout de suite
-  window.addEventListener('pagehide',()=>{ if(pendingRun) pendingRun(); });
+  C.onPageLeave(()=>{ if(pendingRun) pendingRun(); });
 
   const val=c=>c.r==='A'?14:c.r==='K'?13:c.r==='Q'?12:c.r==='J'?11:parseInt(c.r,10);
   function chances(){

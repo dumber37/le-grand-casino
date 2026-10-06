@@ -26,7 +26,7 @@ window.Casino = window.Casino || {};
 
   function seasonStr(){ const d=new Date(); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0'); }
   function seasonStartTs(){ const d=new Date(); return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),1); }
-  function readState(){ try{ const raw=localStorage.getItem(KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+  function readState(){ try{ const raw=localStorage.getItem(KEY); return raw?C.cleanSaved(KEY,JSON.parse(raw)):null; }catch(e){ return null; } }
   function saveState(s){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
 
   const curSeason=seasonStr();

@@ -105,7 +105,9 @@ window.Casino=window.Casino||{};
   ];
   let equippedFrame=null, ownedFrames=[];
   try{ equippedFrame=localStorage.getItem(FRAME_KEY)||null; }catch(e){}
-  try{ const raw=localStorage.getItem(OWNED_FRAMES_KEY); ownedFrames=raw?JSON.parse(raw):[]; }catch(e){}
+  // Le cadre équipé devient une classe CSS dans du HTML (frame-<id>) : seuls les cadres connus sont acceptés.
+  if(equippedFrame&&!FRAMES.some(f=>f.id===equippedFrame&&f.id!=='none')) equippedFrame=null;
+  try{ const raw=localStorage.getItem(OWNED_FRAMES_KEY); const l=raw?JSON.parse(raw):[]; ownedFrames=Array.isArray(l)?l.filter(x=>typeof x==='string'):[]; }catch(e){}
   function saveOwnedFrames(){ try{ localStorage.setItem(OWNED_FRAMES_KEY, JSON.stringify(ownedFrames)); }catch(e){} }
   function frameUnlocked(f){
     if(f.achId) return !!(C.isAchUnlocked && C.isAchUnlocked(f.achId));

@@ -19,7 +19,7 @@
   function showReaction(name,k){
     if(!(k>=0&&k<REACTS.length)) return;
     const line=document.createElement('div'); line.className='fr-feed-line';
-    line.textContent=REACTS[k][0]+' '+String(name).slice(0,20)+' : '+REACTS[k][1];
+    line.textContent=REACTS[k][0]+' '+C.str(name,20)+' : '+REACTS[k][1];
     feedEl.appendChild(line); while(feedEl.children.length>4) feedEl.removeChild(feedEl.firstChild);
     setTimeout(()=>{ if(line.parentNode) line.parentNode.removeChild(line); },9000);
     const f=document.createElement('span'); f.className='fr-float'; f.textContent=REACTS[k][0];
@@ -85,7 +85,7 @@
       const net=parseInt(m.net,10); if(!isFinite(net)||Math.abs(net)>1e9) return;
       data[peerId]={net}; hostPublish();
     } else if(m.t==='st_rank'&&peerId==null&&Array.isArray(m.rows)){
-      const list=m.rows.slice(0,6).map((r,i)=>({n:String(r&&r.n).slice(0,20)+(i===m.me?' (toi)':''), net:parseInt(r&&r.net,10)||0}));
+      const list=m.rows.slice(0,6).map((r,i)=>({n:C.str(r&&r.n,20)+(i===m.me?' (toi)':''), net:parseInt(r&&r.net,10)||0}));
       renderRank(list);
     }
   });

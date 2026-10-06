@@ -41,7 +41,7 @@ window.Casino=window.Casino||{};
   const hud=$('chHud'), hudGame=$('ch-hudGame'), hudTime=$('ch-hudTime'), hudBalance=$('ch-hudBalance'), quitBtn=$('ch-quitBtn');
 
   let records={};
-  try{ const raw=localStorage.getItem(CH_KEY); if(raw) records=JSON.parse(raw); }catch(e){}
+  try{ const raw=localStorage.getItem(CH_KEY); if(raw) records=C.cleanSaved(CH_KEY,JSON.parse(raw)); }catch(e){}
   function saveRecords(){ try{ localStorage.setItem(CH_KEY, JSON.stringify(records)); }catch(e){} }
 
   let selectedGame=GAMES[0].key, selectedCapital=CAPITALS[0], selectedDuration=DURATIONS[0];

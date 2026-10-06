@@ -42,7 +42,8 @@
     if(!animated||!(n>0)){ finish(); return {skip(){}, cancel(){}}; }
     const next=()=>{
       if(over) return;
-      onCard(i++);
+      // Une erreur d'affichage sur UNE carte ne doit jamais figer la manche (mise déjà prise) : on la signale et on continue.
+      try{ onCard(i++); }catch(e){ if(window.console&&console.error) console.error(e); }
       timer=setTimeout(i<n?next:finish, i<n?gap:tail);
     };
     timer=setTimeout(next,lead);

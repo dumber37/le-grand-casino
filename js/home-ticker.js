@@ -21,7 +21,7 @@
 
   // ---- Derniers gros gains ----
   const friendWins=[];
-  const short=s=>String(s==null?'':s).slice(0,20);
+  const short=s=>C.str(s,20);
   function items(){
     const own=C.getHistory().filter(h=>h.net>=BIG_WIN).slice(0,5).map(h=>'Toi : +'+h.net+' à '+C.gameName(h.game));
     return friendWins.slice(0,4).concat(own);

@@ -10,6 +10,82 @@ window.Casino = (function(){
   // ====== MODULE: State & Storage — solde, mise cumulée, série de jours ======
   const BAL_KEY='grand-casino-balance', WAG_KEY='grand-casino-wagered', STREAK_KEY='grand-casino-streak', LAST_KEY='grand-casino-lastplay', THEME_KEY='grand-casino-theme';
   const BEST_STREAK_KEY='grand-casino-beststreak';
+
+  // ====== MODULE: Assainissement des données enregistrées / importées ======
+  // Une sauvegarde importée (fichier, QR, cloud) est une donnée NON FIABLE : plusieurs vues construisent du HTML à partir
+  // de ces valeurs (historique, stats, missions, classement...). Chaque clé connue est donc ramenée à sa forme attendue
+  // (nombres finis bornés, identifiants simples, tableaux de taille limitée) avant d'être utilisée ou écrite ; ce qui
+  // n'a pas la bonne forme est écarté ou remis à zéro. C.cleanSaved sert aussi au chargement (stockage corrompu).
+  const ID_RE=/^[\w-]{1,40}$/, DATE_RE=/^\d{4}-\d{2}-\d{2}$/, MONTH_RE=/^\d{4}-\d{2}$/, HEX_RE=/^#[0-9a-f]{6}$/i;
+  const BIG=1e12, TS=4e12;
+  const T={
+    n:(lo,hi,int)=>({k:'n',lo,hi,int}), id:{k:'id'}, date:{k:'date'}, month:{k:'month'}, hex:{k:'hex'}, bool:{k:'b'}, obool:{k:'ob'},
+    str:max=>({k:'s',max}), arr:(item,max,keep)=>({k:'a',item,max,keep}), obj:fields=>({k:'o',fields}), map:(val,max)=>({k:'m',val,max})
+  };
+  const isObj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
+  // Nombre fini à partir d'une valeur quelconque, même venue du réseau : jamais d'exception (un objet {"toString":1}
+  // fait lever Number()/+x) ni de NaN. Utilisé partout où une valeur non fiable devient un chiffre affiché.
+  const toNum=v=>{ v=(typeof v==='number'||typeof v==='string')?Number(v):NaN; return isFinite(v)?v:0; };
+  C.num=toNum;
+  // Court texte à partir d'une valeur quelconque (String() sur un objet piégé peut lever) : '' si ce n'est ni texte ni nombre.
+  C.str=(v,max)=>(typeof v==='string'?v:(typeof v==='number'&&isFinite(v)?String(v):'')).replace(/[<>\u0000-\u001f]/g,'').slice(0,max||40);
+  function cleanBy(spec,v){
+    switch(spec.k){
+      case 'n': { v=toNum(v); if(spec.int) v=Math.round(v); return Math.min(spec.hi,Math.max(spec.lo,v)); }
+      case 'id': return typeof v==='string'&&ID_RE.test(v)?v:'';
+      case 'date': return typeof v==='string'&&DATE_RE.test(v)?v:'';
+      case 'month': return typeof v==='string'&&MONTH_RE.test(v)?v:'';
+      case 'hex': return typeof v==='string'&&HEX_RE.test(v)?v:'';
+      case 'b': return !!v;
+      case 'ob': return typeof v==='boolean'?v:undefined;
+      case 's': return typeof v==='string'?v.replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,spec.max):'';
+      case 'a': { if(!Array.isArray(v)) return []; const out=v.slice(0,spec.max).map(x=>cleanBy(spec.item,x)).filter(x=>x!==''&&x!==undefined); return spec.keep?out.filter(spec.keep):out; }
+      case 'o': { const src=isObj(v)?v:{}, o={}; Object.keys(spec.fields).forEach(f=>{ const c=cleanBy(spec.fields[f],src[f]); if(c!==undefined) o[f]=c; }); return o; }
+      case 'm': { const src=isObj(v)?v:{}, o={}; Object.keys(src).filter(k=>ID_RE.test(k)&&k!=='__proto__'&&k!=='constructor'&&k!=='prototype').slice(0,spec.max).forEach(k=>{ o[k]=cleanBy(spec.val,src[k]); }); return o; }
+    }
+    return undefined;
+  }
+  const N=T.n, IDS40=T.arr(T.id,40);
+  const SAVE_SCHEMA={
+    'grand-casino-stats':T.obj({gamesPlayed:N(0,BIG,true),totalWon:N(0,BIG),biggestWin:N(0,BIG),biggestWinGame:T.id,biggestWinTime:N(0,TS,true),
+      crashBestMult:N(0,1e9),crashBestMultTime:N(0,TS,true),
+      perGame:T.map(T.obj({count:N(0,BIG,true),wins:N(0,BIG,true),wagered:N(0,BIG),won:N(0,BIG)}),60)}),
+    'grand-casino-history':T.arr(T.obj({game:T.id,bet:N(0,BIG),win:N(0,BIG),net:N(-BIG,BIG),time:N(0,TS,true)}),100,h=>h.game),
+    'grand-casino-favorites':IDS40,
+    'grand-casino-achievements':T.arr(T.id,100),
+    'grand-casino-ach-log':T.arr(T.obj({id:T.id,time:N(0,TS,true)}),20,e=>e.id),
+    'grand-casino-missions':T.obj({date:T.date,list:T.arr(T.obj({id:T.id,progress:N(0,BIG),playedGames:T.arr(T.id,30),completed:T.bool}),6,m=>m.id)}),
+    'grand-casino-challenges':T.map(N(0,BIG),40),
+    'grand-casino-avatar-custom':T.obj({bg:T.hex,skin:T.hex,hair:T.hex,shirt:T.hex,style:T.id,glasses:T.obool,mustache:T.obool,beard:T.obool,hat:T.obool,foxEars:T.obool}),
+    'grand-casino-owned-frames':IDS40, 'grand-casino-owned-themes':IDS40, 'grand-casino-owned-cardbacks':IDS40,
+    'grand-casino-owned-chipskins':IDS40, 'grand-casino-owned-wineffects':IDS40, 'grand-casino-owned-felts':IDS40,
+    'grand-casino-season-pass':T.obj({season:T.month,claimed:T.arr(N(0,9,true),10)}),
+    'grand-casino-weekly-tournament':T.obj({weekStart:T.date,pastWeeks:T.arr(T.obj({weekStart:T.date,net:N(-BIG,BIG),reward:N(0,1e7)}),12,w=>w.weekStart)}),
+    'grand-casino-daily-challenge':T.obj({date:T.date,picks:T.arr(N(1,40,true),10),drawn:T.arr(N(1,40,true),10),matches:N(0,10,true),reward:N(0,1e7,true)}),
+    'grand-casino-a11y':T.obj({fs:N(0,2,true),contrast:T.bool,cb:T.bool,motion:T.obool})
+  };
+  const intStr=s=>{ const v=parseInt(s,10); return isNaN(v)?null:String(Math.min(BIG,Math.max(0,v))); };
+  const idStr=s=>typeof s==='string'&&ID_RE.test(s)?s:null;
+  const dateStr=s=>typeof s==='string'&&DATE_RE.test(s)?s:null;
+  const onOff=s=>(s==='on'||s==='off')?s:null;
+  const SAVE_PLAIN={
+    'grand-casino-balance':intStr, 'grand-casino-wagered':intStr, 'grand-casino-streak':intStr, 'grand-casino-beststreak':intStr,
+    'grand-casino-lastplay':dateStr, 'grand-casino-wheel-last':dateStr,
+    'grand-casino-theme':idStr, 'grand-casino-cardback':idStr, 'grand-casino-avatar-frame':idStr,
+    'grand-casino-chip-skin':idStr, 'grand-casino-wineffect':idStr, 'grand-casino-felt':idStr,
+    'grand-casino-pseudo':s=>cleanBy(T.str(20),s)||null, 'grand-casino-avatar':s=>cleanBy(T.str(16),s)||null,
+    'grand-casino-sound':onOff, 'grand-casino-seasonal':onOff,
+    'grand-casino-deal-speed':s=>['0','500','1000','1500'].indexOf(s)>=0?s:null
+  };
+  // Valeur déjà analysée (JSON.parse) ramenée à la forme attendue de sa clé ; clé inconnue : telle quelle.
+  C.cleanSaved=(key,parsed)=>SAVE_SCHEMA[key]?cleanBy(SAVE_SCHEMA[key],parsed):parsed;
+  // Texte brut d'une sauvegarde -> texte à écrire dans localStorage, ou null (valeur écartée / clé inconnue).
+  C.normalizeSaveValue=function(key,raw){
+    if(typeof raw!=='string') return null;
+    if(SAVE_SCHEMA[key]){ try{ return JSON.stringify(cleanBy(SAVE_SCHEMA[key],JSON.parse(raw))); }catch(e){ return null; } }
+    return SAVE_PLAIN[key]?SAVE_PLAIN[key](raw):null;
+  };
+
   C.state = { balance:500, totalWagered:0, streak:1, bestStreak:1 };
   // Bonus quotidien (jour 1→7, cyclique) : détecté ici au même moment que la série de jours
   // (dont il réutilise directement le calcul), mais crédité plus bas dans le fichier une fois
@@ -46,7 +122,7 @@ window.Casino = (function(){
   // ====== MODULE: Statistics ======
   const STATS_KEY='grand-casino-stats';
   let stats={gamesPlayed:0,totalWon:0,biggestWin:0,perGame:{}};
-  try{ const raw=localStorage.getItem(STATS_KEY); if(raw){ const p=JSON.parse(raw); if(p&&typeof p==='object'&&!Array.isArray(p)){ stats=Object.assign(stats,p); if(!stats.perGame||typeof stats.perGame!=='object') stats.perGame={}; } } }catch(e){}
+  try{ const raw=localStorage.getItem(STATS_KEY); if(raw){ const p=JSON.parse(raw); if(p&&typeof p==='object'&&!Array.isArray(p)){ stats=Object.assign(stats,C.cleanSaved(STATS_KEY,p)); if(!stats.perGame||typeof stats.perGame!=='object') stats.perGame={}; } } }catch(e){}
   const GAME_NAMES={slots:'Machine à sous',blackjack:'Blackjack',roulette:'Roulette',bus:'Ride the Bus',baccarat:'Baccarat',coinflip:'Pile ou Face',mines:'Mines',crash:'Crash',dragon:'Fortune Dragon',videopoker:'Vidéo Poker',poker:'Poker Texas Hold’em',cases:'Ouverture de Caisses',war:'Bataille',keno:'Keno',craps:'Craps',plinko:'Plinko',hilo:'Hi-Lo',scratch:'Cartes à gratter',tower:'Dragon Tower',wheel:'Roue de la chance',daily:'Défi du jour'};
   C.gameName = k=>Object.prototype.hasOwnProperty.call(GAME_NAMES,k)?GAME_NAMES[k]:k;
   function saveStats(){ try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){} }
@@ -61,7 +137,7 @@ window.Casino = (function(){
   // ====== MODULE: History (100 dernières parties) ======
   const HIST_KEY='grand-casino-history';
   let history=[];
-  try{ const raw=localStorage.getItem(HIST_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) history=p; } }catch(e){}
+  try{ const raw=localStorage.getItem(HIST_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) history=C.cleanSaved(HIST_KEY,p); } }catch(e){}
   function saveHistory(){ try{ localStorage.setItem(HIST_KEY, JSON.stringify(history)); }catch(e){} }
   // Source unique pour tout module qui relit l'historique (stats-chart.js, weekly.js,
   // season.js...) : évite que chacun reparse sa propre copie de grand-casino-history
@@ -113,9 +189,9 @@ window.Casino = (function(){
     emptyEl.style.display=rows.length?'none':'block';
     rows.forEach(h=>{
       const row=document.createElement('div'); row.className='hist-row';
-      const name=GAME_NAMES[h.game]||h.game;
+      const name=C.gameName(h.game);
       const netTxt=h.net>0?('+'+h.net):(h.net<0?String(h.net):'0');
-      row.innerHTML='<div class="hist-main"><b>'+name+'</b><span>Mise : '+h.bet+'</span></div><div class="hist-side"><span class="hist-net '+(h.net>0?'pos':(h.net<0?'neg':''))+'">'+netTxt+'</span><small>'+formatTime(h.time)+'</small></div>';
+      row.innerHTML='<div class="hist-main"><b>'+C.escapeHtml(name)+'</b><span>Mise : '+C.num(h.bet)+'</span></div><div class="hist-side"><span class="hist-net '+(h.net>0?'pos':(h.net<0?'neg':''))+'">'+netTxt+'</span><small>'+formatTime(h.time)+'</small></div>';
       listEl.appendChild(row);
     });
   }
@@ -141,11 +217,15 @@ window.Casino = (function(){
   // À utiliser pour toute donnée venue d'un autre joueur (nom d'ami, classement importé...) avant de
   // l'insérer via innerHTML — une seule version partagée au lieu d'une copie par fichier.
   C.escapeHtml = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // fn est appelée quand la page est quittée OU passe en arrière-plan (onglet changé, téléphone verrouillé, appli
+  // fermée par le système : sur mobile, pagehide seul n'est pas toujours déclenché). Sert aux manches dont le résultat
+  // est connu mais affiché avec un délai : on les règle tout de suite pour ne jamais perdre un gain.
+  C.onPageLeave = fn=>{ window.addEventListener('pagehide',fn); document.addEventListener('visibilitychange',()=>{ if(document.hidden) fn(); }); };
 
   // ====== MODULE: Favorites ======
   const FAV_KEY='grand-casino-favorites';
   let favorites=[];
-  try{ const raw=localStorage.getItem(FAV_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) favorites=p; } }catch(e){}
+  try{ const raw=localStorage.getItem(FAV_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) favorites=C.cleanSaved(FAV_KEY,p); } }catch(e){}
   function saveFavorites(){ try{ localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); }catch(e){} }
   const GAMES_META=[
     {key:'slots',icon:'🎰',name:'Machine à sous',tag:'Classique'},
@@ -208,7 +288,7 @@ window.Casino = (function(){
   // ====== MODULE: Achievements ======
   const ACH_KEY='grand-casino-achievements';
   let unlockedAch=[];
-  try{ const raw=localStorage.getItem(ACH_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) unlockedAch=p; } }catch(e){}
+  try{ const raw=localStorage.getItem(ACH_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) unlockedAch=C.cleanSaved(ACH_KEY,p); } }catch(e){}
   function saveUnlockedAch(){ try{ localStorage.setItem(ACH_KEY, JSON.stringify(unlockedAch)); }catch(e){} }
   C.isAchUnlocked = id=>unlockedAch.includes(id);
   // Journal des succès récents (profil) : petit horodatage séparé, posé en plus de unlockedAch
@@ -216,7 +296,7 @@ window.Casino = (function(){
   // 20 derniers déblocages suffisent pour un fil "récents", pas besoin d'historique complet.
   const ACH_LOG_KEY='grand-casino-ach-log';
   let achLog=[];
-  try{ const raw=localStorage.getItem(ACH_LOG_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) achLog=p; } }catch(e){}
+  try{ const raw=localStorage.getItem(ACH_LOG_KEY); if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)) achLog=C.cleanSaved(ACH_LOG_KEY,p); } }catch(e){}
   function saveAchLog(){ try{ localStorage.setItem(ACH_LOG_KEY, JSON.stringify(achLog)); }catch(e){} }
   // pgCount : petit raccourci réutilisé par plusieurs succès/missions ci-dessous pour lire le
   // nombre de parties d'un jeu dans stats.perGame, sans répéter la même garde à chaque fois.
@@ -319,7 +399,7 @@ window.Casino = (function(){
   }
   function saveMissions(){ try{ localStorage.setItem(MISSIONS_KEY, JSON.stringify(missions)); }catch(e){} }
   function loadMissions(){
-    try{ const raw=localStorage.getItem(MISSIONS_KEY); if(raw) missions=JSON.parse(raw); }catch(e){}
+    try{ const raw=localStorage.getItem(MISSIONS_KEY); if(raw) missions=C.cleanSaved(MISSIONS_KEY,JSON.parse(raw)); }catch(e){}
     const today=todayStr();
     if(!missions||missions.date!==today){ missions={date:today, list:drawDailyMissions()}; saveMissions(); }
   }
@@ -529,7 +609,7 @@ window.Casino = (function(){
     const cards=[];
     if(stats.biggestWin>0){
       cards.push({icon:'💰', label:'Plus gros gain', value:'+'+stats.biggestWin+' 🪙',
-        sub:(GAME_NAMES[stats.biggestWinGame]||stats.biggestWinGame||'Jeu inconnu')+(stats.biggestWinTime?' — '+formatTime(stats.biggestWinTime):' — partie ancienne')});
+        sub:C.escapeHtml(GAME_NAMES[stats.biggestWinGame]||stats.biggestWinGame||'Jeu inconnu')+(stats.biggestWinTime?' — '+formatTime(stats.biggestWinTime):' — partie ancienne')});
     }
     if(C.state.bestStreak>1){
       cards.push({icon:'🔥', label:'Plus longue série de jours', value:C.state.bestStreak+(C.state.bestStreak>1?' jours':' jour'),
@@ -621,8 +701,13 @@ window.Casino = (function(){
   function applySaveObject(payload,opts){
     if(!validateSaveData(payload)) return false;
     C.createRestorePoint((opts&&opts.reason)||'Avant un import');
+    // Chaque valeur est assainie (C.normalizeSaveValue) avant d'être écrite : un fichier, un QR ou un document cloud
+    // piégé ne peut ainsi jamais glisser du HTML ou des valeurs absurdes dans les vues qui affichent ces données.
     SAVE_KEYS.forEach(k=>{
-      try{ if(payload.data[k]!==undefined) localStorage.setItem(k, payload.data[k]); else localStorage.removeItem(k); }catch(e){}
+      try{
+        const v=payload.data[k]!==undefined?C.normalizeSaveValue(k,payload.data[k]):null;
+        if(v!==null) localStorage.setItem(k,v); else localStorage.removeItem(k);
+      }catch(e){}
     });
     return true;
   }
@@ -825,11 +910,15 @@ window.Casino = (function(){
     return '<span class="cf-tl">'+idx+'</span><span class="cf-br">'+idx+'</span>'+body;
   }
   C.renderCard = function(card,hidden,big){
+    // Les cartes d'une table multijoueur viennent du réseau (l'hôte) : seuls les rangs et couleurs connus sont
+    // dessinés (ni HTML ni texte libre), toute autre valeur donne une carte « ? » — jamais de contenu injecté.
+    card=card||{};
+    const r=(RANKS.indexOf(card.r)>=0||card.r==='?')?card.r:'?', s=SUITS.indexOf(card.s)>=0?card.s:'♠';
     const wrap=document.createElement('div'); wrap.className='card-3d'+(big?' lg':'');
     const inner=document.createElement('div'); inner.className='card-flip'+(hidden?' is-back':'');
-    const face=document.createElement('div'); face.className='card-face'+(['♥','♦'].includes(card.s)?' red':'');
-    face.dataset.label=card.r+card.s;   // identifiant stable de la carte (le contenu est désormais structuré)
-    face.innerHTML=cardFaceHtml(card);
+    const face=document.createElement('div'); face.className='card-face'+((s==='♥'||s==='♦')?' red':'');
+    face.dataset.label=r+s;   // identifiant stable de la carte (le contenu est désormais structuré)
+    face.innerHTML=cardFaceHtml({r,s});
     const back=document.createElement('div'); back.className='card-back';
     inner.appendChild(face); inner.appendChild(back);
     wrap.appendChild(inner);

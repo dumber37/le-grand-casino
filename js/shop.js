@@ -20,7 +20,7 @@ window.Casino = window.Casino || {};
     {id:'ruby',    name:'Rubis Impérial',     cost:800, swatch:['#170406','#7a0f1a','#f2b705']}
   ];
   let ownedThemes=[];
-  try{ const raw=localStorage.getItem(OWNED_THEMES_KEY); ownedThemes=raw?JSON.parse(raw):[]; }catch(e){}
+  try{ const raw=localStorage.getItem(OWNED_THEMES_KEY); ownedThemes=raw?C.cleanSaved(OWNED_THEMES_KEY,JSON.parse(raw)):[]; }catch(e){}
   function saveOwnedThemes(){ try{ localStorage.setItem(OWNED_THEMES_KEY, JSON.stringify(ownedThemes)); }catch(e){} }
   function themeOwned(t){ return t.cost===0 || ownedThemes.includes(t.id); }
   function currentTheme(){ return document.documentElement.getAttribute('data-theme')||'dark'; }
@@ -54,7 +54,7 @@ window.Casino = window.Casino || {};
     {id:'dragon',  name:'Dragon Rouge', cost:450, swatch:['#7a0f1a','#d4af37','#2a0407']}
   ];
   let ownedCardbacks=[];
-  try{ const raw=localStorage.getItem(OWNED_CARDBACKS_KEY); ownedCardbacks=raw?JSON.parse(raw):[]; }catch(e){}
+  try{ const raw=localStorage.getItem(OWNED_CARDBACKS_KEY); ownedCardbacks=raw?C.cleanSaved(OWNED_CARDBACKS_KEY,JSON.parse(raw)):[]; }catch(e){}
   function saveOwnedCardbacks(){ try{ localStorage.setItem(OWNED_CARDBACKS_KEY, JSON.stringify(ownedCardbacks)); }catch(e){} }
   function cardbackOwned(c){ return c.cost===0 || ownedCardbacks.includes(c.id); }
   function currentCardback(){ return document.documentElement.getAttribute('data-cardback')||'classic'; }
@@ -100,7 +100,7 @@ window.Casino = window.Casino || {};
     {id:'royal',    name:'Violet royal',cost:300, swatch:['#6a3aa8','#432570','#201037']},
     {id:'onyx',     name:'Onyx',        cost:400, swatch:['#4a4f57','#2b2f35','#121417']}
   ];
-  function readList(key){ try{ const p=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(p)?p:[]; }catch(e){ return []; } }
+  function readList(key){ try{ const p=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(p)?C.cleanSaved(key,p):[]; }catch(e){ return []; } }
   function writeList(key,l){ try{ localStorage.setItem(key,JSON.stringify(l)); }catch(e){} }
   let ownedWinfx=readList(OWNED_WINFX_KEY), ownedFelts=readList(OWNED_FELTS_KEY);
   const getEq=(key,def)=>{ try{ return localStorage.getItem(key)||def; }catch(e){ return def; } };
